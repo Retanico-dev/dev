@@ -3,22 +3,19 @@
 <head>
   <!-- ▼▼▼ ここにご自身のSupabase情報を貼り付けてください ▼▼▼ -->
   <script>
-    const SUPABASE_URL = "https://griosberitrswzkynewx.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdyaW9zYmVyaXRyc3d6a3luZXd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzNzUxMDksImV4cCI6MjEwNjk1MTEwOX0.LYWUkTS4s9oTuVR8DdM0mIGduQuGc37jxjpGN3fxNEc";
+    const SUPABASE_URL = "YOUR_SUPABASE_URL";
+    const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
   </script>
   <!-- ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ -->
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Project Flow - 進行管理</title>
-  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Supabase JS Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen">
 
-  <!-- ナビゲーションバー -->
   <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
       <div class="flex items-center space-x-3">
@@ -30,30 +27,26 @@
   </header>
 
   <main class="max-w-7xl mx-auto px-4 py-8">
-    <!-- 1. ログイン画面 -->
+    <!-- ログイン画面 -->
     <div id="loginView" class="max-w-md mx-auto mt-12 p-6 bg-white rounded-xl shadow-sm border border-slate-200">
       <h2 class="text-xl font-bold mb-4 text-center">ログイン</h2>
-      <p class="text-sm text-slate-500 mb-6 text-center">管理者・クリエイター専用ポータル</p>
-      
       <div class="space-y-4">
         <div>
           <label class="block text-xs font-medium text-slate-600 mb-1">メールアドレス</label>
-          <input type="email" id="loginEmail" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="example@domain.com">
+          <input type="email" id="loginEmail" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm">
         </div>
         <div>
           <label class="block text-xs font-medium text-slate-600 mb-1">パスワード</label>
-          <input type="password" id="loginPassword" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="パスワードを入力">
+          <input type="password" id="loginPassword" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm">
         </div>
-        <div class="pt-2">
-          <button type="button" id="btnPwLogin" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm transition">
-            パスワードでログイン
-          </button>
-        </div>
+        <button type="button" id="btnPwLogin" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm transition">
+          ログイン
+        </button>
       </div>
       <p id="loginMsg" class="mt-4 text-sm text-center font-medium"></p>
     </div>
 
-    <!-- 2. ダッシュボード画面（ログイン後） -->
+    <!-- ダッシュボード画面 -->
     <div id="appView" class="hidden space-y-6">
       <div id="adminTabs" class="flex border-b border-slate-200 space-x-4">
         <button onclick="switchTab('creative')" id="tabCreative" class="pb-3 px-2 font-medium text-sm border-b-2 border-blue-600 text-blue-600">制作進行ボード</button>
@@ -61,7 +54,7 @@
         <button onclick="switchTab('master')" id="tabMaster" class="pb-3 px-2 font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700">工程マスター設定</button>
       </div>
 
-      <!-- クリエイター用タスク表示（User専用） -->
+      <!-- クリエイター用タスク表示 -->
       <div id="userTaskSection" class="hidden space-y-4">
         <h2 class="text-lg font-bold">担当タスク一覧</h2>
         <div id="userTaskList" class="grid gap-4 md:grid-cols-2"></div>
@@ -70,15 +63,15 @@
       <!-- Admin: 制作進行ボード -->
       <div id="creativeSection" class="space-y-6">
         <div class="flex justify-between items-center">
-          <h2 class="text-lg font-bold">制作案件一覧</h2>
+          <h2 class="text-lg font-bold">制作案件パイプライン</h2>
           <button onclick="openModal('newProjectModal')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition shadow-sm">
             + 新規案件起票
           </button>
         </div>
-        <div id="projectList" class="space-y-4"></div>
+        <div id="projectList" class="space-y-6"></div>
       </div>
 
-      <!-- Admin: 営業・商談ボード -->
+      <!-- Admin: 営業ボード -->
       <div id="salesSection" class="hidden space-y-6">
         <div class="flex justify-between items-center">
           <h2 class="text-lg font-bold">営業・商談パイプライン</h2>
@@ -113,7 +106,7 @@
       <h3 class="font-bold text-lg">新規制作案件の起票</h3>
       <div>
         <label class="block text-xs font-medium text-slate-600 mb-1">案件・曲名 *</label>
-        <input type="text" id="newPrjTitle" class="w-full px-3 py-2 border rounded-lg text-sm">
+        <input type="text" id="newPrjTitle" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="例: 2nd Single 制作">
       </div>
       <div>
         <label class="block text-xs font-medium text-slate-600 mb-1">クライアント名</label>
@@ -125,9 +118,9 @@
       </div>
 
       <div class="border-t pt-4">
-        <label class="block text-xs font-bold text-slate-700 mb-2">自動納期計算・工程組み込み</label>
+        <label class="block text-xs font-bold text-slate-700 mb-2">工程選択 & 納期自動計算</label>
         <div class="flex items-center space-x-2 mb-3">
-          <label class="text-xs text-slate-500">着手予定日:</label>
+          <label class="text-xs text-slate-500">着手日:</label>
           <input type="date" id="autoCalcStartDate" class="px-2 py-1 border rounded text-sm">
         </div>
         <div id="processCheckboxes" class="space-y-1.5 max-h-40 overflow-y-auto p-2 bg-slate-50 rounded-lg border text-sm"></div>
@@ -135,7 +128,7 @@
 
       <div class="flex justify-end space-x-2 pt-2">
         <button onclick="closeModal('newProjectModal')" class="px-4 py-2 border rounded-lg text-sm">キャンセル</button>
-        <button onclick="createCreativeProject()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">起票・タスク生成</button>
+        <button onclick="createCreativeProject()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">起票・タスク一括生成</button>
       </div>
     </div>
   </div>
@@ -168,24 +161,22 @@
     let currentUser = null;
     let userProfile = null;
     let processMasters = [];
+    let allProfiles = [];
 
     window.addEventListener('DOMContentLoaded', () => {
       try {
         if (!SUPABASE_URL || SUPABASE_URL === "YOUR_SUPABASE_URL") {
-          alert("エラー: 5行目の SUPABASE_URL が設定されていません。ご自身のURLに書き換えてください。");
+          alert("SUPABASE_URL が設定されていません。");
           return;
         }
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       } catch (err) {
-        alert("Supabase初期化エラー: " + err.message);
+        alert("初期化エラー: " + err.message);
         return;
       }
 
       const btn = document.getElementById('btnPwLogin');
-      if (btn) {
-        btn.addEventListener('click', handlePasswordLogin);
-      }
-
+      if (btn) btn.addEventListener('click', handlePasswordLogin);
       init();
     });
 
@@ -194,68 +185,35 @@
       const password = document.getElementById('loginPassword').value.trim();
       const msg = document.getElementById('loginMsg');
 
-      if (!email || !password) {
-        alert('メールアドレスとパスワードを入力してください');
-        return;
-      }
-
+      if (!email || !password) return alert('入力してください');
       msg.innerText = "ログイン中...";
-      msg.className = "mt-4 text-sm text-center text-blue-600 font-medium";
 
-      try {
-        const { data, error } = await supabaseClient.auth.signInWithPassword({
-          email: email,
-          password: password
-        });
-
-        if (error) {
-          msg.innerText = "エラー: " + error.message;
-          msg.className = "mt-4 text-sm text-center text-red-500 font-medium";
-          alert("ログイン失敗: " + error.message);
-        } else {
-          msg.innerText = "";
-          currentUser = data.user;
-          await loadUserProfile();
-        }
-      } catch (err) {
-        alert("通信例外エラー: " + err.message);
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) {
+        msg.innerText = "ログイン失敗: " + error.message;
+        msg.className = "mt-4 text-sm text-center text-red-500 font-medium";
+      } else {
+        msg.innerText = "";
+        currentUser = data.user;
+        await loadUserProfile();
       }
     }
 
     async function init() {
-      try {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (session) {
-          currentUser = session.user;
-          await loadUserProfile();
-        } else {
-          renderAuthUI(false);
-        }
-      } catch (e) {
-        console.error(e);
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session) {
+        currentUser = session.user;
+        await loadUserProfile();
+      } else {
+        renderAuthUI(false);
       }
     }
 
     async function loadUserProfile() {
-      try {
-        const { data, error } = await supabaseClient
-          .from('profiles')
-          .select('*')
-          .eq('id', currentUser.id)
-          .single();
-        
-        if (data) {
-          userProfile = data;
-          renderAuthUI(true);
-          loadDashboard();
-        } else {
-          userProfile = { role: 'admin', email: currentUser.email, name: currentUser.email.split('@')[0] };
-          renderAuthUI(true);
-          loadDashboard();
-        }
-      } catch (err) {
-        alert("ユーザープロファイル取得エラー: " + err.message);
-      }
+      const { data } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).single();
+      userProfile = data || { role: 'admin', email: currentUser.email, name: currentUser.email.split('@')[0] };
+      renderAuthUI(true);
+      loadDashboard();
     }
 
     function renderAuthUI(isLoggedIn) {
@@ -304,38 +262,41 @@
     }
 
     async function loadDashboard() {
-      await loadProcessMasters();
+      await Promise.all([loadProcessMasters(), loadAllProfiles()]);
       if (userProfile.role === 'admin') {
         loadCreativeProjects();
         loadSalesProjects();
       }
     }
 
+    async function loadAllProfiles() {
+      const { data } = await supabaseClient.from('profiles').select('id, name, email');
+      allProfiles = data || [];
+    }
+
     async function loadProcessMasters() {
       const { data } = await supabaseClient.from('process_masters').select('*').order('sort_order');
       processMasters = data || [];
 
-      const tbody = document.getElementById('masterTableBody');
-      tbody.innerHTML = processMasters.map(p => `
+      document.getElementById('masterTableBody').innerHTML = processMasters.map(p => `
         <tr class="border-b">
           <td class="py-2 font-medium">${p.name}</td>
           <td class="py-2 text-slate-500">${p.standard_days} 日間</td>
         </tr>
       `).join('');
 
-      const checkContainer = document.getElementById('processCheckboxes');
-      checkContainer.innerHTML = processMasters.map(p => `
+      document.getElementById('processCheckboxes').innerHTML = processMasters.map(p => `
         <label class="flex items-center space-x-2 cursor-pointer">
           <input type="checkbox" value="${p.id}" data-days="${p.standard_days}" data-name="${p.name}" checked class="rounded text-blue-600">
           <span class="text-xs">${p.name} (${p.standard_days}日)</span>
         </label>
       `).join('');
 
-      const tmrw = new Date();
-      tmrw.setDate(tmrw.getDate() + 1);
-      document.getElementById('autoCalcStartDate').value = tmrw.toISOString().split('T')[0];
+      const today = new Date();
+      document.getElementById('autoCalcStartDate').value = today.toISOString().split('T')[0];
     }
 
+    // 制作案件ロード（誰ボールか＆期日アラートを判定）
     async function loadCreativeProjects() {
       const { data: prjs } = await supabaseClient
         .from('projects')
@@ -349,32 +310,114 @@
         return;
       }
 
-      container.innerHTML = prjs.map(p => `
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
-          <div class="flex items-center justify-between">
-            <div>
-              <span class="text-xs text-slate-400 font-medium">${p.client_name || 'クライアント未設定'}</span>
-              <h3 class="text-base font-bold text-slate-800">${p.title}</h3>
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      container.innerHTML = prjs.map(p => {
+        const sortedTasks = (p.tasks || []).sort((a,b) => a.sort_order - b.sort_order);
+        
+        // 現在誰ボールかを判定（未完了の最初のタスクを探す）
+        const currentTask = sortedTasks.find(t => t.status !== '完了');
+        let ballBadgeHtml = '';
+
+        if (!currentTask) {
+          ballBadgeHtml = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">✓ 全工程完了</span>`;
+        } else if (currentTask.status === '提出・確認待ち') {
+          ballBadgeHtml = `
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300 animate-pulse">
+              🟡 社内/クライアント確認待ち（${currentTask.title}）
+            </span>`;
+        } else {
+          const assignee = allProfiles.find(u => u.id === currentTask.assignee_id);
+          const assigneeName = assignee ? (assignee.name || assignee.email) : '担当未設定';
+          const isOverdue = currentTask.deadline && currentTask.deadline < todayStr;
+
+          ballBadgeHtml = `
+            <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold ${isOverdue ? 'bg-red-100 text-red-700 border border-red-300' : 'bg-blue-100 text-blue-800'}">
+              <span>🔴 ボール: <strong>${assigneeName}</strong></span>
+              <span class="text-[11px] font-normal">(${currentTask.title} / 期限: ${currentTask.deadline || '未定'}${isOverdue ? ' ⚠超過' : ''})</span>
             </div>
-            <div class="flex items-center space-x-2">
-              ${p.drive_url ? `<a href="${p.drive_url}" target="_blank" class="text-xs text-blue-600 hover:underline">Drive ↗</a>` : ''}
-              <span class="text-xs px-2.5 py-1 rounded-full font-medium bg-blue-50 text-blue-700">${p.status}</span>
-            </div>
-          </div>
-          <div class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            ${(p.tasks || []).sort((a,b)=>a.sort_order - b.sort_order).map(t => `
-              <div class="p-3 rounded-lg border text-xs space-y-1 ${t.status === '完了' ? 'bg-slate-50 border-slate-200 text-slate-400' : 'bg-white border-blue-100'}">
-                <div class="flex justify-between font-bold">
-                  <span>${t.title}</span>
-                  <span class="${t.status === '提出・確認待ち' ? 'text-amber-600 font-bold' : ''}">${t.status}</span>
-                </div>
-                <div class="text-[11px] text-slate-500">期日: ${t.deadline || '未設定'}</div>
-                ${t.deliverable_url ? `<a href="${t.deliverable_url}" target="_blank" class="text-blue-500 underline truncate block">提出物リンク ↗</a>` : ''}
+          `;
+        }
+
+        return `
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
+              <div>
+                <span class="text-xs text-slate-400 font-medium">${p.client_name || 'クライアント未設定'}</span>
+                <h3 class="text-lg font-bold text-slate-800">${p.title}</h3>
               </div>
-            `).join('')}
+              <div class="flex items-center space-x-3">
+                ${ballBadgeHtml}
+                ${p.drive_url ? `<a href="${p.drive_url}" target="_blank" class="text-xs px-2.5 py-1 bg-slate-100 hover:bg-slate-200 rounded text-slate-700 font-medium">Drive ↗</a>` : ''}
+              </div>
+            </div>
+
+            <!-- 工程タスク一覧 -->
+            <div class="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              ${sortedTasks.map(t => {
+                const isOverdue = t.deadline && t.deadline < todayStr && t.status !== '完了';
+                const isCurrent = currentTask && currentTask.id === t.id;
+
+                return `
+                  <div class="p-3 rounded-lg border text-xs space-y-2 transition-all ${
+                    t.status === '完了' 
+                      ? 'bg-slate-50 border-slate-200 text-slate-400' 
+                      : isCurrent 
+                        ? 'bg-blue-50/50 border-blue-400 ring-2 ring-blue-100 shadow-sm' 
+                        : 'bg-white border-slate-200'
+                  }">
+                    <div class="flex justify-between items-center font-bold">
+                      <span class="${isCurrent ? 'text-blue-700 font-extrabold' : ''}">${t.title}</span>
+                      <select onchange="updateTaskStatus('${t.id}', this.value)" class="text-[11px] px-1.5 py-0.5 border rounded bg-white font-medium ${t.status === '提出・確認待ち' ? 'text-amber-600 font-bold border-amber-300' : ''}">
+                        ${['未着手', '作業中', '提出・確認待ち', 'リテイク', '完了'].map(st => `
+                          <option value="${st}" ${t.status === st ? 'selected' : ''}>${st}</option>
+                        `).join('')}
+                      </select>
+                    </div>
+
+                    <!-- 担当者アサイン切り替え -->
+                    <div class="flex items-center space-x-1">
+                      <span class="text-[10px] text-slate-400">担当:</span>
+                      <select onchange="assignTask('${t.id}', this.value)" class="text-[11px] w-full px-1 py-0.5 border rounded bg-white">
+                        <option value="">-- 未設定 --</option>
+                        ${allProfiles.map(u => `
+                          <option value="${u.id}" ${t.assignee_id === u.id ? 'selected' : ''}>${u.name || u.email}</option>
+                        `).join('')}
+                      </select>
+                    </div>
+
+                    <!-- 期限日 -->
+                    <div class="flex items-center justify-between text-[11px] pt-1 border-t">
+                      <span class="text-slate-400">期限:</span>
+                      <input type="date" value="${t.deadline \vert{}\vert{} ''}" onchange="updateTaskDeadline('${t.id}', this.value)" class="border rounded px-1 text-[11px] ${isOverdue ? 'text-red-600 font-bold bg-red-50' : 'text-slate-700'}">
+                    </div>
+
+                    ${t.deliverable_url ? `
+                      <a href="${t.deliverable_url}" target="_blank" class="block text-center py-1 bg-blue-50 text-blue-600 rounded font-medium text-[11px] hover:bg-blue-100 truncate">
+                        提出物リンク ↗
+                      </a>` : ''}
+                  </div>
+                `;
+              }).join('')}
+            </div>
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
+    }
+
+    async function assignTask(taskId, assigneeId) {
+      await supabaseClient.from('tasks').update({ assignee_id: assigneeId || null }).eq('id', taskId);
+      loadCreativeProjects();
+    }
+
+    async function updateTaskStatus(taskId, status) {
+      await supabaseClient.from('tasks').update({ status }).eq('id', taskId);
+      loadCreativeProjects();
+    }
+
+    async function updateTaskDeadline(taskId, deadline) {
+      await supabaseClient.from('tasks').update({ deadline: deadline || null }).eq('id', taskId);
+      loadCreativeProjects();
     }
 
     async function createCreativeProject() {
@@ -387,10 +430,7 @@
 
       const { data: prj, error: prjErr } = await supabaseClient.from('projects').insert({
         type: 'creative',
-        title: title,
-        client_name: client,
-        drive_url: drive,
-        status: '進行中'
+        title, client_name: client, drive_url: drive, status: '進行中'
       }).select().single();
 
       if (prjErr) return alert(prjErr.message);
@@ -420,12 +460,7 @@
     }
 
     async function loadSalesProjects() {
-      const { data: sales } = await supabaseClient
-        .from('projects')
-        .select('*')
-        .eq('type', 'sales')
-        .order('created_at', { ascending: false });
-
+      const { data: sales } = await supabaseClient.from('projects').select('*').eq('type', 'sales').order('created_at', { ascending: false });
       const container = document.getElementById('salesList');
       if (!sales || sales.length === 0) {
         container.innerHTML = '<div class="col-span-3 p-8 text-center text-slate-400 bg-white rounded-xl border">営業リードはありません</div>';
@@ -446,16 +481,14 @@
             次回MTG: ${s.next_meeting_at ? new Date(s.next_meeting_at).toLocaleString('ja-JP') : '未定'}
           </div>
           ${s.meeting_notes_url ? `<a href="${s.meeting_notes_url}" target="_blank" class="text-xs text-blue-600 block hover:underline truncate">議事録リンク ↗</a>` : ''}
-          ${s.status === '成約' ? `<div class="p-2 bg-emerald-50 text-emerald-700 text-[11px] rounded font-medium">✓ 成約済（Discordチャンネル連携対象）</div>` : ''}
+          ${s.status === '成約' ? `<div class="p-2 bg-emerald-50 text-emerald-700 text-[11px] rounded font-medium">✓ 成約済</div>` : ''}
         </div>
       `).join('');
     }
 
     async function updateSalesStatus(id, newStatus) {
       await supabaseClient.from('projects').update({ status: newStatus }).eq('id', id);
-      if (newStatus === '成約') {
-        alert('【成約】Discord連携トリガー対象になりました');
-      }
+      if (newStatus === '成約') alert('【成約】Discord自動連携トリガー対象');
       loadSalesProjects();
     }
 
@@ -467,7 +500,7 @@
 
       await supabaseClient.from('projects').insert({
         type: 'sales',
-        title: title,
+        title,
         next_meeting_at: meeting ? new Date(meeting).toISOString() : null,
         meeting_notes_url: notes,
         status: 'リード'
