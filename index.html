@@ -36,14 +36,23 @@
     <div id="loginView" class="max-w-md mx-auto mt-12 p-6 bg-white rounded-xl shadow-sm border border-slate-200">
       <h2 class="text-xl font-bold mb-4 text-center">ログイン</h2>
       <p class="text-sm text-slate-500 mb-6 text-center">メールアドレス宛にログインリンクを送信します。</p>
-      <form id="loginForm" class="space-y-4">
+<form id="loginForm" class="space-y-4">
         <div>
           <label class="block text-xs font-medium text-slate-600 mb-1">メールアドレス</label>
           <input type="email" id="loginEmail" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="example@domain.com">
         </div>
-        <button type="submit" id="loginBtn" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm transition">
-          マジックリンクを送信
-        </button>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">パスワード（管理者は直接入力でログイン可能）</label>
+          <input type="password" id="loginPassword" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="パスワードを設定した場合は入力">
+        </div>
+        <div class="flex space-x-2">
+          <button type="button" onclick="loginWithPassword()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm transition">
+            パスワードでログイン
+          </button>
+          <button type="submit" id="loginBtn" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg text-sm transition">
+            マジックリンク
+          </button>
+        </div>
       </form>
       <p id="loginMsg" class="mt-4 text-sm text-center hidden"></p>
     </div>
