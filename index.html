@@ -35,7 +35,7 @@
     <!-- 1. ログイン画面 -->
     <div id="loginView" class="max-w-md mx-auto mt-12 p-6 bg-white rounded-xl shadow-sm border border-slate-200">
       <h2 class="text-xl font-bold mb-4 text-center">ログイン</h2>
-      <p class="text-sm text-slate-500 mb-6 text-center">メールアドレス宛にログインリンクを送信します。</p>
+      <p class="text-sm text-slate-500 mb-6 text-center">パスワードまたはメールリンクでログインします。</p>
       <form id="loginForm" class="space-y-4">
         <div>
           <label class="block text-xs font-medium text-slate-600 mb-1">メールアドレス</label>
@@ -43,9 +43,9 @@
         </div>
         <div>
           <label class="block text-xs font-medium text-slate-600 mb-1">パスワード（管理者は直接入力でログイン可能）</label>
-          <input type="password" id="loginPassword" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="パスワードを設定した場合は入力">
+          <input type="password" id="loginPassword" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="パスワードを入力">
         </div>
-        <div class="flex space-x-2">
+        <div class="flex space-x-2 pt-2">
           <button type="button" onclick="loginWithPassword()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm transition">
             パスワードでログイン
           </button>
@@ -135,9 +135,7 @@
           <label class="text-xs text-slate-500">着手予定日:</label>
           <input type="date" id="autoCalcStartDate" class="px-2 py-1 border rounded text-sm">
         </div>
-        <div id="processCheckboxes" class="space-y-1.5 max-h-40 overflow-y-auto p-2 bg-slate-50 rounded-lg border text-sm">
-          <!-- JSで工程マスターがチェックボックスとして並ぶ -->
-        </div>
+        <div id="processCheckboxes" class="space-y-1.5 max-h-40 overflow-y-auto p-2 bg-slate-50 rounded-lg border text-sm"></div>
       </div>
 
       <div class="flex justify-end space-x-2 pt-2">
@@ -170,7 +168,7 @@
     </div>
   </div>
 
-  <!-- アプリケーションロジック -->
+  <!-- アプリケーションロジック（JavaScript） -->
   <script>
     let currentUser = null;
     let userProfile = null;
@@ -187,10 +185,10 @@
       }
 
       supabaseClient.auth.onAuthStateChange(async (event, session) => {
-        if (session) {
-          currentUser = session.user;
+        if (event === 'SIGNED_IN' || session) {
+          currentUser = session?.user;
           await loadUserProfile();
-        } else {
+        } else if (event === 'SIGNED_OUT') {
           currentUser = null;
           userProfile = null;
           renderAuthUI(false);
@@ -220,7 +218,7 @@
       const authActions = document.getElementById('authActions');
       const roleBadge = document.getElementById('roleBadge');
 
-      if (isLoggedIn) {
+      if (isLoggedIn && userProfile) {
         loginView.classList.add('hidden');
         appView.classList.remove('hidden');
         roleBadge.classList.remove('hidden');
@@ -254,7 +252,34 @@
       }
     }
 
-    // ログイン処理（マジックリンク）
+    // パスワードで直接ログイン
+    async function loginWithPassword() {
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      const msg = document.getElementById('loginMsg');
+      
+      if (!email || !password) {
+        alert('メールアドレスとパスワードを入力してください');
+        return;
+      }
+
+      msg.classList.remove('hidden', 'text-red-500', 'text-emerald-600');
+      msg.innerText = "ログイン中...";
+
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+      if (error) {
+        msg.classList.add('text-red-500');
+        msg.innerText = "エラー: " + error.message;
+      } else {
+        msg.classList.add('hidden');
+      }
+    }
+
+    // マジックリンク送信
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('loginEmail').value;
@@ -272,39 +297,14 @@
         msg.innerText = "エラー: " + error.message;
       } else {
         msg.classList.add('text-emerald-600');
-        msg.innerText = "ログイン用リンクをメールに送信しました！メールをご確認ください。";
+        msg.innerText = "ログインリンクをメールに送信しました！";
       }
     });
 
     async function logout() {
       await supabaseClient.auth.signOut();
     }
-// パスワードで直接ログインする関数
-    async function loginWithPassword() {
-      const email = document.getElementById('loginEmail').value;
-      const password = document.getElementById('loginPassword').value;
-      const msg = document.getElementById('loginMsg');
-      
-      if (!email || !password) {
-        alert('メールアドレスとパスワードの両方を入力してください');
-        return;
-      }
 
-      msg.classList.remove('hidden', 'text-red-500', 'text-emerald-600');
-      msg.innerText = "ログイン中...";
-
-      const { data, error } = await supabaseClient.auth.signInWithPassword({
-        email: email,
-        password: password
-      });
-
-      if (error) {
-        msg.classList.add('text-red-500');
-        msg.innerText = "ログインエラー: " + error.message;
-      } else {
-        msg.classList.add('hidden');
-      }
-    }
     // ダッシュボード初期ロード
     async function loadDashboard() {
       await loadProcessMasters();
@@ -319,7 +319,6 @@
       const { data } = await supabaseClient.from('process_masters').select('*').order('sort_order');
       processMasters = data || [];
 
-      // 設定テーブル
       const tbody = document.getElementById('masterTableBody');
       tbody.innerHTML = processMasters.map(p => `
         <tr class="border-b">
@@ -328,7 +327,6 @@
         </tr>
       `).join('');
 
-      // 新規起票時のチェックボックス
       const checkContainer = document.getElementById('processCheckboxes');
       checkContainer.innerHTML = processMasters.map(p => `
         <label class="flex items-center space-x-2 cursor-pointer">
@@ -337,7 +335,6 @@
         </label>
       `).join('');
 
-      // デフォルト着手日を明日にセット
       const tmrw = new Date();
       tmrw.setDate(tmrw.getDate() + 1);
       document.getElementById('autoCalcStartDate').value = tmrw.toISOString().split('T')[0];
@@ -370,7 +367,6 @@
             </div>
           </div>
 
-          <!-- タスクパイプライン一覧 -->
           <div class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             ${(p.tasks || []).sort((a,b)=>a.sort_order - b.sort_order).map(t => `
               <div class="p-3 rounded-lg border text-xs space-y-1 ${t.status === '完了' ? 'bg-slate-50 border-slate-200 text-slate-400' : 'bg-white border-blue-100'}">
@@ -396,7 +392,6 @@
 
       if (!title) return alert('案件名を入力してください');
 
-      // 1. プロジェクト作成
       const { data: prj, error: prjErr } = await supabaseClient.from('projects').insert({
         type: 'creative',
         title: title,
@@ -407,14 +402,12 @@
 
       if (prjErr) return alert(prjErr.message);
 
-      // 2. 選択された工程のタスクを自動計算して作成
       const checkedBoxes = Array.from(document.querySelectorAll('#processCheckboxes input:checked'));
       let currentDate = new Date(startDateStr || new Date());
 
       const tasksToInsert = [];
       checkedBoxes.forEach((cb, idx) => {
         const days = parseInt(cb.dataset.days, 10);
-        // 日数を加算して締切を決定
         currentDate.setDate(currentDate.getDate() + days);
         tasksToInsert.push({
           project_id: prj.id,
@@ -555,30 +548,7 @@
     function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
-    // 初期化（URLのトークンを確実に検出してログイン完了させる）
-    async function init() {
-      // 1. URLに付いてきた認証トークンをセッションに反映
-      const { data: { session }, error } = await supabaseClient.auth.getSession();
-      
-      if (session) {
-        currentUser = session.user;
-        await loadUserProfile();
-      } else {
-        renderAuthUI(false);
-      }
-
-      // 2. 認証状態の変化を監視
-      supabaseClient.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'SIGNED_IN' || session) {
-          currentUser = session?.user;
-          await loadUserProfile();
-        } else if (event === 'SIGNED_OUT') {
-          currentUser = null;
-          userProfile = null;
-          renderAuthUI(false);
-        }
-      });
-    }
+    init();
   </script>
 </body>
 </html>
