@@ -1,16 +1,21 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <script>
-    const SUPABASE_URL = "https://griosberitrswzkynewx.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdyaW9zYmVyaXRyc3d6a3luZXd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzNzUxMDksImV4cCI6MjEwNjk1MTEwOX0.LYWUkTS4s9oTuVR8DdM0mIGduQuGc37jxjpGN3fxNEc";
-  </script>
-
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Project Flow - 進行管理</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://griosberitrswzkynewx.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdyaW9zYmVyaXRyc3d6a3luZXd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzNzUxMDksImV4cCI6MjEwNjk1MTEwOX0.LYWUkTS4s9oTuVR8DdM0mIGduQuGc37jxjpGN3fxNEc";
+    let supabaseClient = null;
+    try {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } catch(e) {
+      console.error(e);
+    }
+  </script>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen">
 
@@ -28,19 +33,19 @@
     <!-- ログイン画面 -->
     <div id="loginView" class="max-w-md mx-auto mt-12 p-6 bg-white rounded-xl shadow-sm border border-slate-200">
       <h2 class="text-xl font-bold mb-4 text-center">ログイン</h2>
-      <div class="space-y-4">
+      <form onsubmit="event.preventDefault(); handlePasswordLogin();" class="space-y-4">
         <div>
           <label class="block text-xs font-medium text-slate-600 mb-1">メールアドレス</label>
-          <input type="email" id="loginEmail" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+          <input type="email" id="loginEmail" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="user@example.com">
         </div>
         <div>
           <label class="block text-xs font-medium text-slate-600 mb-1">パスワード</label>
-          <input type="password" id="loginPassword" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+          <input type="password" id="loginPassword" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="••••••••">
         </div>
-        <button type="button" id="btnPwLogin" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm transition">
+        <button type="submit" id="btnPwLogin" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm transition shadow-sm">
           ログイン
         </button>
-      </div>
+      </form>
       <p id="loginMsg" class="mt-4 text-sm text-center font-medium"></p>
     </div>
 
@@ -155,59 +160,63 @@
   </div>
 
   <script>
-    let supabaseClient = null;
     let currentUser = null;
     let userProfile = null;
     let processMasters = [];
     let allProfiles = [];
-
-    window.addEventListener('DOMContentLoaded', () => {
-      try {
-        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      } catch (err) {
-        alert("初期化エラー: " + err.message);
-        return;
-      }
-
-      const btn = document.getElementById('btnPwLogin');
-      if (btn) btn.addEventListener('click', handlePasswordLogin);
-      init();
-    });
 
     async function handlePasswordLogin() {
       const email = document.getElementById('loginEmail').value.trim();
       const password = document.getElementById('loginPassword').value.trim();
       const msg = document.getElementById('loginMsg');
 
-      if (!email || !password) return alert('入力してください');
-      msg.innerText = "ログイン中...";
+      if (!email || !password) {
+        alert('メールアドレスとパスワードを入力してください');
+        return;
+      }
 
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-      if (error) {
-        msg.innerText = "ログイン失敗: " + error.message;
-        msg.className = "mt-4 text-sm text-center text-red-500 font-medium";
-      } else {
-        msg.innerText = "";
-        currentUser = data.user;
-        await loadUserProfile();
+      msg.innerText = "ログイン確認中...";
+      msg.className = "mt-4 text-sm text-center text-blue-600 font-medium";
+
+      try {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) {
+          msg.innerText = "ログイン失敗: " + error.message;
+          msg.className = "mt-4 text-sm text-center text-red-500 font-medium";
+          alert("ログイン失敗: " + error.message);
+        } else {
+          msg.innerText = "";
+          currentUser = data.user;
+          await loadUserProfile();
+        }
+      } catch (err) {
+        alert("通信エラー: " + err.message);
       }
     }
 
     async function init() {
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if (session) {
-        currentUser = session.user;
-        await loadUserProfile();
-      } else {
-        renderAuthUI(false);
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session) {
+          currentUser = session.user;
+          await loadUserProfile();
+        } else {
+          renderAuthUI(false);
+        }
+      } catch (e) {
+        console.error(e);
       }
     }
 
     async function loadUserProfile() {
-      const { data } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).single();
-      userProfile = data || { role: 'admin', email: currentUser.email, name: currentUser.email.split('@')[0] };
-      renderAuthUI(true);
-      loadDashboard();
+      try {
+        const { data } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).single();
+        userProfile = data || { role: 'admin', email: currentUser.email, name: currentUser.email.split('@')[0] };
+        renderAuthUI(true);
+        loadDashboard();
+      } catch (err) {
+        alert("ユーザープロファイル取得エラー: " + err.message);
+      }
     }
 
     function renderAuthUI(isLoggedIn) {
@@ -311,85 +320,88 @@
         let ballBadgeHtml = '';
 
         if (!currentTask) {
-          ballBadgeHtml = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">✓ 全工程完了</span>`;
+          ballBadgeHtml = '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">✓ 全工程完了</span>';
         } else if (currentTask.status === '提出・確認待ち') {
-          ballBadgeHtml = `
-            <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
-              🟡 社内/クライアント確認待ち（${currentTask.title}）
-            </span>`;
+          ballBadgeHtml = '<span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">🟡 社内/クライアント確認待ち（' + currentTask.title + '）</span>';
         } else {
           const assignee = allProfiles.find(u => u.id === currentTask.assignee_id);
           const assigneeName = assignee ? (assignee.name || assignee.email) : '担当未設定';
           const isOverdue = currentTask.deadline && currentTask.deadline < todayStr;
+          const badgeClass = isOverdue ? 'bg-red-100 text-red-700 border border-red-300' : 'bg-blue-100 text-blue-800';
+          const overdueText = isOverdue ? ' ⚠超過' : '';
+          const deadlineText = currentTask.deadline || '未定';
 
-          ballBadgeHtml = `
-            <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold ${isOverdue ? 'bg-red-100 text-red-700 border border-red-300' : 'bg-blue-100 text-blue-800'}">
-              <span>🔴 ボール: <strong>${assigneeName}</strong></span>
-              <span class="text-[11px] font-normal">(${currentTask.title} / 期限: ${currentTask.deadline || '未定'}${isOverdue ? ' ⚠超過' : ''})</span>
-            </div>
-          `;
+          ballBadgeHtml = '<div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold ' + badgeClass + '">'
+            + '<span>🔴 ボール: <strong>' + assigneeName + '</strong></span>'
+            + '<span class="text-[11px] font-normal">(' + currentTask.title + ' / 期限: ' + deadlineText + overdueText + ')</span>'
+            + '</div>';
         }
 
-        return `
-          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
-            <div class="flex flex-wrap items-center justify-between gap-2 border-b pb-3">
-              <div>
-                <span class="text-xs text-slate-400 font-medium">${p.client_name || 'クライアント未設定'}</span>
-                <h3 class="text-lg font-bold text-slate-800">${p.title}</h3>
-              </div>
-              <div class="flex items-center space-x-3">
-                ${ballBadgeHtml}
-                ${p.drive_url ? `<a href="${p.drive_url}" target="_blank" class="text-xs px-2.5 py-1 bg-slate-100 hover:bg-slate-200 rounded text-slate-700 font-medium">Drive ↗</a>` : ''}
-              </div>
-            </div>
+        const driveLinkHtml = p.drive_url ? '<a href="' + p.drive_url + '" target="_blank" class="text-xs px-2.5 py-1 bg-slate-100 hover:bg-slate-200 rounded text-slate-700 font-medium">Drive ↗</a>' : '';
 
-            <div class="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              ${sortedTasks.map(t => {
-                const isOverdue = t.deadline && t.deadline < todayStr && t.status !== '完了';
-                const isCurrent = currentTask && currentTask.id === t.id;
+        const tasksHtml = sortedTasks.map(t => {
+          const isOverdue = t.deadline && t.deadline < todayStr && t.status !== '完了';
+          const isCurrent = currentTask && currentTask.id === t.id;
 
-                return `
-                  <div class="p-3 rounded-lg border text-xs space-y-2 transition-all ${
-                    t.status === '完了' 
-                      ? 'bg-slate-50 border-slate-200 text-slate-400' 
-                      : isCurrent 
-                        ? 'bg-blue-50/50 border-blue-400 ring-2 ring-blue-100 shadow-sm' 
-                        : 'bg-white border-slate-200'
-                  }">
-                    <div class="flex justify-between items-center font-bold">
-                      <span class="${isCurrent ? 'text-blue-700 font-extrabold' : ''}">${t.title}</span>
-                      <select onchange="updateTaskStatus('${t.id}', this.value)" class="text-[11px] px-1.5 py-0.5 border rounded bg-white font-medium ${t.status === '提出・確認待ち' ? 'text-amber-600 font-bold border-amber-300' : ''}">
-                        ${['未着手', '作業中', '提出・確認待ち', 'リテイク', '完了'].map(st => `
-                          <option value="${st}" ${t.status === st ? 'selected' : ''}>${st}</option>
-                        `).join('')}
-                      </select>
-                    </div>
+          let cardClass = 'bg-white border-slate-200';
+          if (t.status === '完了') {
+            cardClass = 'bg-slate-50 border-slate-200 text-slate-400';
+          } else if (isCurrent) {
+            cardClass = 'bg-blue-50/50 border-blue-400 ring-2 ring-blue-100 shadow-sm';
+          }
 
-                    <div class="flex items-center space-x-1">
-                      <span class="text-[10px] text-slate-400">担当:</span>
-                      <select onchange="assignTask('${t.id}', this.value)" class="text-[11px] w-full px-1 py-0.5 border rounded bg-white">
-                        <option value="">-- 未設定 --</option>
-                        ${allProfiles.map(u => `
-                          <option value="${u.id}" ${t.assignee_id === u.id ? 'selected' : ''}>${u.name || u.email}</option>
-                        `).join('')}
-                      </select>
-                    </div>
+          const statusOptions = ['未着手', '作業中', '提出・確認待ち', 'リテイク', '完了'].map(st => {
+            const selected = t.status === st ? 'selected' : '';
+            return '<option value="' + st + '" ' + selected + '>' + st + '</option>';
+          }).join('');
 
-                    <div class="flex items-center justify-between text-[11px] pt-1 border-t">
-                      <span class="text-slate-400">期限:</span>
-                      <input type="date" value="${t.deadline \vert{}\vert{} ''}" onchange="updateTaskDeadline('${t.id}', this.value)" class="border rounded px-1 text-[11px] ${isOverdue ? 'text-red-600 font-bold bg-red-50' : 'text-slate-700'}">
-                    </div>
+          const profileOptions = allProfiles.map(u => {
+            const selected = t.assignee_id === u.id ? 'selected' : '';
+            return '<option value="' + u.id + '" ' + selected + '>' + (u.name || u.email) + '</option>';
+          }).join('');
 
-                    ${t.deliverable_url ? `
-                      <a href="${t.deliverable_url}" target="_blank" class="block text-center py-1 bg-blue-50 text-blue-600 rounded font-medium text-[11px] hover:bg-blue-100 truncate">
-                        提出物リンク ↗
-                      </a>` : ''}
-                  </div>
-                `;
-              }).join('')}
-            </div>
-          </div>
-        `;
+          const deadlineInputClass = isOverdue ? 'text-red-600 font-bold bg-red-50' : 'text-slate-700';
+          const deliverableHtml = t.deliverable_url 
+            ? '<a href="' + t.deliverable_url + '" target="_blank" class="block text-center py-1 bg-blue-50 text-blue-600 rounded font-medium text-[11px] hover:bg-blue-100 truncate">提出物リンク ↗</a>'
+            : '';
+
+          return '<div class="p-3 rounded-lg border text-xs space-y-2 transition-all ' + cardClass + '">'
+            + '<div class="flex justify-between items-center font-bold">'
+            + '<span class="' + (isCurrent ? 'text-blue-700 font-extrabold' : '') + '">' + t.title + '</span>'
+            + '<select onchange="updateTaskStatus(\'' + t.id + '\', this.value)" class="text-[11px] px-1.5 py-0.5 border rounded bg-white font-medium">'
+            + statusOptions
+            + '</select>'
+            + '</div>'
+            + '<div class="flex items-center space-x-1">'
+            + '<span class="text-[10px] text-slate-400">担当:</span>'
+            + '<select onchange="assignTask(\'' + t.id + '\', this.value)" class="text-[11px] w-full px-1 py-0.5 border rounded bg-white">'
+            + '<option value="">-- 未設定 --</option>'
+            + profileOptions
+            + '</select>'
+            + '</div>'
+            + '<div class="flex items-center justify-between text-[11px] pt-1 border-t">'
+            + '<span class="text-slate-400">期限:</span>'
+            + '<input type="date" value="' + (t.deadline || '') + '" onchange="updateTaskDeadline(\'' + t.id + '\', this.value)" class="border rounded px-1 text-[11px] ' + deadlineInputClass + '">'
+            + '</div>'
+            + deliverableHtml
+            + '</div>';
+        }).join('');
+
+        return '<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">'
+          + '<div class="flex flex-wrap items-center justify-between gap-2 border-b pb-3">'
+          + '<div>'
+          + '<span class="text-xs text-slate-400 font-medium">' + (p.client_name || 'クライアント未設定') + '</span>'
+          + '<h3 class="text-lg font-bold text-slate-800">' + p.title + '</h3>'
+          + '</div>'
+          + '<div class="flex items-center space-x-3">'
+          + ballBadgeHtml
+          + driveLinkHtml
+          + '</div>'
+          + '</div>'
+          + '<div class="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">'
+          + tasksHtml
+          + '</div>'
+          + '</div>';
       }).join('');
     }
 
@@ -455,23 +467,28 @@
         return;
       }
 
-      container.innerHTML = sales.map(s => `
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
-          <div class="flex justify-between items-start">
-            <h4 class="font-bold text-sm text-slate-800">${s.title}</h4>
-            <select onchange="updateSalesStatus('${s.id}', this.value)" class="text-xs px-2 py-1 border rounded bg-slate-50 font-medium">
-              ${['リード', '初回MTG', '提案中', '成約', '失注'].map(st => `
-                <option value="${st}" ${s.status === st ? 'selected' : ''}>${st}</option>
-              `).join('')}
-            </select>
-          </div>
-          <div class="text-xs text-slate-500">
-            次回MTG: ${s.next_meeting_at ? new Date(s.next_meeting_at).toLocaleString('ja-JP') : '未定'}
-          </div>
-          ${s.meeting_notes_url ? `<a href="${s.meeting_notes_url}" target="_blank" class="text-xs text-blue-600 block hover:underline truncate">議事録リンク ↗</a>` : ''}
-          ${s.status === '成約' ? `<div class="p-2 bg-emerald-50 text-emerald-700 text-[11px] rounded font-medium">✓ 成約済</div>` : ''}
-        </div>
-      `).join('');
+      container.innerHTML = sales.map(s => {
+        const statusOptions = ['リード', '初回MTG', '提案中', '成約', '失注'].map(st => {
+          const selected = s.status === st ? 'selected' : '';
+          return '<option value="' + st + '" ' + selected + '>' + st + '</option>';
+        }).join('');
+
+        const meetingText = s.next_meeting_at ? new Date(s.next_meeting_at).toLocaleString('ja-JP') : '未定';
+        const notesHtml = s.meeting_notes_url ? '<a href="' + s.meeting_notes_url + '" target="_blank" class="text-xs text-blue-600 block hover:underline truncate">議事録リンク ↗</a>' : '';
+        const wonBadgeHtml = s.status === '成約' ? '<div class="p-2 bg-emerald-50 text-emerald-700 text-[11px] rounded font-medium">✓ 成約済</div>' : '';
+
+        return '<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">'
+          + '<div class="flex justify-between items-start">'
+          + '<h4 class="font-bold text-sm text-slate-800">' + s.title + '</h4>'
+          + '<select onchange="updateSalesStatus(\'' + s.id + '\', this.value)" class="text-xs px-2 py-1 border rounded bg-slate-50 font-medium">'
+          + statusOptions
+          + '</select>'
+          + '</div>'
+          + '<div class="text-xs text-slate-500">次回MTG: ' + meetingText + '</div>'
+          + notesHtml
+          + wonBadgeHtml
+          + '</div>';
+      }).join('');
     }
 
     async function updateSalesStatus(id, newStatus) {
@@ -511,27 +528,31 @@
         return;
       }
 
-      container.innerHTML = tasks.map(t => `
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
-          <div class="text-xs text-slate-400 font-medium">${t.projects?.title || '案件名なし'}</div>
-          <h4 class="text-base font-bold">${t.title}</h4>
-          <div class="text-xs text-slate-500">締切期日: <span class="font-bold text-slate-800">${t.deadline || '未定'}</span></div>
-          <div class="pt-2 border-t space-y-2">
-            <label class="block text-xs text-slate-600 font-medium">提出物URL:</label>
-            <input type="url" id="deliv_${t.id}" value="${t.deliverable_url || ''}" class="w-full px-3 py-1.5 border rounded text-xs" placeholder="https://...">
-            <div class="flex justify-between items-center pt-1">
-              <span class="text-xs font-semibold text-blue-600">ステータス: ${t.status}</span>
-              <button onclick="submitTask('${t.id}')" class="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 transition">
-                提出・確認待ちにする
-              </button>
-            </div>
-          </div>
-        </div>
-      `).join('');
+      container.innerHTML = tasks.map(t => {
+        const prjTitle = (t.projects && t.projects.title) ? t.projects.title : '案件名なし';
+        const deadlineText = t.deadline || '未定';
+        const deliverableVal = t.deliverable_url || '';
+
+        return '<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">'
+          + '<div class="text-xs text-slate-400 font-medium">' + prjTitle + '</div>'
+          + '<h4 class="text-base font-bold">' + t.title + '</h4>'
+          + '<div class="text-xs text-slate-500">締切期日: <span class="font-bold text-slate-800">' + deadlineText + '</span></div>'
+          + '<div class="pt-2 border-t space-y-2">'
+          + '<label class="block text-xs text-slate-600 font-medium">提出物URL:</label>'
+          + '<input type="url" id="deliv_' + t.id + '" value="' + deliverableVal + '" class="w-full px-3 py-1.5 border rounded text-xs" placeholder="https://...">'
+          + '<div class="flex justify-between items-center pt-1">'
+          + '<span class="text-xs font-semibold text-blue-600">ステータス: ' + t.status + '</span>'
+          + '<button onclick="submitTask(\'' + t.id + '\')" class="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 transition">'
+          + '提出・確認待ちにする'
+          + '</button>'
+          + '</div>'
+          + '</div>'
+          + '</div>';
+      }).join('');
     }
 
     async function submitTask(taskId) {
-      const url = document.getElementById(`deliv_${taskId}`).value;
+      const url = document.getElementById('deliv_' + taskId).value;
       if (!url) return alert('提出物URLを入力してください');
 
       await supabaseClient.from('tasks').update({
@@ -545,8 +566,8 @@
 
     function switchTab(tab) {
       ['creative', 'sales', 'master'].forEach(t => {
-        document.getElementById(`${t}Section`).classList.toggle('hidden', t !== tab);
-        const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        document.getElementById(t + 'Section').classList.toggle('hidden', t !== tab);
+        const btn = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
         if (t === tab) {
           btn.className = "pb-3 px-2 font-medium text-sm border-b-2 border-blue-600 text-blue-600";
         } else {
@@ -557,6 +578,8 @@
 
     function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    init();
   </script>
 </body>
 </html>
