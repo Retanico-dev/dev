@@ -55,6 +55,7 @@
         <button onclick="switchTab('creative')" id="tabCreative" class="pb-3 px-2 font-medium text-sm border-b-2 border-blue-600 text-blue-600">制作進行ボード</button>
         <button onclick="switchTab('sales')" id="tabSales" class="pb-3 px-2 font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700">営業・商談ボード</button>
         <button onclick="switchTab('master')" id="tabMaster" class="pb-3 px-2 font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700">工程マスター設定</button>
+        <button onclick="switchTab('members')" id="tabMembers" class="pb-3 px-2 font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700">メンバー管理</button>
       </div>
 
       <!-- クリエイター用タスク表示 -->
@@ -100,8 +101,60 @@
           </table>
         </div>
       </div>
+
+      <!-- Admin: メンバー管理 -->
+      <div id="membersSection" class="hidden space-y-6 max-w-3xl">
+        <div class="flex justify-between items-center">
+          <h2 class="text-lg font-bold">所属クリエイター・メンバー一覧</h2>
+          <button onclick="openModal('newMemberModal')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition shadow-sm">
+            + 新規メンバー追加
+          </button>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-50 border-b text-slate-500 text-xs text-left">
+              <tr>
+                <th class="p-3">表示名</th>
+                <th class="p-3">メールアドレス</th>
+                <th class="p-3">権限</th>
+              </tr>
+            </thead>
+            <tbody id="membersTableBody"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </main>
+
+  <!-- モーダル: 新規メンバー追加 -->
+  <div id="newMemberModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4">
+      <h3 class="font-bold text-lg">新規メンバー（クリエイター）の追加</h3>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">表示名（クリエイター名） *</label>
+        <input type="text" id="newMemberName" required class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="山田 太郎">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">メールアドレス *</label>
+        <input type="email" id="newMemberEmail" required class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="creator@example.com">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">初期パスワード *</label>
+        <input type="password" id="newMemberPassword" required class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="6文字以上">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">権限ロール</label>
+        <select id="newMemberRole" class="w-full px-3 py-2 border rounded-lg text-sm bg-white">
+          <option value="user">クリエイター (User: 自身のアサインタスクのみ閲覧)</option>
+          <option value="admin">管理者 (Admin: 全案件・営業・メンバー管理可能)</option>
+        </select>
+      </div>
+      <div class="flex justify-end space-x-2 pt-2">
+        <button onclick="closeModal('newMemberModal')" class="px-4 py-2 border rounded-lg text-sm">キャンセル</button>
+        <button onclick="createNewMember()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">作成・追加</button>
+      </div>
+    </div>
+  </div>
 
   <!-- モーダル: 新規案件起票 -->
   <div id="newProjectModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
@@ -234,10 +287,8 @@
           ? 'text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700' 
           : 'text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
 
-        authActions.innerHTML = `
-          <span class="text-xs text-slate-500">${userProfile.name || userProfile.email}</span>
-          <button onclick="logout()" class="text-xs text-slate-500 hover:text-slate-800 underline">ログアウト</button>
-        `;
+        authActions.innerHTML = '<span class="text-xs text-slate-500">' + (userProfile.name || userProfile.email) + '</span>'
+          + '<button onclick="logout()" class="text-xs text-slate-500 hover:text-slate-800 underline">ログアウト</button>';
 
         if (userProfile.role === 'admin') {
           document.getElementById('adminTabs').classList.remove('hidden');
@@ -248,6 +299,7 @@
           document.getElementById('creativeSection').classList.add('hidden');
           document.getElementById('salesSection').classList.add('hidden');
           document.getElementById('masterSection').classList.add('hidden');
+          document.getElementById('membersSection').classList.add('hidden');
           document.getElementById('userTaskSection').classList.remove('hidden');
           loadUserTasks();
         }
@@ -269,31 +321,93 @@
       if (userProfile.role === 'admin') {
         loadCreativeProjects();
         loadSalesProjects();
+        renderMembersTable();
       }
     }
 
     async function loadAllProfiles() {
-      const { data } = await supabaseClient.from('profiles').select('id, name, email');
+      const { data } = await supabaseClient.from('profiles').select('*').order('created_at', { ascending: false });
       allProfiles = data || [];
+    }
+
+    function renderMembersTable() {
+      const tbody = document.getElementById('membersTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = allProfiles.map(u => {
+        const badgeClass = u.role === 'admin' ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-100 text-emerald-700';
+        const roleName = u.role === 'admin' ? '管理者' : 'クリエイター';
+        return '<tr class="border-b last:border-b-0">'
+          + '<td class="p-3 font-medium">' + (u.name || '未設定') + '</td>'
+          + '<td class="p-3 text-slate-500">' + (u.email || '-') + '</td>'
+          + '<td class="p-3"><span class="px-2 py-0.5 rounded text-xs font-semibold ' + badgeClass + '">' + roleName + '</span></td>'
+          + '</tr>';
+      }).join('');
+    }
+
+    // 新規メンバー追加処理（Adminがクリエイターを作成）
+    async function createNewMember() {
+      const name = document.getElementById('newMemberName').value.trim();
+      const email = document.getElementById('newMemberEmail').value.trim();
+      const password = document.getElementById('newMemberPassword').value.trim();
+      const role = document.getElementById('newMemberRole').value;
+
+      if (!name || !email || !password) return alert('全ての項目を入力してください');
+      if (password.length < 6) return alert('パスワードは6文字以上で指定してください');
+
+      // サブクライアントを使って現在の管理者セッションを維持したまま新規登録
+      const tempClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: { persistSession: false }
+      });
+
+      const { data, error } = await tempClient.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+          data: { name: name }
+        }
+      });
+
+      if (error) {
+        alert('メンバー作成失敗: ' + error.message);
+        return;
+      }
+
+      // profiles テーブルのロール設定
+      if (data.user) {
+        await supabaseClient.from('profiles').upsert({
+          id: data.user.id,
+          email: email,
+          name: name,
+          role: role
+        });
+      }
+
+      alert('メンバー「' + name + '」を追加しました！');
+      closeModal('newMemberModal');
+      document.getElementById('newMemberName').value = '';
+      document.getElementById('newMemberEmail').value = '';
+      document.getElementById('newMemberPassword').value = '';
+      await loadAllProfiles();
+      renderMembersTable();
     }
 
     async function loadProcessMasters() {
       const { data } = await supabaseClient.from('process_masters').select('*').order('sort_order');
       processMasters = data || [];
 
-      document.getElementById('masterTableBody').innerHTML = processMasters.map(p => `
-        <tr class="border-b">
-          <td class="py-2 font-medium">${p.name}</td>
-          <td class="py-2 text-slate-500">${p.standard_days} 日間</td>
-        </tr>
-      `).join('');
+      document.getElementById('masterTableBody').innerHTML = processMasters.map(p => {
+        return '<tr class="border-b">'
+          + '<td class="py-2 font-medium">' + p.name + '</td>'
+          + '<td class="py-2 text-slate-500">' + p.standard_days + ' 日間</td>'
+          + '</tr>';
+      }).join('');
 
-      document.getElementById('processCheckboxes').innerHTML = processMasters.map(p => `
-        <label class="flex items-center space-x-2 cursor-pointer">
-          <input type="checkbox" value="${p.id}" data-days="${p.standard_days}" data-name="${p.name}" checked class="rounded text-blue-600">
-          <span class="text-xs">${p.name} (${p.standard_days}日)</span>
-        </label>
-      `).join('');
+      document.getElementById('processCheckboxes').innerHTML = processMasters.map(p => {
+        return '<label class="flex items-center space-x-2 cursor-pointer">'
+          + '<input type="checkbox" value="' + p.id + '" data-days="' + p.standard_days + '" data-name="' + p.name + '" checked class="rounded text-blue-600">'
+          + '<span class="text-xs">' + p.name + ' (' + p.standard_days + '日)</span>'
+          + '</label>';
+      }).join('');
 
       const today = new Date();
       document.getElementById('autoCalcStartDate').value = today.toISOString().split('T')[0];
@@ -493,7 +607,6 @@
 
     async function updateSalesStatus(id, newStatus) {
       await supabaseClient.from('projects').update({ status: newStatus }).eq('id', id);
-      if (newStatus === '成約') alert('【成約】Discord自動連携トリガー対象');
       loadSalesProjects();
     }
 
@@ -565,13 +678,16 @@
     }
 
     function switchTab(tab) {
-      ['creative', 'sales', 'master'].forEach(t => {
-        document.getElementById(t + 'Section').classList.toggle('hidden', t !== tab);
+      ['creative', 'sales', 'master', 'members'].forEach(t => {
+        const el = document.getElementById(t + 'Section');
+        if (el) el.classList.toggle('hidden', t !== tab);
         const btn = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
-        if (t === tab) {
-          btn.className = "pb-3 px-2 font-medium text-sm border-b-2 border-blue-600 text-blue-600";
-        } else {
-          btn.className = "pb-3 px-2 font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700";
+        if (btn) {
+          if (t === tab) {
+            btn.className = "pb-3 px-2 font-medium text-sm border-b-2 border-blue-600 text-blue-600";
+          } else {
+            btn.className = "pb-3 px-2 font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700";
+          }
         }
       });
     }
