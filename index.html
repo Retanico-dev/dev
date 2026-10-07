@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Flow - 進行管理</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+  <!-- 設定: 控えたSupabaseのURLとAnon Keyをここに入れる -->
+  <script>
+    const SUPABASE_URL = "https://griosberitrswzkynewx.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdyaW9zYmVyaXRyc3d6a3luZXd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzNzUxMDksImV4cCI6MjEwNjk1MTEwOX0.LYWUkTS4s9oTuVR8DdM0mIGduQuGc37jxjpGN3fxNEc";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  </script>
+
+  <!-- ナビゲーションバー -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <span class="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">ProjectFlow</span>
+        <span id="roleBadge" class="hidden text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Guest</span>
+      </div>
+      <div id="authActions" class="flex items-center space-x-3">
+        <!-- ログイン中ユーザー表示 / ログアウト -->
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-8">
+    <!-- 1. ログイン画面 -->
+    <div id="loginView" class="max-w-md mx-auto mt-12 p-6 bg-white rounded-xl shadow-sm border border-slate-200">
+      <h2 class="text-xl font-bold mb-4 text-center">ログイン</h2>
+      <p class="text-sm text-slate-500 mb-6 text-center">メールアドレス宛にログインリンクを送信します。</p>
+      <form id="loginForm" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">メールアドレス</label>
+          <input type="email" id="loginEmail" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="example@domain.com">
+        </div>
+        <button type="submit" id="loginBtn" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm transition">
+          マジックリンクを送信
+        </button>
+      </form>
+      <p id="loginMsg" class="mt-4 text-sm text-center hidden"></p>
+    </div>
+
+    <!-- 2. ダッシュボード画面（ログイン後） -->
+    <div id="appView" class="hidden space-y-6">
+      <!-- Admin用ナビゲーションタブ -->
+      <div id="adminTabs" class="flex border-b border-slate-200 space-x-4">
+        <button onclick="switchTab('creative')" id="tabCreative" class="pb-3 px-2 font-medium text-sm border-b-2 border-blue-600 text-blue-600">制作進行ボード</button>
+        <button onclick="switchTab('sales')" id="tabSales" class="pb-3 px-2 font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700">営業・商談ボード</button>
+        <button onclick="switchTab('master')" id="tabMaster" class="pb-3 px-2 font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700">工程マスター設定</button>
+      </div>
+
+      <!-- クリエイター用表示（User専用） -->
+      <div id="userTaskSection" class="hidden space-y-4">
+        <h2 class="text-lg font-bold">担当タスク一覧</h2>
+        <div id="userTaskList" class="grid gap-4 md:grid-cols-2"></div>
+      </div>
+
+      <!-- Admin: 制作進行ボード -->
+      <div id="creativeSection" class="space-y-6">
+        <div class="flex justify-between items-center">
+          <h2 class="text-lg font-bold">制作案件一覧</h2>
+          <button onclick="openModal('newProjectModal')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition shadow-sm">
+            + 新規案件起票
+          </button>
+        </div>
+        <div id="projectList" class="space-y-4"></div>
+      </div>
+
+      <!-- Admin: 営業・商談ボード -->
+      <div id="salesSection" class="hidden space-y-6">
+        <div class="flex justify-between items-center">
+          <h2 class="text-lg font-bold">営業・商談パイプライン</h2>
+          <button onclick="openModal('newSalesModal')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition shadow-sm">
+            + 営業リード追加
+          </button>
+        </div>
+        <div id="salesList" class="grid gap-4 md:grid-cols-3"></div>
+      </div>
+
+      <!-- Admin: 工程マスター設定 -->
+      <div id="masterSection" class="hidden space-y-6 max-w-2xl">
+        <h2 class="text-lg font-bold">標準工程・仕掛日数設定</h2>
+        <div class="bg-white p-4 rounded-xl border border-slate-200">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b text-slate-400 text-xs text-left">
+                <th class="py-2">工程名</th>
+                <th class="py-2">標準所要日数</th>
+              </tr>
+            </thead>
+            <tbody id="masterTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- モーダル: 新規案件起票 ＆ 自動工程展開 -->
+  <div id="newProjectModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+      <h3 class="font-bold text-lg">新規制作案件の起票</h3>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">案件・曲名 *</label>
+        <input type="text" id="newPrjTitle" required class="w-full px-3 py-2 border rounded-lg text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">クライアント名</label>
+        <input type="text" id="newPrjClient" class="w-full px-3 py-2 border rounded-lg text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">共有ドライブ / フォルダURL</label>
+        <input type="url" id="newPrjDrive" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="https://drive.google.com/...">
+      </div>
+
+      <div class="border-t pt-4">
+        <label class="block text-xs font-bold text-slate-700 mb-2">自動納期計算・工程組み込み</label>
+        <div class="flex items-center space-x-2 mb-3">
+          <label class="text-xs text-slate-500">着手予定日:</label>
+          <input type="date" id="autoCalcStartDate" class="px-2 py-1 border rounded text-sm">
+        </div>
+        <div id="processCheckboxes" class="space-y-1.5 max-h-40 overflow-y-auto p-2 bg-slate-50 rounded-lg border text-sm">
+          <!-- JSで工程マスターがチェックボックスとして並ぶ -->
+        </div>
+      </div>
+
+      <div class="flex justify-end space-x-2 pt-2">
+        <button onclick="closeModal('newProjectModal')" class="px-4 py-2 border rounded-lg text-sm">キャンセル</button>
+        <button onclick="createCreativeProject()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">起票・タスク生成</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル: 営業リード追加 -->
+  <div id="newSalesModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4">
+      <h3 class="font-bold text-lg">営業リード追加</h3>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">クライアント名 / 案件名 *</label>
+        <input type="text" id="salesTitle" required class="w-full px-3 py-2 border rounded-lg text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">次回MTG日時</label>
+        <input type="datetime-local" id="salesMeeting" class="w-full px-3 py-2 border rounded-lg text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">議事録 / メモURL</label>
+        <input type="url" id="salesNotesUrl" class="w-full px-3 py-2 border rounded-lg text-sm">
+      </div>
+      <div class="flex justify-end space-x-2 pt-2">
+        <button onclick="closeModal('newSalesModal')" class="px-4 py-2 border rounded-lg text-sm">キャンセル</button>
+        <button onclick="createSalesLead()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">追加</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- アプリケーションロジック -->
+  <script>
+    let currentUser = null;
+    let userProfile = null;
+    let processMasters = [];
+
+    // 初期化
+    async function init() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session) {
+        currentUser = session.user;
+        await loadUserProfile();
+      } else {
+        renderAuthUI(false);
+      }
+
+      supabaseClient.auth.onAuthStateChange(async (event, session) => {
+        if (session) {
+          currentUser = session.user;
+          await loadUserProfile();
+        } else {
+          currentUser = null;
+          userProfile = null;
+          renderAuthUI(false);
+        }
+      });
+    }
+
+    // ユーザー情報取得
+    async function loadUserProfile() {
+      const { data, error } = await supabaseClient
+        .from('profiles')
+        .select('*')
+        .eq('id', currentUser.id)
+        .single();
+      
+      if (data) {
+        userProfile = data;
+        renderAuthUI(true);
+        loadDashboard();
+      }
+    }
+
+    // 認証UI出し分け
+    function renderAuthUI(isLoggedIn) {
+      const loginView = document.getElementById('loginView');
+      const appView = document.getElementById('appView');
+      const authActions = document.getElementById('authActions');
+      const roleBadge = document.getElementById('roleBadge');
+
+      if (isLoggedIn) {
+        loginView.classList.add('hidden');
+        appView.classList.remove('hidden');
+        roleBadge.classList.remove('hidden');
+        roleBadge.innerText = userProfile.role === 'admin' ? '管理者 (Admin)' : 'クリエイター (User)';
+        roleBadge.className = userProfile.role === 'admin' 
+          ? 'text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700' 
+          : 'text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
+
+        authActions.innerHTML = `
+          <span class="text-xs text-slate-500">${userProfile.name || userProfile.email}</span>
+          <button onclick="logout()" class="text-xs text-slate-500 hover:text-slate-800 underline">ログアウト</button>
+        `;
+
+        if (userProfile.role === 'admin') {
+          document.getElementById('adminTabs').classList.remove('hidden');
+          document.getElementById('userTaskSection').classList.add('hidden');
+          switchTab('creative');
+        } else {
+          document.getElementById('adminTabs').classList.add('hidden');
+          document.getElementById('creativeSection').classList.add('hidden');
+          document.getElementById('salesSection').classList.add('hidden');
+          document.getElementById('masterSection').classList.add('hidden');
+          document.getElementById('userTaskSection').classList.remove('hidden');
+          loadUserTasks();
+        }
+      } else {
+        loginView.classList.remove('hidden');
+        appView.classList.add('hidden');
+        roleBadge.classList.add('hidden');
+        authActions.innerHTML = '';
+      }
+    }
+
+    // ログイン処理（マジックリンク）
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const msg = document.getElementById('loginMsg');
+      msg.classList.remove('hidden', 'text-red-500', 'text-emerald-600');
+      msg.innerText = "送信中...";
+
+      const { error } = await supabaseClient.auth.signInWithOtp({
+        email: email,
+        options: { emailRedirectTo: window.location.href }
+      });
+
+      if (error) {
+        msg.classList.add('text-red-500');
+        msg.innerText = "エラー: " + error.message;
+      } else {
+        msg.classList.add('text-emerald-600');
+        msg.innerText = "ログイン用リンクをメールに送信しました！メールをご確認ください。";
+      }
+    });
+
+    async function logout() {
+      await supabaseClient.auth.signOut();
+    }
+
+    // ダッシュボード初期ロード
+    async function loadDashboard() {
+      await loadProcessMasters();
+      if (userProfile.role === 'admin') {
+        loadCreativeProjects();
+        loadSalesProjects();
+      }
+    }
+
+    // 工程マスター取得
+    async function loadProcessMasters() {
+      const { data } = await supabaseClient.from('process_masters').select('*').order('sort_order');
+      processMasters = data || [];
+
+      // 設定テーブル
+      const tbody = document.getElementById('masterTableBody');
+      tbody.innerHTML = processMasters.map(p => `
+        <tr class="border-b">
+          <td class="py-2 font-medium">${p.name}</td>
+          <td class="py-2 text-slate-500">${p.standard_days} 日間</td>
+        </tr>
+      `).join('');
+
+      // 新規起票時のチェックボックス
+      const checkContainer = document.getElementById('processCheckboxes');
+      checkContainer.innerHTML = processMasters.map(p => `
+        <label class="flex items-center space-x-2 cursor-pointer">
+          <input type="checkbox" value="${p.id}" data-days="${p.standard_days}" data-name="${p.name}" checked class="rounded text-blue-600">
+          <span class="text-xs">${p.name} (${p.standard_days}日)</span>
+        </label>
+      `).join('');
+
+      // デフォルト着手日を明日にセット
+      const tmrw = new Date();
+      tmrw.setDate(tmrw.getDate() + 1);
+      document.getElementById('autoCalcStartDate').value = tmrw.toISOString().split('T')[0];
+    }
+
+    // 制作案件ロード
+    async function loadCreativeProjects() {
+      const { data: prjs } = await supabaseClient
+        .from('projects')
+        .select('*, tasks(*)')
+        .eq('type', 'creative')
+        .order('created_at', { ascending: false });
+
+      const container = document.getElementById('projectList');
+      if (!prjs || prjs.length === 0) {
+        container.innerHTML = '<div class="p-8 text-center text-slate-400 bg-white rounded-xl border">進行中の案件はありません</div>';
+        return;
+      }
+
+      container.innerHTML = prjs.map(p => `
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-xs text-slate-400 font-medium">${p.client_name || 'クライアント未設定'}</span>
+              <h3 class="text-base font-bold text-slate-800">${p.title}</h3>
+            </div>
+            <div class="flex items-center space-x-2">
+              ${p.drive_url ? `<a href="${p.drive_url}" target="_blank" class="text-xs text-blue-600 hover:underline">Drive ↗</a>` : ''}
+              <span class="text-xs px-2.5 py-1 rounded-full font-medium bg-blue-50 text-blue-700">${p.status}</span>
+            </div>
+          </div>
+
+          <!-- タスクパイプライン一覧 -->
+          <div class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            ${(p.tasks || []).sort((a,b)=>a.sort_order - b.sort_order).map(t => `
+              <div class="p-3 rounded-lg border text-xs space-y-1 ${t.status === '完了' ? 'bg-slate-50 border-slate-200 text-slate-400' : 'bg-white border-blue-100'}">
+                <div class="flex justify-between font-bold">
+                  <span>${t.title}</span>
+                  <span class="${t.status === '提出・確認待ち' ? 'text-amber-600 font-bold' : ''}">${t.status}</span>
+                </div>
+                <div class="text-[11px] text-slate-500">期日: ${t.deadline || '未設定'}</div>
+                ${t.deliverable_url ? `<a href="${t.deliverable_url}" target="_blank" class="text-blue-500 underline truncate block">提出物リンク ↗</a>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // 制作案件作成 ＆ 納期自動計算
+    async function createCreativeProject() {
+      const title = document.getElementById('newPrjTitle').value;
+      const client = document.getElementById('newPrjClient').value;
+      const drive = document.getElementById('newPrjDrive').value;
+      const startDateStr = document.getElementById('autoCalcStartDate').value;
+
+      if (!title) return alert('案件名を入力してください');
+
+      // 1. プロジェクト作成
+      const { data: prj, error: prjErr } = await supabaseClient.from('projects').insert({
+        type: 'creative',
+        title: title,
+        client_name: client,
+        drive_url: drive,
+        status: '進行中'
+      }).select().single();
+
+      if (prjErr) return alert(prjErr.message);
+
+      // 2. 選択された工程のタスクを自動計算して作成
+      const checkedBoxes = Array.from(document.querySelectorAll('#processCheckboxes input:checked'));
+      let currentDate = new Date(startDateStr || new Date());
+
+      const tasksToInsert = [];
+      checkedBoxes.forEach((cb, idx) => {
+        const days = parseInt(cb.dataset.days, 10);
+        // 日数を加算して締切を決定
+        currentDate.setDate(currentDate.getDate() + days);
+        tasksToInsert.push({
+          project_id: prj.id,
+          title: cb.dataset.name,
+          deadline: currentDate.toISOString().split('T')[0],
+          sort_order: idx + 1,
+          status: '未着手'
+        });
+      });
+
+      if (tasksToInsert.length > 0) {
+        await supabaseClient.from('tasks').insert(tasksToInsert);
+      }
+
+      closeModal('newProjectModal');
+      loadCreativeProjects();
+    }
+
+    // 営業案件ロード
+    async function loadSalesProjects() {
+      const { data: sales } = await supabaseClient
+        .from('projects')
+        .select('*')
+        .eq('type', 'sales')
+        .order('created_at', { ascending: false });
+
+      const container = document.getElementById('salesList');
+      if (!sales || sales.length === 0) {
+        container.innerHTML = '<div class="col-span-3 p-8 text-center text-slate-400 bg-white rounded-xl border">営業リードはありません</div>';
+        return;
+      }
+
+      container.innerHTML = sales.map(s => `
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
+          <div class="flex justify-between items-start">
+            <h4 class="font-bold text-sm text-slate-800">${s.title}</h4>
+            <select onchange="updateSalesStatus('${s.id}', this.value)" class="text-xs px-2 py-1 border rounded bg-slate-50 font-medium">
+              ${['リード', '初回MTG', '提案中', '成約', '失注'].map(st => `
+                <option value="${st}" ${s.status === st ? 'selected' : ''}>${st}</option>
+              `).join('')}
+            </select>
+          </div>
+          <div class="text-xs text-slate-500">
+            次回MTG: ${s.next_meeting_at ? new Date(s.next_meeting_at).toLocaleString('ja-JP') : '未定'}
+          </div>
+          ${s.meeting_notes_url ? `<a href="${s.meeting_notes_url}" target="_blank" class="text-xs text-blue-600 block hover:underline truncate">議事録リンク ↗</a>` : ''}
+          ${s.status === '成約' ? `<div class="p-2 bg-emerald-50 text-emerald-700 text-[11px] rounded font-medium">✓ 成約済（Discordチャンネル連携対象）</div>` : ''}
+        </div>
+      `).join('');
+    }
+
+    async function updateSalesStatus(id, newStatus) {
+      await supabaseClient.from('projects').update({ status: newStatus }).eq('id', id);
+      if (newStatus === '成約') {
+        alert('【成約ステータス更新】Discord連携スクリプトのトリガー対象になります！');
+      }
+      loadSalesProjects();
+    }
+
+    async function createSalesLead() {
+      const title = document.getElementById('salesTitle').value;
+      const meeting = document.getElementById('salesMeeting').value;
+      const notes = document.getElementById('salesNotesUrl').value;
+      if (!title) return alert('案件名を入力してください');
+
+      await supabaseClient.from('projects').insert({
+        type: 'sales',
+        title: title,
+        next_meeting_at: meeting ? new Date(meeting).toISOString() : null,
+        meeting_notes_url: notes,
+        status: 'リード'
+      });
+
+      closeModal('newSalesModal');
+      loadSalesProjects();
+    }
+
+    // クリエイター（User）用タスクロード＆提出
+    async function loadUserTasks() {
+      const { data: tasks } = await supabaseClient
+        .from('tasks')
+        .select('*, projects(title, drive_url)')
+        .eq('assignee_id', currentUser.id)
+        .order('deadline', { ascending: true });
+
+      const container = document.getElementById('userTaskList');
+      if (!tasks || tasks.length === 0) {
+        container.innerHTML = '<div class="col-span-2 p-8 text-center text-slate-400 bg-white rounded-xl border">現在アサインされているタスクはありません</div>';
+        return;
+      }
+
+      container.innerHTML = tasks.map(t => `
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+          <div class="text-xs text-slate-400 font-medium">${t.projects?.title || '案件名なし'}</div>
+          <h4 class="text-base font-bold">${t.title}</h4>
+          <div class="text-xs text-slate-500">締切期日: <span class="font-bold text-slate-800">${t.deadline || '未定'}</span></div>
+          
+          <div class="pt-2 border-t space-y-2">
+            <label class="block text-xs text-slate-600 font-medium">提出物URL（Googleドライブ等）:</label>
+            <input type="url" id="deliv_${t.id}" value="${t.deliverable_url || ''}" class="w-full px-3 py-1.5 border rounded text-xs" placeholder="https://...">
+            <div class="flex justify-between items-center pt-1">
+              <span class="text-xs font-semibold text-blue-600">ステータス: ${t.status}</span>
+              <button onclick="submitTask('${t.id}')" class="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 transition">
+                提出・確認待ちにする
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function submitTask(taskId) {
+      const url = document.getElementById(`deliv_${taskId}`).value;
+      if (!url) return alert('提出物URLを入力してください');
+
+      await supabaseClient.from('tasks').update({
+        deliverable_url: url,
+        status: '提出・確認待ち'
+      }).eq('id', taskId);
+
+      alert('提出が完了しました！管理者に通知されます。');
+      loadUserTasks();
+    }
+
+    // UIタブ切り替え
+    function switchTab(tab) {
+      ['creative', 'sales', 'master'].forEach(t => {
+        document.getElementById(`${t}Section`).classList.toggle('hidden', t !== tab);
+        const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        if (t === tab) {
+          btn.className = "pb-3 px-2 font-medium text-sm border-b-2 border-blue-600 text-blue-600";
+        } else {
+          btn.className = "pb-3 px-2 font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700";
+        }
+      });
+    }
+
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    init();
+  </script>
+</body>
+</html>
