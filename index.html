@@ -279,7 +279,32 @@
     async function logout() {
       await supabaseClient.auth.signOut();
     }
+// パスワードで直接ログインする関数
+    async function loginWithPassword() {
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      const msg = document.getElementById('loginMsg');
+      
+      if (!email || !password) {
+        alert('メールアドレスとパスワードの両方を入力してください');
+        return;
+      }
 
+      msg.classList.remove('hidden', 'text-red-500', 'text-emerald-600');
+      msg.innerText = "ログイン中...";
+
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+      if (error) {
+        msg.classList.add('text-red-500');
+        msg.innerText = "ログインエラー: " + error.message;
+      } else {
+        msg.classList.add('hidden');
+      }
+    }
     // ダッシュボード初期ロード
     async function loadDashboard() {
       await loadProcessMasters();
