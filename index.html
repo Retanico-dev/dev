@@ -1,12 +1,10 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <!-- ▼▼▼ ここにご自身のSupabase情報を貼り付けてください ▼▼▼ -->
   <script>
-    const SUPABASE_URL = "YOUR_SUPABASE_URL";
-    const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+    const SUPABASE_URL = "https://griosberitrswzkynewx.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdyaW9zYmVyaXRyc3d6a3luZXd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzNzUxMDksImV4cCI6MjEwNjk1MTEwOX0.LYWUkTS4s9oTuVR8DdM0mIGduQuGc37jxjpGN3fxNEc";
   </script>
-  <!-- ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ -->
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -165,10 +163,6 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       try {
-        if (!SUPABASE_URL || SUPABASE_URL === "YOUR_SUPABASE_URL") {
-          alert("SUPABASE_URL が設定されていません。");
-          return;
-        }
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       } catch (err) {
         alert("初期化エラー: " + err.message);
@@ -296,7 +290,6 @@
       document.getElementById('autoCalcStartDate').value = today.toISOString().split('T')[0];
     }
 
-    // 制作案件ロード（誰ボールか＆期日アラートを判定）
     async function loadCreativeProjects() {
       const { data: prjs } = await supabaseClient
         .from('projects')
@@ -314,8 +307,6 @@
 
       container.innerHTML = prjs.map(p => {
         const sortedTasks = (p.tasks || []).sort((a,b) => a.sort_order - b.sort_order);
-        
-        // 現在誰ボールかを判定（未完了の最初のタスクを探す）
         const currentTask = sortedTasks.find(t => t.status !== '完了');
         let ballBadgeHtml = '';
 
@@ -323,7 +314,7 @@
           ballBadgeHtml = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">✓ 全工程完了</span>`;
         } else if (currentTask.status === '提出・確認待ち') {
           ballBadgeHtml = `
-            <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300 animate-pulse">
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
               🟡 社内/クライアント確認待ち（${currentTask.title}）
             </span>`;
         } else {
@@ -352,7 +343,6 @@
               </div>
             </div>
 
-            <!-- 工程タスク一覧 -->
             <div class="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               ${sortedTasks.map(t => {
                 const isOverdue = t.deadline && t.deadline < todayStr && t.status !== '完了';
@@ -375,7 +365,6 @@
                       </select>
                     </div>
 
-                    <!-- 担当者アサイン切り替え -->
                     <div class="flex items-center space-x-1">
                       <span class="text-[10px] text-slate-400">担当:</span>
                       <select onchange="assignTask('${t.id}', this.value)" class="text-[11px] w-full px-1 py-0.5 border rounded bg-white">
@@ -386,7 +375,6 @@
                       </select>
                     </div>
 
-                    <!-- 期限日 -->
                     <div class="flex items-center justify-between text-[11px] pt-1 border-t">
                       <span class="text-slate-400">期限:</span>
                       <input type="date" value="${t.deadline \vert{}\vert{} ''}" onchange="updateTaskDeadline('${t.id}', this.value)" class="border rounded px-1 text-[11px] ${isOverdue ? 'text-red-600 font-bold bg-red-50' : 'text-slate-700'}">
