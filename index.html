@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+  <!-- ▼▼▼ ここにご自身のSupabase情報を貼り付けてください ▼▼▼ -->
+  <script>
+    const SUPABASE_URL = "https://griosberitrswzkynewx.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdyaW9zYmVyaXRyc3d6a3luZXd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzNzUxMDksImV4cCI6MjEwNjk1MTEwOX0.LYWUkTS4s9oTuVR8DdM0mIGduQuGc37jxjpGN3fxNEc";
+  </script>
+  <!-- ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ -->
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Project Flow - 進行管理</title>
@@ -157,20 +164,15 @@
   </div>
 
   <script>
-    // === 設定項目（ここをご自身の値に置き換えてください） ===
-    const SUPABASE_URL = "YOUR_SUPABASE_URL";
-    const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
-
     let supabaseClient = null;
     let currentUser = null;
     let userProfile = null;
     let processMasters = [];
 
     window.addEventListener('DOMContentLoaded', () => {
-      // クライアント初期化
       try {
         if (!SUPABASE_URL || SUPABASE_URL === "YOUR_SUPABASE_URL") {
-          alert("エラー: SUPABASE_URL が設定されていません。コード先頭付近のURLを書き換えてください。");
+          alert("エラー: 5行目の SUPABASE_URL が設定されていません。ご自身のURLに書き換えてください。");
           return;
         }
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -179,7 +181,6 @@
         return;
       }
 
-      // ボタンのクリックイベントを確実に登録
       const btn = document.getElementById('btnPwLogin');
       if (btn) {
         btn.addEventListener('click', handlePasswordLogin);
@@ -248,7 +249,6 @@
           renderAuthUI(true);
           loadDashboard();
         } else {
-          // profilesにまだ行がない場合は臨時でadmin扱いにする救済措置
           userProfile = { role: 'admin', email: currentUser.email, name: currentUser.email.split('@')[0] };
           renderAuthUI(true);
           loadDashboard();
