@@ -521,7 +521,30 @@
     function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
-    init();
+    // 初期化（URLのトークンを確実に検出してログイン完了させる）
+    async function init() {
+      // 1. URLに付いてきた認証トークンをセッションに反映
+      const { data: { session }, error } = await supabaseClient.auth.getSession();
+      
+      if (session) {
+        currentUser = session.user;
+        await loadUserProfile();
+      } else {
+        renderAuthUI(false);
+      }
+
+      // 2. 認証状態の変化を監視
+      supabaseClient.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_IN' || session) {
+          currentUser = session?.user;
+          await loadUserProfile();
+        } else if (event === 'SIGNED_OUT') {
+          currentUser = null;
+          userProfile = null;
+          renderAuthUI(false);
+        }
+      });
+    }
   </script>
 </body>
 </html>
