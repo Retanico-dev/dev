@@ -83,7 +83,6 @@
 
       <!-- クリエイター用タスク表示 -->
       <div id="userTaskSection" class="hidden space-y-6">
-        <!-- 進行中タスク -->
         <div class="space-y-3">
           <div class="flex flex-wrap justify-between items-center gap-1">
             <h2 class="text-base sm:text-lg font-bold">担当タスク一覧（進行中）</h2>
@@ -92,7 +91,6 @@
           <div id="userActiveTaskList" class="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2"></div>
         </div>
 
-        <!-- 完了タスクのアコーディオンまとめ -->
         <div class="border-t border-slate-200 dark:border-slate-800 pt-4">
           <button onclick="toggleCompletedTasksAccordion()" type="button" class="flex items-center space-x-2 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition py-1">
             <span id="completedAccordionArrow">▶</span>
@@ -138,7 +136,7 @@
         <div id="leadsList" class="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div>
       </div>
 
-      <!-- 更新ログ（全案件・全工程の最新コミュニケーションログ専用タブ） -->
+      <!-- 更新ログ専用タブ -->
       <div id="updatesSection" class="hidden space-y-4 max-w-4xl">
         <div class="flex flex-wrap justify-between items-center gap-2">
           <div>
@@ -226,7 +224,7 @@
     </div>
   </div>
 
-  <!-- モーダル: タスク提出・フィードバックログ詳細（既読化リアルタイム対応） -->
+  <!-- モーダル: タスク提出・フィードバックログ詳細（自動既読＋未読復元対応） -->
   <div id="taskLogModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-4 sm:p-6 space-y-4 border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
       <div class="flex items-start justify-between border-b dark:border-slate-800 pb-3">
@@ -234,7 +232,12 @@
           <span id="taskLogStatusBadge" class="px-2 py-0.5 rounded text-[10px] font-bold"></span>
           <h3 id="taskLogModalTitle" class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 mt-1"></h3>
         </div>
-        <button onclick="closeModal('taskLogModal')" class="text-slate-400 hover:text-slate-600 text-sm">✕</button>
+        <div class="flex items-center space-x-2">
+          <button id="btnUnreadToggleInModal" onclick="toggleTaskUnreadManual()" class="text-[11px] px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium transition">
+            未読に戻す
+          </button>
+          <button onclick="closeModal('taskLogModal')" class="text-slate-400 hover:text-slate-600 text-sm px-1">✕</button>
+        </div>
       </div>
 
       <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border dark:border-slate-700 space-y-2">
@@ -257,12 +260,7 @@
       </div>
 
       <div class="space-y-2 pt-1">
-        <div class="flex justify-between items-center">
-          <h4 class="text-xs font-bold text-slate-500">提出・やり取りタイムライン</h4>
-          <button id="btnMarkReadInModal" onclick="markCurrentTaskLogsAsRead()" class="text-[11px] px-2.5 py-1 rounded font-medium border transition">
-            ✓ 既読にする
-          </button>
-        </div>
+        <h4 class="text-xs font-bold text-slate-500">提出・やり取りタイムライン</h4>
         <div id="taskLogTimeline" class="space-y-2 max-h-56 overflow-y-auto text-xs"></div>
       </div>
 
@@ -494,6 +492,11 @@
     let cachedCreativeProjects = [];
     let isCompletedAccordionOpen = false;
 
+    function getCurrentUserIdentifier() {
+      if (!userProfile) return '';
+      return userProfile.name || userProfile.user_id || userProfile.email || '';
+    }
+
     function getDisplayName(profile) {
       if (!profile) return '未アサイン';
       return profile.name || profile.user_id || '未設定';
@@ -521,28 +524,71 @@
       return m + '/' + d;
     }
 
-    // ログ未読判定（各ログ単体の未読判定）
-    function isLogItemUnread(logItem, taskId) {
+    // ログ未読判定（read_by配列に自分が入っているかどうか）
+    function isLogItemUnread(logItem) {
       if (!logItem) return false;
-      const currentUserName = userProfile ? (userProfile.name || userProfile.user_id || '') : '';
-      if (logItem.user === currentUserName) return false;
+      const myId = getCurrentUserIdentifier();
+      if (!myId) return false;
+      if (logItem.user === myId) return false; // 自分が投稿したログは未読対象外
 
-      const readStorageKey = 'read_task_log_' + (currentUser ? currentUser.id : 'anon') + '_' + taskId;
-      const lastReadAt = localStorage.getItem(readStorageKey);
-      if (!lastReadAt) return true;
-      return new Date(logItem.at) > new Date(lastReadAt);
+      const readByList = logItem.read_by || [];
+      return !readByList.includes(myId);
     }
 
     function getTaskUnreadStatus(task) {
       const logs = task.logs || [];
       if (logs.length === 0) return false;
-      return logs.some(l => isLogItemUnread(l, task.id));
+      return logs.some(l => isLogItemUnread(l));
     }
 
-    function setTaskAsRead(taskId) {
-      if (!currentUser) return;
-      const readStorageKey = 'read_task_log_' + currentUser.id + '_' + taskId;
-      localStorage.setItem(readStorageKey, new Date().toISOString());
+    // 開いた瞬間に全ログを自動既読（Supabase同期）
+    async function autoMarkTaskAsRead(task) {
+      const myId = getCurrentUserIdentifier();
+      if (!myId || !task || !task.logs) return;
+
+      let hasChange = false;
+      const updatedLogs = task.logs.map(l => {
+        const readBy = Array.isArray(l.read_by) ? [...l.read_by] : [];
+        if (l.user !== myId && !readBy.includes(myId)) {
+          readBy.push(myId);
+          hasChange = true;
+          return { ...l, read_by: readBy };
+        }
+        return l;
+      });
+
+      if (hasChange) {
+        task.logs = updatedLogs;
+        await supabaseClient.from('tasks').update({ logs: updatedLogs }).eq('id', task.id);
+        // 背景のカードを再描画して赤丸を消す
+        loadCreativeProjects();
+        if (adminViewMode === 'creator' || (userProfile && userProfile.role !== 'admin')) {
+          loadUserTasks();
+        }
+      }
+    }
+
+    // 手動で未読に戻す
+    async function toggleTaskUnreadManual() {
+      if (!selectedTaskForLog || !selectedTaskForLog.logs) return;
+      const myId = getCurrentUserIdentifier();
+      if (!myId) return;
+
+      const updatedLogs = selectedTaskForLog.logs.map(l => {
+        if (l.user !== myId && Array.isArray(l.read_by)) {
+          return { ...l, read_by: l.read_by.filter(id => id !== myId) };
+        }
+        return l;
+      });
+
+      selectedTaskForLog.logs = updatedLogs;
+      await supabaseClient.from('tasks').update({ logs: updatedLogs }).eq('id', selectedTaskForLog.id);
+
+      renderTaskLogTimeline(selectedTaskForLog.logs);
+      closeModal('taskLogModal');
+      loadCreativeProjects();
+      loadUserTasks();
+      alert('タスクを未読（NEW）に戻しました！');
     }
 
     function toggleCompletedTasksAccordion() {
@@ -1155,12 +1201,15 @@
           const badgeColor = l.type === '提出' ? 'bg-blue-100 text-blue-700' : l.type === 'リテイク指示' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700';
           const urlHtml = l.url ? '<div class="mt-1"><a href="' + l.url + '" target="_blank" class="inline-flex items-center text-blue-600 dark:text-blue-400 font-bold hover:underline bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded text-[11px]">📦 成果物URL: ' + l.url + ' ↗</a></div>' : '';
 
+          const readMembers = (l.read_by || []).length > 0 ? ('<span class="text-[10px] text-slate-400 ml-2">既読: ' + l.read_by.join(', ') + '</span>') : '';
+
           return '<div class="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-lg border dark:border-slate-700 space-y-1">'
             + '<div class="flex justify-between items-center text-[10px]">'
             + '<div class="flex items-center space-x-1.5">'
             + '<span class="font-bold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">[' + l.taskTitle + ']</span>'
             + '<span class="font-bold px-1.5 py-0.5 rounded ' + badgeColor + '">' + l.type + '</span>'
             + '<span class="text-slate-500">(' + (l.user || '不明') + ')</span>'
+            + readMembers
             + '</div>'
             + '<span class="text-slate-400">' + dateStr + '</span>'
             + '</div>'
@@ -1174,9 +1223,9 @@
     }
 
     // ----------------------------------------------------
-    // 単体タスクのログモーダル（提出・リテイク）
+    // 単体タスクのログモーダル（自動既読＋未読復元対応）
     // ----------------------------------------------------
-    function openTaskLogModal(taskId) {
+    async function openTaskLogModal(taskId) {
       let targetTask = null;
       let targetPrj = null;
       for (const p of cachedCreativeProjects) {
@@ -1200,35 +1249,11 @@
       document.getElementById('taskLogInputText').value = '';
       document.getElementById('taskLogStatusSelect').value = '';
 
-      updateModalReadButtonUI();
       renderTaskLogTimeline(targetTask.logs || []);
       openModal('taskLogModal');
-    }
 
-    function updateModalReadButtonUI() {
-      const btn = document.getElementById('btnMarkReadInModal');
-      if (!btn || !selectedTaskForLog) return;
-      const isUnread = getTaskUnreadStatus(selectedTaskForLog);
-      if (isUnread) {
-        btn.innerText = '✓ 既読にする';
-        btn.className = 'text-[11px] px-2.5 py-1 rounded font-bold bg-blue-50 dark:bg-blue-950/70 border border-blue-400 text-blue-700 dark:text-blue-300 hover:bg-blue-100 cursor-pointer transition';
-      } else {
-        btn.innerText = '✓ 既読済み';
-        btn.className = 'text-[11px] px-2.5 py-1 rounded font-medium bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700 cursor-default transition';
-      }
-    }
-
-    function markCurrentTaskLogsAsRead() {
-      if (!selectedTaskForLog) return;
-      setTaskAsRead(selectedTaskForLog.id);
-      
-      // リアルタイムにUI更新（モーダルを閉じずにスッと反映）
-      updateModalReadButtonUI();
-      renderTaskLogTimeline(selectedTaskForLog.logs || []);
-      
-      // ボード・タスク一覧を両方更新して赤い新着マークを消す
-      loadCreativeProjects();
-      loadUserTasks();
+      // 開いた時点で自動的に既読をつける
+      await autoMarkTaskAsRead(targetTask);
     }
 
     function renderTaskLogTimeline(logs) {
@@ -1240,17 +1265,19 @@
       }
 
       container.innerHTML = logs.map(l => {
-        const isUnread = selectedTaskForLog ? isLogItemUnread(l, selectedTaskForLog.id) : false;
+        const isUnread = isLogItemUnread(l);
         const dateStr = new Date(l.at).toLocaleString('ja-JP');
         const urlHtml = l.url ? '<div class="mt-1"><a href="' + l.url + '" target="_blank" class="inline-flex items-center text-blue-600 dark:text-blue-400 font-bold hover:underline bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded text-[11px]">📦 提出URL: ' + l.url + ' ↗</a></div>' : '';
         const badgeColor = l.type === '提出' ? 'bg-blue-100 text-blue-700' : l.type === 'リテイク指示' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700';
         const unreadTag = isUnread ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500 text-white animate-pulse">NEW</span>' : '';
+        const readMembers = (l.read_by || []).length > 0 ? ('<span class="text-[10px] text-slate-400 ml-1">既読: ' + l.read_by.join(', ') + '</span>') : '';
 
         return '<div class="p-2.5 rounded-lg border transition ' + (isUnread ? 'bg-amber-50/60 dark:bg-amber-950/30 border-amber-300 dark:border-amber-700' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700') + ' space-y-1">'
           + '<div class="flex justify-between items-center text-[10px]">'
           + '<div class="flex items-center space-x-1.5">'
           + '<span class="font-bold px-1.5 py-0.5 rounded ' + badgeColor + '">' + l.type + ' (' + (l.user || '不明') + ')</span>'
           + unreadTag
+          + readMembers
           + '</div>'
           + '<span class="text-slate-400">' + dateStr + '</span>'
           + '</div>'
@@ -1268,7 +1295,7 @@
       if (!comment && !newStatus) return alert('コメントを入力するか、ステータスを選択してください');
 
       const logs = selectedTaskForLog.logs || [];
-      const currentUserName = userProfile ? (userProfile.name || userProfile.user_id || '管理者') : '管理者';
+      const currentUserName = getCurrentUserIdentifier() || '管理者';
 
       let logType = 'コメント';
       if (newStatus === 'リテイク') logType = 'リテイク指示';
@@ -1278,6 +1305,7 @@
         type: logType,
         user: currentUserName,
         comment: comment,
+        read_by: [currentUserName],
         at: new Date().toISOString()
       });
 
@@ -1289,7 +1317,6 @@
       const { error } = await supabaseClient.from('tasks').update(updateData).eq('id', selectedTaskForLog.id);
       if (error) return alert('保存失敗: ' + error.message);
 
-      setTaskAsRead(selectedTaskForLog.id);
       alert('ログを更新しました！');
       closeModal('taskLogModal');
       await loadCreativeProjects();
@@ -1327,6 +1354,7 @@
         const dateStr = new Date(l.at).toLocaleString('ja-JP');
         const badgeColor = l.type === '提出' ? 'bg-blue-100 text-blue-700' : l.type === 'リテイク指示' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700';
         const urlHtml = l.url ? '<div class="mt-1"><a href="' + l.url + '" target="_blank" class="inline-flex items-center text-blue-600 dark:text-blue-400 font-bold hover:underline bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded text-[11px]">📦 成果物URL: ' + l.url + ' ↗</a></div>' : '';
+        const readMembers = (l.read_by || []).length > 0 ? ('<span class="text-[10px] text-slate-400 ml-2">既読: ' + l.read_by.join(', ') + '</span>') : '';
 
         return '<div class="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-1.5 hover:border-slate-300 dark:hover:border-slate-700 transition">'
           + '<div class="flex flex-wrap items-center justify-between gap-1 text-[11px]">'
@@ -1340,6 +1368,7 @@
           + '<div class="flex items-center space-x-2 text-xs">'
           + '<span class="font-bold px-1.5 py-0.5 rounded text-[10px] ' + badgeColor + '">' + l.type + '</span>'
           + '<span class="text-slate-500 font-medium">投稿者: ' + (l.user || '不明') + '</span>'
+          + readMembers
           + '</div>'
           + (l.comment ? '<div class="text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-pre-wrap pl-1.5 border-l-2 border-slate-200 dark:border-slate-700">' + l.comment + '</div>' : '')
           + urlHtml
@@ -1689,9 +1718,10 @@
 
             const deadlineInputClass = isOverdue ? 'text-red-600 dark:text-red-400 font-bold bg-red-100/60 dark:bg-red-950/70 border-red-300' : 'text-slate-700 dark:text-slate-300';
             
-            const unreadBadge = hasUnread ? '<span class="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse ml-1" title="新着ログあり"></span>' : '';
+            // 未読時は赤丸＆NEWハイライト
+            const unreadBadge = hasUnread ? '<span class="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse ml-1" title="未読ログあり"></span>' : '';
             const logButtonClass = hasUnread 
-              ? 'bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-300 border border-amber-300 font-bold' 
+              ? 'bg-red-50 dark:bg-red-950/70 text-red-700 dark:text-red-300 border border-red-400 font-bold' 
               : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold';
 
             const logButtonHtml = '<button onclick="openTaskLogModal(\'' + t.id + '\')" class="w-full py-1 text-center rounded text-[11px] transition flex items-center justify-center space-x-1 ' + logButtonClass + '">'
@@ -1896,9 +1926,9 @@
             statusBadge = '<span class="text-[11px] font-semibold text-amber-600">🟡 提出・確認待ち</span>';
           }
 
-          const unreadBadge = hasUnread ? '<span class="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse ml-1" title="新着コメントあり"></span>' : '';
+          const unreadBadge = hasUnread ? '<span class="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse ml-1" title="未読ログあり"></span>' : '';
           const logBtnClass = hasUnread 
-            ? 'bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-300 border border-amber-300 font-bold' 
+            ? 'bg-red-50 dark:bg-red-950/70 text-red-700 dark:text-red-300 border border-red-400 font-bold' 
             : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300';
 
           return '<div class="p-4 rounded-xl border shadow-sm space-y-3 transition ' + cardBg + '">'
@@ -1949,13 +1979,14 @@
 
       const { data: task } = await supabaseClient.from('tasks').select('*').eq('id', taskId).single();
       const logs = (task && task.logs) ? task.logs : [];
-      const currentUserName = userProfile ? (userProfile.name || userProfile.user_id || 'クリエイター') : 'クリエイター';
+      const currentUserName = getCurrentUserIdentifier() || 'クリエイター';
 
       logs.unshift({
         type: '提出',
         user: currentUserName,
         url: url,
         comment: comment || '成果物を提出しました。',
+        read_by: [currentUserName],
         at: new Date().toISOString()
       });
 
@@ -1967,7 +1998,6 @@
 
       if (error) return alert('提出エラー: ' + error.message);
 
-      setTaskAsRead(taskId);
       alert('提出が完了し、ログに記録されました！');
       loadUserTasks();
     }
