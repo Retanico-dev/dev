@@ -86,17 +86,26 @@
         <div id="salesList" class="grid gap-4 md:grid-cols-3"></div>
       </div>
 
-      <!-- Admin: 工程マスター設定 -->
-      <div id="masterSection" class="hidden space-y-6 max-w-2xl">
-        <h2 class="text-lg font-bold">標準工程・仕掛日数設定</h2>
-        <div class="bg-white p-4 rounded-xl border border-slate-200">
+      <!-- Admin: 工程マスター設定（UI編集可能） -->
+      <div id="masterSection" class="hidden space-y-6 max-w-3xl">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-lg font-bold">標準工程・仕掛日数設定</h2>
+            <p class="text-xs text-slate-500 mt-1">ここで変更した日数は、新規案件起票時の自動納期計算に即座に反映されます。</p>
+          </div>
+          <button onclick="saveAllMasterDays()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition shadow-sm">
+            日数を一括保存
+          </button>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b text-slate-400 text-xs text-left">
-                <th class="py-2">ライン</th>
-                <th class="py-2">工程名</th>
-                <th class="py-2">先行条件</th>
-                <th class="py-2">標準所要日数</th>
+                <th class="py-2.5 px-3">ライン</th>
+                <th class="py-2.5 px-3">工程名</th>
+                <th class="py-2.5 px-3">先行条件</th>
+                <th class="py-2.5 px-3">標準所要日数</th>
+                <th class="py-2.5 px-3 text-right">操作</th>
               </tr>
             </thead>
             <tbody id="masterTableBody"></tbody>
@@ -181,7 +190,7 @@
           <label class="text-xs text-slate-500">着手予定日:</label>
           <input type="date" id="autoCalcStartDate" class="px-2 py-1 border rounded text-sm">
         </div>
-        <div class="text-[11px] text-slate-400 mb-2">※楽曲（作曲→作詞/編曲→Rec→Mix→Mas）とMV（イラスト→映像）の並行日数を自動計算します</div>
+        <div class="text-[11px] text-slate-400 mb-2">※マスター設定の日数をもとに、楽曲とMVの並行納期を自動計算します</div>
         <div id="processCheckboxes" class="space-y-1.5 max-h-48 overflow-y-auto p-2 bg-slate-50 rounded-lg border text-sm"></div>
       </div>
 
@@ -221,8 +230,8 @@
     let allProfiles = [];
     const collapsedProjects = new Set();
 
-    // 業務パイプライン定義（先行工程依存・並び順）
-    const WORKFLOW_DEF = [
+    // デフォルトの業務パイプライン定義
+    let workflowMasters = [
       { key: 'compose', name: '作曲', days: 7, track: 'music', order: 1, depends: [] },
       { key: 'lyrics', name: '作詞', days: 5, track: 'music', order: 2, depends: ['作曲'] },
       { key: 'arrange', name: '編曲', days: 7, track: 'music', order: 3, depends: ['作曲'] },
@@ -328,7 +337,7 @@
     }
 
     async function loadDashboard() {
-      await loadAllProfiles();
+      await Promise.all([loadMasterFromDB(), loadAllProfiles()]);
       renderMasterTable();
       renderCheckboxes();
       if (userProfile.role === 'admin') {
@@ -338,30 +347,120 @@
       }
     }
 
+    // Supabaseからマスター日数を読み込む（DBにデータがあれば上書き、無ければ初期作成）
+    async function loadMasterFromDB() {
+      try {
+        const { data, error } = await supabaseClient.from('process_masters').select('*');
+        if (data && data.length > 0) {
+          // DBの値をworkflowMastersに同期
+          workflowMasters.forEach(w => {
+            const found = data.find(d => d.name === w.name);
+            if (found && typeof found.standard_days === 'number') {
+              w.days = found.standard_days;
+              w.db_id = found.id;
+            }
+          });
+        } else {
+          // DBが空なら初期シードを投入
+          const inserts = workflowMasters.map((w, idx) => ({
+            name: w.name,
+            standard_days: w.days,
+            sort_order: idx + 1
+          }));
+          await supabaseClient.from('process_masters').insert(inserts);
+        }
+      } catch (err) {
+        console.error("Master load error:", err);
+      }
+    }
+
     async function loadAllProfiles() {
       const { data } = await supabaseClient.from('profiles').select('*').order('created_at', { ascending: false });
       allProfiles = data || [];
     }
 
+    // 工程マスター設定テーブルのレンダリング（入力フォーム化）
     function renderMasterTable() {
       const tbody = document.getElementById('masterTableBody');
       if (!tbody) return;
-      tbody.innerHTML = WORKFLOW_DEF.map(w => {
+      tbody.innerHTML = workflowMasters.map(w => {
         const trackBadge = w.track === 'music' ? '<span class="px-1.5 py-0.5 rounded text-[10px] bg-blue-100 text-blue-700">楽曲</span>' : '<span class="px-1.5 py-0.5 rounded text-[10px] bg-purple-100 text-purple-700">MV</span>';
         const dependsText = w.depends.length > 0 ? w.depends.join(' ＋ ') : '着手日';
-        return '<tr class="border-b last:border-b-0">'
-          + '<td class="py-2">' + trackBadge + '</td>'
-          + '<td class="py-2 font-medium">' + w.name + '</td>'
-          + '<td class="py-2 text-slate-500 text-xs">' + dependsText + '</td>'
-          + '<td class="py-2 text-slate-500">' + w.days + ' 日間</td>'
+
+        return '<tr class="border-b last:border-b-0 hover:bg-slate-50 transition">'
+          + '<td class="py-2.5 px-3">' + trackBadge + '</td>'
+          + '<td class="py-2.5 px-3 font-medium">' + w.name + '</td>'
+          + '<td class="py-2.5 px-3 text-slate-500 text-xs">' + dependsText + '</td>'
+          + '<td class="py-2.5 px-3">'
+          + '<div class="flex items-center space-x-1.5">'
+          + '<input type="number" min="1" max="90" id="input_days_' + w.key + '" value="' + w.days + '" class="w-16 px-2 py-1 border rounded text-xs font-bold text-slate-800 text-center focus:ring-2 focus:ring-blue-500 outline-none">'
+          + '<span class="text-xs text-slate-500">日間</span>'
+          + '</div>'
+          + '</td>'
+          + '<td class="py-2.5 px-3 text-right">'
+          + '<button onclick="saveSingleMasterDay(\'' + w.key + '\')" class="px-2.5 py-1 text-xs bg-slate-100 hover:bg-blue-600 hover:text-white rounded font-medium transition text-slate-700">保存</button>'
+          + '</td>'
           + '</tr>';
       }).join('');
+    }
+
+    // 1工程のみ保存
+    async function saveSingleMasterDay(key) {
+      const input = document.getElementById('input_days_' + key);
+      if (!input) return;
+      const newDays = parseInt(input.value, 10);
+      if (isNaN(newDays) || newDays < 1) return alert('1日以上で入力してください');
+
+      const target = workflowMasters.find(w => w.key === key);
+      if (!target) return;
+
+      target.days = newDays;
+
+      // DB更新
+      const { error } = await supabaseClient
+        .from('process_masters')
+        .upsert({ name: target.name, standard_days: newDays }, { onConflict: 'name' });
+
+      if (error) {
+        alert('保存エラー: ' + error.message);
+      } else {
+        renderCheckboxes();
+        alert('「' + target.name + '」の標準日数を ' + newDays + ' 日に更新しました！');
+      }
+    }
+
+    // 全工程の一括保存
+    async function saveAllMasterDays() {
+      const updates = [];
+      workflowMasters.forEach(w => {
+        const input = document.getElementById('input_days_' + w.key);
+        if (input) {
+          const val = parseInt(input.value, 10);
+          if (!isNaN(val) && val > 0) {
+            w.days = val;
+            updates.push({ name: w.name, standard_days: val });
+          }
+        }
+      });
+
+      if (updates.length === 0) return;
+
+      const { error } = await supabaseClient
+        .from('process_masters')
+        .upsert(updates, { onConflict: 'name' });
+
+      if (error) {
+        alert('一括保存エラー: ' + error.message);
+      } else {
+        renderCheckboxes();
+        alert('すべての標準工程日数を保存しました！');
+      }
     }
 
     function renderCheckboxes() {
       const checkContainer = document.getElementById('processCheckboxes');
       if (!checkContainer) return;
-      checkContainer.innerHTML = WORKFLOW_DEF.map(w => {
+      checkContainer.innerHTML = workflowMasters.map(w => {
         const tag = w.track === 'music' ? '[楽曲]' : '[MV]';
         return '<label class="flex items-center space-x-2 cursor-pointer">'
           + '<input type="checkbox" value="' + w.key + '" data-name="' + w.name + '" data-days="' + w.days + '" data-track="' + w.track + '" checked class="rounded text-blue-600">'
@@ -432,7 +531,7 @@
 
       tasks.forEach(t => {
         if (t.status === '完了') return;
-        const def = WORKFLOW_DEF.find(w => w.name === t.title);
+        const def = workflowMasters.find(w => w.name === t.title);
         const isReady = !def || def.depends.every(dep => completedSet.has(dep));
         if (isReady) {
           activeTasks.push(t);
@@ -468,10 +567,9 @@
       container.innerHTML = prjs.map(p => {
         const isCollapsed = collapsedProjects.has(p.id);
 
-        // 工程フロー順にタスクを厳密ソート
         const tasks = (p.tasks || []).sort((a,b) => {
-          const defA = WORKFLOW_DEF.find(w => w.name === a.title);
-          const defB = WORKFLOW_DEF.find(w => w.name === b.title);
+          const defA = workflowMasters.find(w => w.name === a.title);
+          const defB = workflowMasters.find(w => w.name === b.title);
           const orderA = defA ? defA.order : (a.sort_order || 99);
           const orderB = defB ? defB.order : (b.sort_order || 99);
           return orderA - orderB;
@@ -501,13 +599,12 @@
 
         const driveLinkHtml = p.drive_url ? '<a href="' + p.drive_url + '" target="_blank" onclick="event.stopPropagation();" class="text-xs px-2.5 py-1 bg-slate-100 hover:bg-slate-200 rounded text-slate-700 font-medium">Drive ↗</a>' : '';
 
-        // トラック別に分類（ソート順維持）
         const musicTasks = tasks.filter(t => {
-          const w = WORKFLOW_DEF.find(def => def.name === t.title);
+          const w = workflowMasters.find(def => def.name === t.title);
           return !w || w.track === 'music';
         });
         const mvTasks = tasks.filter(t => {
-          const w = WORKFLOW_DEF.find(def => def.name === t.title);
+          const w = workflowMasters.find(def => def.name === t.title);
           return w && w.track === 'mv';
         });
 
@@ -564,7 +661,6 @@
         const toggleBtnIcon = isCollapsed ? '▼ 展開' : '▲ 閉じる';
 
         return '<div class="bg-white rounded-xl border border-slate-200 shadow-sm transition overflow-hidden">'
-          // ヘッダー（クリックで開閉）
           + '<div onclick="toggleProjectCollapse(\'' + p.id + '\')" class="p-4 flex flex-wrap items-center justify-between gap-2 cursor-pointer hover:bg-slate-50 transition ' + (isCollapsed ? '' : 'border-b') + '">'
           + '<div class="flex items-center space-x-3">'
           + '<button type="button" class="text-xs font-semibold px-2 py-1 bg-slate-100 text-slate-600 rounded hover:bg-slate-200">' + toggleBtnIcon + '</button>'
@@ -579,10 +675,8 @@
           + '</div>'
           + '</div>'
 
-          // アコーディオン中身（折りたたみ対象）
           + (!isCollapsed ? (
             '<div class="p-5 space-y-4 bg-white">'
-            // 楽曲トラック表示
             + '<div class="space-y-1.5">'
             + '<div class="flex items-center space-x-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span><span class="text-xs font-bold text-slate-700">楽曲トラック (作曲 ➔ 作詞 ➔ 編曲 ➔ Rec ➔ Mix ➔ Mas)</span></div>'
             + '<div class="grid gap-2.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">'
@@ -590,7 +684,6 @@
             + '</div>'
             + '</div>'
 
-            // MVトラック表示
             + (mvTasks.length > 0 ? (
               '<div class="space-y-1.5 pt-2 border-t border-dashed">'
               + '<div class="flex items-center space-x-2"><span class="w-2 h-2 rounded-full bg-purple-500"></span><span class="text-xs font-bold text-slate-700">MVトラック (イラスト ➔ 映像)</span></div>'
@@ -648,8 +741,9 @@
       };
       const fmt = (d) => d.toISOString().split('T')[0];
 
+      // 最新のworkflowMastersから日数を取得
       const getD = (k) => {
-        const found = WORKFLOW_DEF.find(w => w.key === k);
+        const found = workflowMasters.find(w => w.key === k);
         return found ? found.days : 0;
       };
 
@@ -665,7 +759,7 @@
       dates.movie = addDays(dates.illust, getD('movie'));
 
       const tasksToInsert = [];
-      WORKFLOW_DEF.forEach(w => {
+      workflowMasters.forEach(w => {
         if (checkedKeys.has(w.key)) {
           tasksToInsert.push({
             project_id: prj.id,
@@ -705,7 +799,7 @@
 
         return '<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">'
           + '<div class="flex justify-between items-start">'
-          + '<h4 class="font-bold text-sm text-slate-800">' + s.title + '</h4>'
+          + '<h4 class="font-bold text-sm text-slate-800">${s.title}</h4>'
           + '<select onchange="updateSalesStatus(\'' + s.id + '\', this.value)" class="text-xs px-2 py-1 border rounded bg-slate-50 font-medium">'
           + statusOptions
           + '</select>'
