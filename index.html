@@ -288,7 +288,13 @@
     let userProfile = null;
     let allProfiles = [];
     const collapsedProjects = new Set();
-    let adminViewMode = 'admin'; // 'admin' | 'creator'
+    let adminViewMode = 'admin';
+
+    // ユーザー表示名の共通フォーマット関数（メアドは一切出さず、表示名優先、無ければID）
+    function getDisplayName(profile) {
+      if (!profile) return '未アサイン';
+      return profile.name || profile.user_id || '未設定';
+    }
 
     function initTheme() {
       const savedTheme = localStorage.getItem('theme');
@@ -319,7 +325,6 @@
       { key: 'movie', name: '映像 (MV)', days: 10, track: 'mv', order: 2, depends: ['イラスト'] }
     ];
 
-    // スマートログイン（IDまたはメアドでログイン）
     async function handleSmartLogin() {
       const identifier = document.getElementById('loginIdentifier').value.trim();
       const password = document.getElementById('loginPassword').value.trim();
@@ -331,7 +336,6 @@
 
       let loginEmail = identifier;
 
-      // 入力値に @ が含まれない場合はIDとみなし、profilesテーブルからメールアドレスを逆引き
       if (!identifier.includes('@')) {
         const { data: profile, error: searchErr } = await supabaseClient
           .from('profiles')
@@ -388,8 +392,8 @@
         userProfile = data || { 
           role: 'admin', 
           email: currentUser.email, 
-          name: currentUser.email.split('@')[0],
-          user_id: currentUser.email.split('@')[0]
+          name: '',
+          user_id: ''
         };
         renderAuthUI(true);
         loadDashboard();
@@ -414,9 +418,8 @@
           ? 'text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300' 
           : 'text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300';
 
-        // アカウント設定モーダルを開くリンク
         authActions.innerHTML = '<button onclick="openMyAccountModal()" class="text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600 underline" title="アカウント設定">'
-          + (userProfile.name || userProfile.user_id || userProfile.email) + ' ⚙️'
+          + getDisplayName(userProfile) + ' ⚙️'
           + '</button>'
           + '<button onclick="logout()" class="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 underline">ログアウト</button>';
 
@@ -442,7 +445,6 @@
       }
     }
 
-    // Admin ⇄ クリエイター視点の切り替え
     function toggleAdminViewMode() {
       adminViewMode = (adminViewMode === 'admin') ? 'creator' : 'admin';
       applyAdminViewMode();
@@ -469,7 +471,6 @@
       }
     }
 
-    // マイアカウント設定モーダル
     function openMyAccountModal() {
       document.getElementById('myAccountName').value = userProfile.name || '';
       document.getElementById('myAccountUserId').value = userProfile.user_id || '';
@@ -484,7 +485,6 @@
 
       if (!newName || !newUserId) return alert('表示名とユーザーIDは必須です');
 
-      // 1. profilesテーブル更新
       const { error: profileErr } = await supabaseClient
         .from('profiles')
         .update({ name: newName, user_id: newUserId })
@@ -492,7 +492,6 @@
 
       if (profileErr) return alert('更新エラー: ' + profileErr.message);
 
-      // 2. パスワード変更（入力があった場合のみ）
       if (newPassword) {
         if (newPassword.length < 6) return alert('パスワードは6文字以上で設定してください');
         const { error: pwErr } = await supabaseClient.auth.updateUser({ password: newPassword });
@@ -633,7 +632,6 @@
       document.getElementById('autoCalcStartDate').value = today.toISOString().split('T')[0];
     }
 
-    // メンバー管理テーブル（ID対応）
     function renderMembersTable() {
       const tbody = document.getElementById('membersTableBody');
       if (!tbody) return;
@@ -756,7 +754,7 @@
               return '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">🟡 確認待ち: ' + t.title + '</span>';
             }
             const assignee = allProfiles.find(u => u.id === t.assignee_id);
-            const assigneeName = assignee ? (assignee.name || assignee.user_id || assignee.email) : '未アサイン';
+            const assigneeName = getDisplayName(assignee);
             const isOverdue = t.deadline && t.deadline < todayStr;
             const badgeClass = isOverdue 
               ? 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-800' 
@@ -797,7 +795,7 @@
 
             const profileOptions = allProfiles.map(u => {
               const selected = t.assignee_id === u.id ? 'selected' : '';
-              const label = u.name ? (u.name + (u.user_id ? ' (' + u.user_id + ')' : '')) : (u.user_id || u.email);
+              const label = getDisplayName(u);
               return '<option value="' + u.id + '" ' + selected + '>' + label + '</option>';
             }).join('');
 
