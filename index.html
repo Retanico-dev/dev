@@ -25,7 +25,7 @@
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen transition-colors duration-200 antialiased selection:bg-blue-500 selection:text-white">
 
-  <!-- ヘッダー (スマホ対応: 縮小と折り返し防止) -->
+  <!-- ヘッダー -->
   <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50 transition-colors">
     <div class="max-w-7xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between gap-2">
       <div class="flex items-center space-x-2 min-w-0">
@@ -76,7 +76,7 @@
 
     <!-- 2. ダッシュボード画面 -->
     <div id="appView" class="hidden space-y-4 sm:space-y-6">
-      <!-- 上部タブ: スマホでは横スワイプ可能に -->
+      <!-- 上部タブ -->
       <div id="adminTabs" class="flex border-b border-slate-200 dark:border-slate-800 space-x-2 sm:space-x-4 overflow-x-auto no-scrollbar whitespace-nowrap pb-1">
         <button onclick="switchTab('creative')" id="tabCreative" class="pb-2.5 px-2 font-medium text-xs sm:text-sm border-b-2 border-blue-600 text-blue-600 flex-shrink-0">制作進行ボード</button>
         <button onclick="switchTab('sales')" id="tabSales" class="pb-2.5 px-2 font-medium text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 flex-shrink-0">営業・商談ボード</button>
@@ -116,7 +116,7 @@
           </button>
         </div>
 
-        <!-- ステータスフィルター（横スクロール可能） -->
+        <!-- ステータスフィルター -->
         <div class="flex overflow-x-auto no-scrollbar gap-1.5 pb-1 text-xs whitespace-nowrap">
           <button onclick="filterLeads('all')" class="lead-filter-btn px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg border dark:border-slate-700 bg-blue-600 text-white font-medium" data-status="all">すべて</button>
           <button onclick="filterLeads('未対応（HOT）')" class="lead-filter-btn px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300" data-status="未対応（HOT）">未対応HOT</button>
@@ -411,6 +411,15 @@
     function getDisplayName(profile) {
       if (!profile) return '未アサイン';
       return profile.name || profile.user_id || '未設定';
+    }
+
+    // トラック自動判定（名称ブレ対応）
+    function getTaskTrack(taskTitle) {
+      const t = taskTitle.trim();
+      if (t.includes('イラスト') || t.includes('絵') || t.includes('映像') || t.includes('動画') || t.includes('MV') || t.includes('ムービー')) {
+        return 'mv';
+      }
+      return 'music';
     }
 
     function initTheme() {
@@ -977,7 +986,7 @@
     }
 
     // ----------------------------------------------------
-    // 制作進行ボード ロジック (スマホ対応グリッド)
+    // 制作進行ボード ロジック (アプデ反映版)
     // ----------------------------------------------------
     function renderMasterTable() {
       const tbody = document.getElementById('masterTableBody');
@@ -1181,50 +1190,55 @@
 
         const activeTasks = getActiveBallTasks(tasks);
 
+        // ボールバッジ生成（期日表示・青/赤切り替え対応）
         let ballBadgeHtml = '';
         if (tasks.length > 0 && tasks.every(t => t.status === '完了')) {
-          ballBadgeHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">✓ 完了</span>';
+          ballBadgeHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">✓ 全工程完了</span>';
         } else if (activeTasks.length === 0) {
           ballBadgeHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">待機中</span>';
         } else {
           ballBadgeHtml = activeTasks.map(t => {
+            const deadlineText = t.deadline ? ('期日: ' + t.deadline) : '期日: 未定';
             if (t.status === '提出・確認待ち') {
-              return '<span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">🟡 確認: ' + t.title + '</span>';
+              return '<span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">🟡 確認待ち: ' + t.title + ' (' + deadlineText + ')</span>';
             }
             const assignee = allProfiles.find(u => u.id === t.assignee_id);
             const assigneeName = getDisplayName(assignee);
             const isOverdue = t.deadline && t.deadline < todayStr;
+
+            // ③ 期日超え＝赤、期日内＝青
+            const ballIcon = isOverdue ? '🔴' : '🔵';
             const badgeClass = isOverdue 
-              ? 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-800' 
-              : 'bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800';
-            return '<div class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold ' + badgeClass + '">'
-              + '<span>🔴 <strong>' + assigneeName + '</strong> (' + t.title + ')</span>'
+              ? 'bg-red-100 dark:bg-red-950/70 text-red-700 dark:text-red-300 border border-red-400 dark:border-red-700 font-bold' 
+              : 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 font-medium';
+
+            return '<div class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs ' + badgeClass + '">'
+              + '<span>' + ballIcon + ' <strong>' + assigneeName + '</strong> (' + t.title + ') <span class="opacity-90 ml-0.5 font-normal">[' + deadlineText + (isOverdue ? ' ⚠超過' : '') + ']</span></span>'
               + '</div>';
           }).join(' ');
         }
 
         const driveLinkHtml = p.drive_url ? '<a href="' + p.drive_url + '" target="_blank" onclick="event.stopPropagation();" class="text-[11px] px-2 py-0.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded text-slate-700 dark:text-slate-300 font-medium">Drive ↗</a>' : '';
 
-        const musicTasks = tasks.filter(t => {
-          const w = workflowMasters.find(def => def.name === t.title);
-          return !w || w.track === 'music';
-        });
-        const mvTasks = tasks.filter(t => {
-          const w = workflowMasters.find(def => def.name === t.title);
-          return w && w.track === 'mv';
-        });
+        // ② 楽曲トラックとMVトラックの正確な分離（名称ブレにも対応）
+        const musicTasks = tasks.filter(t => getTaskTrack(t.title) === 'music');
+        const mvTasks = tasks.filter(t => getTaskTrack(t.title) === 'mv');
 
-        // スマホでは 1列または2列、PCでは 6列/4列
         const renderTaskCards = (taskList) => {
           return taskList.map(t => {
             const isOverdue = t.deadline && t.deadline < todayStr && t.status !== '完了';
             const isActive = activeTasks.some(at => at.id === t.id);
 
+            // ③ カードのハイライト・文字色判定
             let cardClass = 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800';
             if (t.status === '完了') {
               cardClass = 'bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600';
+            } else if (isOverdue) {
+              // 期日超過: 赤ハイライト・赤文字
+              cardClass = 'bg-red-50/70 dark:bg-red-950/30 border-red-400 dark:border-red-700 ring-2 ring-red-200 dark:ring-red-900/50 shadow-sm text-red-700 dark:text-red-300';
             } else if (isActive) {
-              cardClass = 'bg-blue-50/50 dark:bg-blue-950/30 border-blue-400 dark:border-blue-700 ring-2 ring-blue-100 dark:ring-blue-900/40 shadow-sm';
+              // 期日内ボール中: 青ハイライト
+              cardClass = 'bg-blue-50/50 dark:bg-blue-950/30 border-blue-400 dark:border-blue-700 ring-2 ring-blue-100 dark:ring-blue-900/40 shadow-sm text-slate-800 dark:text-slate-200';
             }
 
             const statusOptions = ['未着手', '作業中', '提出・確認待ち', 'リテイク', '完了'].map(st => {
@@ -1238,27 +1252,28 @@
               return '<option value="' + u.id + '" ' + selected + '>' + label + '</option>';
             }).join('');
 
-            const deadlineInputClass = isOverdue ? 'text-red-600 dark:text-red-400 font-bold bg-red-50 dark:bg-red-950/50' : 'text-slate-700 dark:text-slate-300';
+            const titleColorClass = isOverdue ? 'text-red-600 dark:text-red-400 font-extrabold' : (isActive ? 'text-blue-600 dark:text-blue-400 font-bold' : '');
+            const deadlineInputClass = isOverdue ? 'text-red-600 dark:text-red-400 font-bold bg-red-100/60 dark:bg-red-950/70 border-red-300' : 'text-slate-700 dark:text-slate-300';
             const deliverableHtml = t.deliverable_url 
               ? '<a href="' + t.deliverable_url + '" target="_blank" class="block text-center py-1 bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 rounded font-medium text-[11px] hover:bg-blue-100 transition truncate">提出物リンク ↗</a>'
               : '';
 
             return '<div class="p-2.5 sm:p-3 rounded-lg border text-xs space-y-2 transition-all ' + cardClass + '">'
               + '<div class="flex justify-between items-center font-bold">'
-              + '<span class="' + (isActive ? 'text-blue-600 dark:text-blue-400 font-extrabold' : '') + '">' + t.title + '</span>'
-              + '<select onchange="updateTaskStatus(\'' + t.id + '\', this.value)" class="text-[11px] px-1 py-0.5 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 font-medium">'
+              + '<span class="' + titleColorClass + '">' + t.title + '</span>'
+              + '<select onchange="updateTaskStatus(\'' + t.id + '\', this.value)" class="text-[11px] px-1 py-0.5 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 font-medium text-slate-800 dark:text-slate-200">'
               + statusOptions
               + '</select>'
               + '</div>'
               + '<div class="flex items-center space-x-1">'
               + '<span class="text-[10px] text-slate-400">担当:</span>'
-              + '<select onchange="assignTask(\'' + t.id + '\', this.value)" class="text-[11px] w-full px-1 py-0.5 border dark:border-slate-700 rounded bg-white dark:bg-slate-800">'
+              + '<select onchange="assignTask(\'' + t.id + '\', this.value)" class="text-[11px] w-full px-1 py-0.5 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200">'
               + '<option value="">-- 未設定 --</option>'
               + profileOptions
               + '</select>'
               + '</div>'
               + '<div class="flex items-center justify-between text-[11px] pt-1 border-t border-slate-100 dark:border-slate-800">'
-              + '<span class="text-slate-400">期限:</span>'
+              + '<span class="' + (isOverdue ? 'text-red-500 font-bold' : 'text-slate-400') + '">期限:</span>'
               + '<input type="date" value="' + (t.deadline || '') + '" onchange="updateTaskDeadline(\'' + t.id + '\', this.value)" class="border dark:border-slate-700 bg-white dark:bg-slate-800 rounded px-1 text-[11px] ' + deadlineInputClass + '">'
               + '</div>'
               + deliverableHtml
@@ -1286,7 +1301,7 @@
           + (!isCollapsed ? (
             '<div class="p-3 sm:p-5 space-y-3 sm:space-y-4 bg-white dark:bg-slate-900">'
             + '<div class="space-y-1.5">'
-            + '<div class="flex items-center space-x-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span><span class="text-xs font-bold text-slate-700 dark:text-slate-300">楽曲トラック</span></div>'
+            + '<div class="flex items-center space-x-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span><span class="text-xs font-bold text-slate-700 dark:text-slate-300">楽曲トラック (作曲 ➔ 作詞/編曲 ➔ Rec ➔ Mix ➔ Mas)</span></div>'
             + '<div class="grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">'
             + renderTaskCards(musicTasks)
             + '</div>'
@@ -1294,7 +1309,7 @@
 
             + (mvTasks.length > 0 ? (
               '<div class="space-y-1.5 pt-2 border-t border-dashed border-slate-200 dark:border-slate-800">'
-              + '<div class="flex items-center space-x-2"><span class="w-2 h-2 rounded-full bg-purple-500"></span><span class="text-xs font-bold text-slate-700 dark:text-slate-300">MVトラック</span></div>'
+              + '<div class="flex items-center space-x-2"><span class="w-2 h-2 rounded-full bg-purple-500"></span><span class="text-xs font-bold text-slate-700 dark:text-slate-300">MVトラック (イラスト ➔ 映像)</span></div>'
               + '<div class="grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">'
               + renderTaskCards(mvTasks)
               + '</div>'
