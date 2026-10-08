@@ -103,11 +103,16 @@
 
       <!-- Admin: 制作進行ボード -->
       <div id="creativeSection" class="space-y-4 sm:space-y-6">
-        <div class="flex justify-between items-center gap-2">
+        <div class="flex flex-wrap justify-between items-center gap-2">
           <h2 class="text-base sm:text-lg font-bold">制作案件パイプライン</h2>
-          <button onclick="openModal('newProjectModal')" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-medium transition shadow-sm whitespace-nowrap">
-            + 新規起票
-          </button>
+          <div class="flex items-center space-x-2">
+            <button onclick="toggleAllProjectsCollapse()" class="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold transition border border-slate-200 dark:border-slate-700">
+              一括展開 / 折りたたみ
+            </button>
+            <button onclick="openModal('newProjectModal')" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-medium transition shadow-sm whitespace-nowrap">
+              + 新規起票
+            </button>
+          </div>
         </div>
         <div id="projectList" class="space-y-3 sm:space-y-4"></div>
       </div>
@@ -203,50 +208,52 @@
     </div>
   </main>
 
-  <!-- モーダル: 案件全体統合ログ -->
-  <div id="projectLogModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full p-4 sm:p-6 space-y-4 border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
-      <div class="flex items-start justify-between border-b dark:border-slate-800 pb-3">
-        <div>
-          <span class="text-xs text-slate-400 font-medium" id="prjLogModalClient"></span>
-          <h3 id="prjLogModalTitle" class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100"></h3>
+  <!-- モーダル: 案件全体統合ログ（レスポンシブ折返し対応） -->
+  <div id="projectLogModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2.5 sm:p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full p-4 sm:p-6 border border-slate-200 dark:border-slate-800 max-h-[90vh] flex flex-col shadow-2xl">
+      <div class="flex items-start justify-between border-b dark:border-slate-800 pb-3 flex-shrink-0">
+        <div class="min-w-0 pr-2">
+          <span class="text-xs text-slate-400 font-medium block truncate" id="prjLogModalClient"></span>
+          <h3 id="prjLogModalTitle" class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 truncate"></h3>
         </div>
-        <button onclick="closeModal('projectLogModal')" class="text-slate-400 hover:text-slate-600 text-sm">✕</button>
+        <button onclick="closeModal('projectLogModal')" class="text-slate-400 hover:text-slate-600 text-base p-1 flex-shrink-0">✕</button>
       </div>
 
-      <div class="space-y-2">
-        <h4 class="text-xs font-bold text-slate-500">案件内の全工程タイムライン（最新順）</h4>
-        <div id="prjLogModalTimeline" class="space-y-2 max-h-80 overflow-y-auto text-xs pr-1"></div>
+      <div class="flex-1 overflow-y-auto space-y-2 py-3 pr-1">
+        <h4 class="text-xs font-bold text-slate-500 sticky top-0 bg-white dark:bg-slate-900 py-0.5">案件内の全工程タイムライン（最新順）</h4>
+        <div id="prjLogModalTimeline" class="space-y-2 text-xs"></div>
       </div>
 
-      <div class="flex justify-end pt-2 border-t dark:border-slate-800">
-        <button onclick="closeModal('projectLogModal')" class="px-4 py-1.5 border dark:border-slate-700 rounded-lg text-xs">閉じる</button>
+      <div class="flex justify-end pt-3 border-t dark:border-slate-800 flex-shrink-0">
+        <button onclick="closeModal('projectLogModal')" class="w-full sm:w-auto px-5 py-2 border dark:border-slate-700 rounded-lg text-xs font-medium">閉じる</button>
       </div>
     </div>
   </div>
 
-  <!-- モーダル: タスク提出・フィードバックログ詳細 -->
-  <div id="taskLogModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-4 sm:p-6 space-y-4 border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
-      <div class="flex items-start justify-between border-b dark:border-slate-800 pb-3">
-        <div>
-          <span id="taskLogStatusBadge" class="px-2 py-0.5 rounded text-[10px] font-bold"></span>
-          <h3 id="taskLogModalTitle" class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 mt-1"></h3>
+  <!-- モーダル: タスク提出・フィードバックログ詳細（横揺れ完全防止・レスポンシブフィット） -->
+  <div id="taskLogModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2.5 sm:p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-4 sm:p-6 border border-slate-200 dark:border-slate-800 max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+      <!-- モーダルヘッダー -->
+      <div class="flex items-start justify-between border-b dark:border-slate-800 pb-3 flex-shrink-0 gap-2">
+        <div class="min-w-0 flex-1">
+          <span id="taskLogStatusBadge" class="px-2 py-0.5 rounded text-[10px] font-bold inline-block"></span>
+          <h3 id="taskLogModalTitle" class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 mt-1 truncate"></h3>
         </div>
-        <div class="flex items-center space-x-2">
-          <button id="btnUnreadToggleInModal" onclick="toggleTaskUnreadManual()" class="text-[11px] px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium transition">
+        <div class="flex items-center space-x-1.5 flex-shrink-0">
+          <button id="btnUnreadToggleInModal" onclick="toggleTaskUnreadManual()" class="text-[11px] px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium transition whitespace-nowrap">
             未読に戻す
           </button>
-          <button onclick="closeModal('taskLogModal')" class="text-slate-400 hover:text-slate-600 text-sm px-1">✕</button>
+          <button onclick="closeModal('taskLogModal')" class="text-slate-400 hover:text-slate-600 text-base p-1">✕</button>
         </div>
       </div>
 
-      <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border dark:border-slate-700 space-y-2">
+      <!-- コメント・フィードバック投稿フォーム -->
+      <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border dark:border-slate-700 space-y-2 mt-3 flex-shrink-0">
         <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">コメント・フィードバックの追記</label>
-        <textarea id="taskLogInputText" rows="2" class="w-full p-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none focus:ring-2 focus:ring-blue-500" placeholder="連絡事項やフィードバック、リテイク指示を入力..."></textarea>
+        <textarea id="taskLogInputText" rows="2" class="w-full p-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none focus:ring-2 focus:ring-blue-500 break-words" placeholder="連絡事項やフィードバック、リテイク指示を入力..."></textarea>
         <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
           <div class="flex items-center space-x-1.5 text-xs">
-            <span class="text-slate-500">ステータス変更:</span>
+            <span class="text-slate-500 whitespace-nowrap">ステータス変更:</span>
             <select id="taskLogStatusSelect" class="px-2 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs">
               <option value="">(変更なし)</option>
               <option value="作業中">作業中</option>
@@ -254,19 +261,21 @@
               <option value="完了">承認（完了）</option>
             </select>
           </div>
-          <button onclick="submitTaskLogComment()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition shadow-sm">
+          <button onclick="submitTaskLogComment()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition shadow-sm whitespace-nowrap">
             送信・更新
           </button>
         </div>
       </div>
 
-      <div class="space-y-2 pt-1">
-        <h4 class="text-xs font-bold text-slate-500">提出・やり取りタイムライン</h4>
-        <div id="taskLogTimeline" class="space-y-2 max-h-56 overflow-y-auto text-xs"></div>
+      <!-- タイムライン部分（残りの高さを目一杯使ってスクロール） -->
+      <div class="flex-1 overflow-y-auto min-h-[140px] space-y-2 pt-3 pr-1">
+        <h4 class="text-xs font-bold text-slate-500 sticky top-0 bg-white dark:bg-slate-900 py-0.5 z-10">提出・やり取りタイムライン</h4>
+        <div id="taskLogTimeline" class="space-y-2 text-xs"></div>
       </div>
 
-      <div class="flex justify-end pt-2 border-t dark:border-slate-800">
-        <button onclick="closeModal('taskLogModal')" class="px-4 py-1.5 border dark:border-slate-700 rounded-lg text-xs">閉じる</button>
+      <!-- フッター -->
+      <div class="flex justify-end pt-3 border-t dark:border-slate-800 flex-shrink-0">
+        <button onclick="closeModal('taskLogModal')" class="w-full sm:w-auto px-5 py-1.5 border dark:border-slate-700 rounded-lg text-xs font-medium">閉じる</button>
       </div>
     </div>
   </div>
@@ -331,7 +340,7 @@
           </select>
         </div>
         <div class="relative">
-          <textarea id="templateMessageBox" rows="3" class="w-full p-2.5 pb-8 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs font-mono outline-none focus:ring-2 focus:ring-blue-500" placeholder="定型文を選択するとここに名前が反映されます。"></textarea>
+          <textarea id="templateMessageBox" rows="3" class="w-full p-2.5 pb-8 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs font-mono outline-none focus:ring-2 focus:ring-blue-500 break-words" placeholder="定型文を選択するとここに名前が反映されます。"></textarea>
           <button onclick="copyTemplateBox()" type="button" class="absolute bottom-2 right-2 px-2.5 py-1 bg-slate-800 dark:bg-slate-700 text-white rounded text-[11px] font-medium hover:bg-slate-700 transition shadow">
             📋 コピー
           </button>
@@ -344,7 +353,7 @@
           <span id="phaseGuideText" class="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400"></span>
         </div>
         <div>
-          <textarea id="logMessageInput" rows="2" class="w-full p-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none" placeholder="送信内容のメモや先方からの返信..."></textarea>
+          <textarea id="logMessageInput" rows="2" class="w-full p-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none break-words" placeholder="送信内容のメモや先方からの返信..."></textarea>
         </div>
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
           <div class="flex items-center space-x-1.5 text-xs">
@@ -482,7 +491,7 @@
     let currentUser = null;
     let userProfile = null;
     let allProfiles = [];
-    const collapsedProjects = new Set();
+    const openProjects = new Set();
     let adminViewMode = 'admin';
 
     let allLeads = [];
@@ -504,7 +513,6 @@
       return profile.name || profile.user_id || '未設定';
     }
 
-    // ② トラック判定：イラスト・映像をMVトラック、それ以外を楽曲トラックに完全統一
     function getTaskTrack(taskTitle) {
       const t = taskTitle.trim();
       if (t === 'イラスト' || t === '映像') {
@@ -622,7 +630,6 @@
       document.getElementById('themeToggleIcon').innerText = isDark ? '☀️' : '🌙';
     }
 
-    // ② マスター工程定義：イラスト ➔ 映像 に完全統一
     let workflowMasters = [
       { key: 'compose', name: '作曲', days: 7, track: 'music', order: 1, depends: [] },
       { key: 'lyrics', name: '作詞', days: 5, track: 'music', order: 2, depends: ['作曲'] },
@@ -1042,7 +1049,7 @@
             const dateStr = new Date(lg.at).toLocaleString('ja-JP');
             return '<div class="p-2 bg-slate-50 dark:bg-slate-800 rounded border dark:border-slate-700">'
               + '<div class="flex justify-between text-[10px] text-slate-400 mb-0.5 font-bold"><span>' + lg.type + '</span><span>' + dateStr + '</span></div>'
-              + '<div class="text-slate-700 dark:text-slate-300 font-mono text-[11px] whitespace-pre-wrap">' + lg.text + '</div>'
+              + '<div class="text-slate-700 dark:text-slate-300 font-mono text-[11px] whitespace-pre-wrap break-words">' + lg.text + '</div>'
               + '</div>';
           }).join('')
         : '<div class="text-slate-400 text-center py-2">ログはありません</div>';
@@ -1201,12 +1208,12 @@
         container.innerHTML = prjLogs.map(l => {
           const dateStr = new Date(l.at).toLocaleString('ja-JP');
           const badgeColor = l.type === '提出' ? 'bg-blue-100 text-blue-700' : l.type === 'リテイク指示' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700';
-          const urlHtml = l.url ? '<div class="mt-1"><a href="' + l.url + '" target="_blank" class="inline-flex items-center text-blue-600 dark:text-blue-400 font-bold hover:underline bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded text-[11px]">📦 成果物URL: ' + l.url + ' ↗</a></div>' : '';
+          const urlHtml = l.url ? '<div class="mt-1"><a href="' + l.url + '" target="_blank" class="inline-flex items-center text-blue-600 dark:text-blue-400 font-bold hover:underline bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded text-[11px] break-all max-w-full">📦 成果物URL: ' + l.url + ' ↗</a></div>' : '';
           const readMembers = (l.read_by || []).length > 0 ? ('<span class="text-[10px] text-slate-400 ml-2">既読: ' + l.read_by.join(', ') + '</span>') : '';
 
           return '<div class="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-lg border dark:border-slate-700 space-y-1">'
-            + '<div class="flex justify-between items-center text-[10px]">'
-            + '<div class="flex items-center space-x-1.5">'
+            + '<div class="flex flex-wrap justify-between items-center text-[10px] gap-1">'
+            + '<div class="flex flex-wrap items-center space-x-1.5">'
             + '<span class="font-bold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">[' + l.taskTitle + ']</span>'
             + '<span class="font-bold px-1.5 py-0.5 rounded ' + badgeColor + '">' + l.type + '</span>'
             + '<span class="text-slate-500">(' + (l.user || '不明') + ')</span>'
@@ -1214,7 +1221,7 @@
             + '</div>'
             + '<span class="text-slate-400">' + dateStr + '</span>'
             + '</div>'
-            + (l.comment ? '<div class="text-slate-700 dark:text-slate-300 font-mono text-[11px] whitespace-pre-wrap mt-0.5">' + l.comment + '</div>' : '')
+            + (l.comment ? '<div class="text-slate-700 dark:text-slate-300 font-mono text-[11px] whitespace-pre-wrap break-words break-all mt-0.5">' + l.comment + '</div>' : '')
             + urlHtml
             + '</div>';
         }).join('');
@@ -1254,7 +1261,7 @@
       document.getElementById('taskLogStatusBadge').innerText = targetTask.status;
       document.getElementById('taskLogStatusBadge').className = 'px-2 py-0.5 rounded text-[10px] font-bold ' + 
         (targetTask.status === '完了' ? 'bg-slate-200 text-slate-700' : 
-         targetTask.status === 'リテイク' ? 'bg-amber-100 text-amber-800' :
+         targetTask.status === 'リテイク' ? 'bg-amber-100 text-amber-800' : 
          targetTask.status === '提出・確認待ち' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800');
 
       document.getElementById('taskLogInputText').value = '';
@@ -1270,28 +1277,28 @@
       const container = document.getElementById('taskLogTimeline');
       if (!container) return;
       if (!logs || logs.length === 0) {
-        container.innerHTML = '<div class="text-slate-400 text-center py-4 bg-slate-50 dark:bg-slate-800/40 rounded-lg">提出物やコメントのログはまだありません</div>';
+        container.innerHTML = '<div class="text-slate-400 text-center py-6 bg-slate-50 dark:bg-slate-800/40 rounded-lg">提出物やコメントのログはまだありません</div>';
         return;
       }
 
       container.innerHTML = logs.map(l => {
         const isUnread = isLogItemUnread(l);
         const dateStr = new Date(l.at).toLocaleString('ja-JP');
-        const urlHtml = l.url ? '<div class="mt-1"><a href="' + l.url + '" target="_blank" class="inline-flex items-center text-blue-600 dark:text-blue-400 font-bold hover:underline bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded text-[11px]">📦 提出URL: ' + l.url + ' ↗</a></div>' : '';
-        const badgeColor = l.type === '提出' ? 'bg-blue-100 text-blue-700' : l.type === 'リテイク指示' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700';
+        const urlHtml = l.url ? '<div class="mt-1"><a href="' + l.url + '" target="_blank" class="inline-flex items-center text-blue-600 dark:text-blue-400 font-bold hover:underline bg-blue-50 dark:bg-blue-950/60 px-2 py-1 rounded text-[11px] break-all max-w-full">📦 提出URL: ' + l.url + ' ↗</a></div>' : '';
+        const badgeColor = l.type === '提出' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300' : l.type === 'リテイク指示' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
         const unreadTag = isUnread ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500 text-white animate-pulse">NEW</span>' : '';
         const readMembers = (l.read_by || []).length > 0 ? ('<span class="text-[10px] text-slate-400 ml-1">既読: ' + l.read_by.join(', ') + '</span>') : '';
 
-        return '<div class="p-2.5 rounded-lg border transition ' + (isUnread ? 'bg-amber-50/60 dark:bg-amber-950/30 border-amber-300 dark:border-amber-700' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700') + ' space-y-1">'
-          + '<div class="flex justify-between items-center text-[10px]">'
-          + '<div class="flex items-center space-x-1.5">'
+        return '<div class="p-3 rounded-lg border transition space-y-1.5 ' + (isUnread ? 'bg-amber-50/60 dark:bg-amber-950/30 border-amber-300 dark:border-amber-700' : 'bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700') + '">'
+          + '<div class="flex flex-wrap justify-between items-center text-[10px] gap-1">'
+          + '<div class="flex flex-wrap items-center space-x-1.5">'
           + '<span class="font-bold px-1.5 py-0.5 rounded ' + badgeColor + '">' + l.type + ' (' + (l.user || '不明') + ')</span>'
           + unreadTag
           + readMembers
           + '</div>'
           + '<span class="text-slate-400">' + dateStr + '</span>'
           + '</div>'
-          + (l.comment ? '<div class="text-slate-700 dark:text-slate-300 font-mono text-[11px] whitespace-pre-wrap mt-0.5">' + l.comment + '</div>' : '')
+          + (l.comment ? '<div class="text-slate-700 dark:text-slate-200 font-mono text-[11px] whitespace-pre-wrap break-words break-all leading-relaxed pl-1 border-l-2 border-slate-300 dark:border-slate-600 mt-1">' + l.comment + '</div>' : '')
           + urlHtml
           + '</div>';
       }).join('');
@@ -1364,7 +1371,7 @@
         const isUnread = isLogItemUnread(l);
         const dateStr = new Date(l.at).toLocaleString('ja-JP');
         const badgeColor = l.type === '提出' ? 'bg-blue-100 text-blue-700' : l.type === 'リテイク指示' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700';
-        const urlHtml = l.url ? '<div class="mt-1"><a href="' + l.url + '" target="_blank" class="inline-flex items-center text-blue-600 dark:text-blue-400 font-bold hover:underline bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded text-[11px]">📦 成果物URL: ' + l.url + ' ↗</a></div>' : '';
+        const urlHtml = l.url ? '<div class="mt-1"><a href="' + l.url + '" target="_blank" class="inline-flex items-center text-blue-600 dark:text-blue-400 font-bold hover:underline bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded text-[11px] break-all max-w-full">📦 成果物URL: ' + l.url + ' ↗</a></div>' : '';
         const readMembers = (l.read_by || []).length > 0 ? ('<span class="text-[10px] text-slate-400 ml-2">既読: ' + l.read_by.join(', ') + '</span>') : '';
         const unreadTag = isUnread ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500 text-white animate-pulse">NEW</span>' : '';
 
@@ -1383,7 +1390,7 @@
           + '<span class="text-slate-500 font-medium">投稿者: ' + (l.user || '不明') + '</span>'
           + readMembers
           + '</div>'
-          + (l.comment ? '<div class="text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-pre-wrap pl-1.5 border-l-2 border-slate-200 dark:border-slate-700">' + l.comment + '</div>' : '')
+          + (l.comment ? '<div class="text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-pre-wrap break-words break-all pl-1.5 border-l-2 border-slate-200 dark:border-slate-700">' + l.comment + '</div>' : '')
           + urlHtml
           + '<div class="text-right pt-1">'
           + '<button onclick="openTaskLogModal(\'' + l.taskId + '\')" class="text-[11px] text-blue-600 dark:text-blue-400 hover:underline">このタスクを開く ➔</button>'
@@ -1562,10 +1569,19 @@
     }
 
     function toggleProjectCollapse(prjId) {
-      if (collapsedProjects.has(prjId)) {
-        collapsedProjects.delete(prjId);
+      if (openProjects.has(prjId)) {
+        openProjects.delete(prjId);
       } else {
-        collapsedProjects.add(prjId);
+        openProjects.add(prjId);
+      }
+      loadCreativeProjects();
+    }
+
+    function toggleAllProjectsCollapse() {
+      if (openProjects.size > 0) {
+        openProjects.clear();
+      } else {
+        cachedCreativeProjects.forEach(p => openProjects.add(p.id));
       }
       loadCreativeProjects();
     }
@@ -1610,7 +1626,7 @@
       const todayStr = new Date().toISOString().split('T')[0];
 
       container.innerHTML = prjs.map(p => {
-        const isCollapsed = collapsedProjects.has(p.id);
+        const isOpen = openProjects.has(p.id);
         const hasProjectUnread = getProjectUnreadStatus(p);
 
         const tasks = (p.tasks || []).sort((a,b) => {
@@ -1623,7 +1639,6 @@
 
         const activeTasks = getActiveBallTasks(tasks);
 
-        // ① バッジ文頭：作業中 / 未着手 / 確認待ち / リテイク / 超過に完全連動
         let ballBadgeHtml = '';
         if (tasks.length > 0 && tasks.every(t => t.status === '完了')) {
           ballBadgeHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">✓ 全工程完了</span>';
@@ -1776,10 +1791,10 @@
           }).join('');
         };
 
-        const toggleBtnIcon = isCollapsed ? '▼ 展開' : '▲ 閉じる';
+        const toggleBtnIcon = isOpen ? '▲ 閉じる' : '▼ 展開';
 
         return '<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition overflow-hidden ' + (hasProjectUnread ? 'ring-1 ring-red-400' : '') + '">'
-          + '<div onclick="toggleProjectCollapse(\'' + p.id + '\')" class="p-3 sm:p-4 flex flex-wrap items-center justify-between gap-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition ' + (isCollapsed ? '' : 'border-b border-slate-200 dark:border-slate-800') + '">'
+          + '<div onclick="toggleProjectCollapse(\'' + p.id + '\')" class="p-3 sm:p-4 flex flex-wrap items-center justify-between gap-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition ' + (isOpen ? 'border-b border-slate-200 dark:border-slate-800' : '') + '">'
           + '<div class="flex items-center space-x-2 sm:space-x-3 min-w-0">'
           + '<button type="button" class="text-[11px] sm:text-xs font-semibold px-2 py-0.5 sm:py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded">' + toggleBtnIcon + '</button>'
           + '<div class="min-w-0">'
@@ -1795,7 +1810,7 @@
           + '</div>'
           + '</div>'
 
-          + (!isCollapsed ? (
+          + (isOpen ? (
             '<div class="p-3 sm:p-5 space-y-3 sm:space-y-4 bg-white dark:bg-slate-900">'
             + '<div class="space-y-1.5">'
             + '<div class="flex items-center space-x-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span><span class="text-xs font-bold text-slate-700 dark:text-slate-300">楽曲トラック (作曲 ➔ 作詞/編曲 ➔ Rec ➔ Mix ➔ Mas)</span></div>'
@@ -1971,9 +1986,9 @@
             + '<div class="text-xs text-slate-500 dark:text-slate-400">締切期日: <span class="font-bold ' + (isOverdue ? 'text-red-600' : 'text-slate-800 dark:text-slate-200') + '">' + deadlineText + (isOverdue ? ' [超過]' : '') + '</span></div>'
             + '<div class="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">'
             + '<div><label class="block text-[11px] font-medium mb-0.5">提出物URL *:</label>'
-            + '<input type="url" id="deliv_' + t.id + '" value="' + deliverableVal + '" class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs text-slate-800 dark:text-slate-100" placeholder="https://drive.google.com/..."></div>'
+            + '<input type="url" id="deliv_' + t.id + '" value="' + deliverableVal + '" class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs text-slate-800 dark:text-slate-100 break-all" placeholder="https://drive.google.com/..."></div>'
             + '<div><label class="block text-[11px] font-medium mb-0.5">提出コメント (任意):</label>'
-            + '<textarea id="deliv_comment_' + t.id + '" rows="2" class="w-full px-2.5 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs text-slate-800 dark:text-slate-100" placeholder="調整点や確認してほしいポイントを入力..."></textarea></div>'
+            + '<textarea id="deliv_comment_' + t.id + '" rows="2" class="w-full px-2.5 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs text-slate-800 dark:text-slate-100 break-words" placeholder="調整点や確認してほしいポイントを入力..."></textarea></div>'
             + '<div class="flex justify-between items-center pt-1">'
             + statusBadge
             + '<button onclick="submitTaskWithLog(\'' + t.id + '\')" class="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 transition shadow-sm">'
@@ -1988,7 +2003,7 @@
       completedContainer.innerHTML = completedTasks.map(t => {
         const prjTitle = (t.projects && t.projects.title) ? t.projects.title : '案件名なし';
         const logsCount = (t.logs || []).length;
-        const deliverableLink = t.deliverable_url ? '<a href="' + t.deliverable_url + '" target="_blank" class="text-blue-600 hover:underline text-[11px]">提出物 ↗</a>' : '';
+        const deliverableLink = t.deliverable_url ? '<a href="' + t.deliverable_url + '" target="_blank" class="text-blue-600 hover:underline text-[11px] break-all max-w-[150px] truncate">提出物 ↗</a>' : '';
         const hasUnread = getTaskUnreadStatus(t);
 
         return '<div class="p-3 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800 text-xs space-y-2 opacity-75 hover:opacity-100 transition ' + (hasUnread ? 'ring-1 ring-red-400 opacity-100' : '') + '">'
