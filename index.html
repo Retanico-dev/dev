@@ -82,12 +82,24 @@
       </div>
 
       <!-- クリエイター用タスク表示 -->
-      <div id="userTaskSection" class="hidden space-y-3 sm:space-y-4">
-        <div class="flex flex-wrap justify-between items-center gap-1">
-          <h2 class="text-base sm:text-lg font-bold">自分の担当タスク一覧</h2>
-          <span class="text-[11px] text-slate-500 dark:text-slate-400">期限順</span>
+      <div id="userTaskSection" class="hidden space-y-6">
+        <!-- 進行中タスク -->
+        <div class="space-y-3">
+          <div class="flex flex-wrap justify-between items-center gap-1">
+            <h2 class="text-base sm:text-lg font-bold">担当タスク一覧（進行中）</h2>
+            <span class="text-[11px] text-slate-500 dark:text-slate-400">期限順</span>
+          </div>
+          <div id="userActiveTaskList" class="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2"></div>
         </div>
-        <div id="userTaskList" class="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2"></div>
+
+        <!-- 完了タスクのアコーディオンまとめ -->
+        <div class="border-t border-slate-200 dark:border-slate-800 pt-4">
+          <button onclick="toggleCompletedTasksAccordion()" type="button" class="flex items-center space-x-2 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition py-1">
+            <span id="completedAccordionArrow">▶</span>
+            <span id="completedAccordionLabel">完了したタスク (0件)</span>
+          </button>
+          <div id="userCompletedTaskList" class="hidden mt-3 grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2"></div>
+        </div>
       </div>
 
       <!-- Admin: 制作進行ボード -->
@@ -192,7 +204,7 @@
     </div>
   </main>
 
-  <!-- モーダル: 案件全体統合ログ（各案件ごと） -->
+  <!-- モーダル: 案件全体統合ログ -->
   <div id="projectLogModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full p-4 sm:p-6 space-y-4 border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
       <div class="flex items-start justify-between border-b dark:border-slate-800 pb-3">
@@ -214,7 +226,7 @@
     </div>
   </div>
 
-  <!-- モーダル: タスク提出・フィードバックログ詳細（単体タスク用） -->
+  <!-- モーダル: タスク提出・フィードバックログ詳細 -->
   <div id="taskLogModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-4 sm:p-6 space-y-4 border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
       <div class="flex items-start justify-between border-b dark:border-slate-800 pb-3">
@@ -480,6 +492,7 @@
     let salesTemplates = [];
     let selectedTaskForLog = null;
     let cachedCreativeProjects = [];
+    let isCompletedAccordionOpen = false;
 
     function getDisplayName(profile) {
       if (!profile) return '未アサイン';
@@ -525,6 +538,18 @@
       if (!currentUser) return;
       const readStorageKey = 'read_task_log_' + currentUser.id + '_' + taskId;
       localStorage.setItem(readStorageKey, new Date().toISOString());
+    }
+
+    function toggleCompletedTasksAccordion() {
+      isCompletedAccordionOpen = !isCompletedAccordionOpen;
+      const listEl = document.getElementById('userCompletedTaskList');
+      const arrowEl = document.getElementById('completedAccordionArrow');
+      if (listEl) {
+        listEl.classList.toggle('hidden', !isCompletedAccordionOpen);
+      }
+      if (arrowEl) {
+        arrowEl.innerText = isCompletedAccordionOpen ? '▼' : '▶';
+      }
     }
 
     function initTheme() {
@@ -1114,7 +1139,6 @@
         });
       });
 
-      // 日時が新しい順
       prjLogs.sort((a,b) => new Date(b.at) - new Date(a.at));
 
       const container = document.getElementById('prjLogModalTimeline');
@@ -1250,7 +1274,6 @@
       }
     }
 
-    // 更新ログ専用タブ（全案件・全工程の時系列フィード）
     function renderAllUpdatesLogs() {
       const container = document.getElementById('allUpdatesLogsContainer');
       if (!container) return;
@@ -1576,11 +1599,9 @@
 
         const driveLinkHtml = p.drive_url ? '<a href="' + p.drive_url + '" target="_blank" onclick="event.stopPropagation();" class="text-[11px] px-2 py-0.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded text-slate-700 dark:text-slate-300 font-medium">Drive ↗</a>' : '';
 
-        // 案件全体のログ件数集計
         let prjTotalLogsCount = 0;
         (p.tasks || []).forEach(t => { prjTotalLogsCount += (t.logs || []).length; });
 
-        // 案件ごとの統合ログボタン
         const prjLogBtnHtml = '<button onclick="event.stopPropagation(); openProjectLogModal(\'' + p.id + '\')" class="text-[11px] px-2 py-0.5 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 rounded font-semibold transition border border-indigo-200 dark:border-indigo-800">'
           + '📋 案件ログ (' + prjTotalLogsCount + ')'
           + '</button>';
@@ -1798,6 +1819,7 @@
       loadCreativeProjects();
     }
 
+    // クリエイター視点タスク一覧（進行中と完了タスクの完全分離）
     async function loadUserTasks() {
       const { data: tasks } = await supabaseClient
         .from('tasks')
@@ -1805,61 +1827,94 @@
         .eq('assignee_id', currentUser.id)
         .order('deadline', { ascending: true });
 
-      const container = document.getElementById('userTaskList');
+      const activeContainer = document.getElementById('userActiveTaskList');
+      const completedContainer = document.getElementById('userCompletedTaskList');
+      const accordionLabel = document.getElementById('completedAccordionLabel');
+
       if (!tasks || tasks.length === 0) {
-        container.innerHTML = '<div class="col-span-full p-8 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">現在アサインされているタスクはありません</div>';
+        activeContainer.innerHTML = '<div class="col-span-full p-8 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">現在アサインされているタスクはありません</div>';
+        completedContainer.innerHTML = '';
+        accordionLabel.innerText = '完了したタスク (0件)';
         return;
       }
 
       const todayStr = new Date().toISOString().split('T')[0];
 
-      container.innerHTML = tasks.map(t => {
+      // 進行中と完了を分離
+      const activeTasks = tasks.filter(t => t.status !== '完了');
+      const completedTasks = tasks.filter(t => t.status === '完了');
+
+      accordionLabel.innerText = '完了したタスク (' + completedTasks.length + '件)';
+
+      // 進行中タスクのレンダリング
+      if (activeTasks.length === 0) {
+        activeContainer.innerHTML = '<div class="col-span-full p-6 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">現在対応待ちの進行中タスクはありません 🎉</div>';
+      } else {
+        activeContainer.innerHTML = activeTasks.map(t => {
+          const prjTitle = (t.projects && t.projects.title) ? t.projects.title : '案件名なし';
+          const deadlineText = t.deadline ? formatDeadlineStr(t.deadline) : '未定';
+          const deliverableVal = t.deliverable_url || '';
+          const logsCount = (t.logs || []).length;
+          const hasUnread = getTaskUnreadStatus(t);
+
+          const isRetake = t.status === 'リテイク';
+          const isPendingConfirm = t.status === '提出・確認待ち';
+          const isOverdue = t.deadline && t.deadline < todayStr;
+
+          let cardBg = 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800';
+          let statusBadge = '<span class="text-[11px] font-semibold text-blue-600 dark:text-blue-400">' + t.status + '</span>';
+
+          if (isOverdue) {
+            cardBg = 'bg-red-50/70 dark:bg-red-950/30 border-red-400 dark:border-red-700 ring-2 ring-red-200 dark:ring-red-900/50 text-red-700 dark:text-red-300';
+            statusBadge = '<span class="text-[11px] font-bold text-red-600 dark:text-red-400">⚠ 期日超過 (' + t.status + ')</span>';
+          } else if (isRetake) {
+            cardBg = 'bg-amber-50/70 dark:bg-amber-950/30 border-amber-400 dark:border-amber-700 ring-2 ring-amber-200 dark:ring-amber-900/50 text-amber-800 dark:text-amber-300';
+            statusBadge = '<span class="text-[11px] font-bold text-amber-700 dark:text-amber-400">🟡 リテイク対応中</span>';
+          } else if (isPendingConfirm) {
+            statusBadge = '<span class="text-[11px] font-semibold text-amber-600">🟡 提出・確認待ち</span>';
+          }
+
+          const unreadBadge = hasUnread ? '<span class="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse ml-1" title="新着コメントあり"></span>' : '';
+          const logBtnClass = hasUnread 
+            ? 'bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-300 border border-amber-300 font-bold' 
+            : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300';
+
+          return '<div class="p-4 rounded-xl border shadow-sm space-y-3 transition ' + cardBg + '">'
+            + '<div class="flex justify-between items-start">'
+            + '<div><div class="text-xs text-slate-400 font-medium truncate">' + prjTitle + '</div><h4 class="text-sm sm:text-base font-bold">' + t.title + '</h4></div>'
+            + '<button onclick="openTaskLogModal(\'' + t.id + '\')" class="text-[11px] px-2.5 py-1 rounded font-medium flex items-center ' + logBtnClass + '">💬 ログ (' + logsCount + ')' + unreadBadge + '</button>'
+            + '</div>'
+            + '<div class="text-xs text-slate-500 dark:text-slate-400">締切期日: <span class="font-bold ' + (isOverdue ? 'text-red-600' : 'text-slate-800 dark:text-slate-200') + '">' + deadlineText + (isOverdue ? ' [超過]' : '') + '</span></div>'
+            + '<div class="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">'
+            + '<div><label class="block text-[11px] font-medium mb-0.5">提出物URL *:</label>'
+            + '<input type="url" id="deliv_' + t.id + '" value="' + deliverableVal + '" class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs text-slate-800 dark:text-slate-100" placeholder="https://drive.google.com/..."></div>'
+            + '<div><label class="block text-[11px] font-medium mb-0.5">提出コメント (任意):</label>'
+            + '<textarea id="deliv_comment_' + t.id + '" rows="2" class="w-full px-2.5 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs text-slate-800 dark:text-slate-100" placeholder="調整点や確認してほしいポイントを入力..."></textarea></div>'
+            + '<div class="flex justify-between items-center pt-1">'
+            + statusBadge
+            + '<button onclick="submitTaskWithLog(\'' + t.id + '\')" class="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 transition shadow-sm">'
+            + '提出して確認待ちにする'
+            + '</button>'
+            + '</div>'
+            + '</div>'
+            + '</div>';
+        }).join('');
+      }
+
+      // 完了タスクのレンダリング（アコーディオン内・シンプル表示）
+      completedContainer.innerHTML = completedTasks.map(t => {
         const prjTitle = (t.projects && t.projects.title) ? t.projects.title : '案件名なし';
-        const deadlineText = t.deadline ? formatDeadlineStr(t.deadline) : '未定';
-        const deliverableVal = t.deliverable_url || '';
         const logsCount = (t.logs || []).length;
-        const hasUnread = getTaskUnreadStatus(t);
+        const deliverableLink = t.deliverable_url ? '<a href="' + t.deliverable_url + '" target="_blank" class="text-blue-600 hover:underline text-[11px]">提出物 ↗</a>' : '';
 
-        const isCompleted = t.status === '完了';
-        const isRetake = t.status === 'リテイク';
-        const isPendingConfirm = t.status === '提出・確認待ち';
-        const isOverdue = t.deadline && t.deadline < todayStr && !isCompleted;
-
-        let cardBg = 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800';
-        let statusBadge = '<span class="text-[11px] font-semibold text-blue-600 dark:text-blue-400">' + t.status + '</span>';
-
-        if (isOverdue) {
-          cardBg = 'bg-red-50/70 dark:bg-red-950/30 border-red-400 dark:border-red-700 ring-2 ring-red-200 dark:ring-red-900/50 text-red-700 dark:text-red-300';
-          statusBadge = '<span class="text-[11px] font-bold text-red-600 dark:text-red-400">⚠ 期日超過 (' + t.status + ')</span>';
-        } else if (isRetake) {
-          cardBg = 'bg-amber-50/70 dark:bg-amber-950/30 border-amber-400 dark:border-amber-700 ring-2 ring-amber-200 dark:ring-amber-900/50 text-amber-800 dark:text-amber-300';
-          statusBadge = '<span class="text-[11px] font-bold text-amber-700 dark:text-amber-400">🟡 リテイク対応中</span>';
-        } else if (isPendingConfirm) {
-          statusBadge = '<span class="text-[11px] font-semibold text-amber-600">🟡 提出・確認待ち</span>';
-        }
-
-        const unreadBadge = hasUnread ? '<span class="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse ml-1" title="新着コメントあり"></span>' : '';
-        const logBtnClass = hasUnread 
-          ? 'bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-300 border border-amber-300 font-bold' 
-          : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300';
-
-        return '<div class="p-4 rounded-xl border shadow-sm space-y-3 transition ' + cardBg + '">'
-          + '<div class="flex justify-between items-start">'
-          + '<div><div class="text-xs text-slate-400 font-medium truncate">' + prjTitle + '</div><h4 class="text-sm sm:text-base font-bold">' + t.title + '</h4></div>'
-          + '<button onclick="openTaskLogModal(\'' + t.id + '\')" class="text-[11px] px-2.5 py-1 rounded font-medium flex items-center ' + logBtnClass + '">💬 ログ (' + logsCount + ')' + unreadBadge + '</button>'
+        return '<div class="p-3 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800 text-xs space-y-2 opacity-75 hover:opacity-100 transition">'
+          + '<div class="flex justify-between items-center">'
+          + '<div><span class="text-[10px] text-slate-400 block">' + prjTitle + '</span><span class="font-bold text-slate-700 dark:text-slate-300">' + t.title + '</span></div>'
+          + '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-600">✓ 完了</span>'
           + '</div>'
-          + '<div class="text-xs text-slate-500 dark:text-slate-400">締切期日: <span class="font-bold ' + (isOverdue ? 'text-red-600' : 'text-slate-800 dark:text-slate-200') + '">' + deadlineText + (isOverdue ? ' [超過]' : '') + '</span></div>'
-          + '<div class="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">'
-          + '<div><label class="block text-[11px] font-medium mb-0.5">提出物URL *:</label>'
-          + '<input type="url" id="deliv_' + t.id + '" value="' + deliverableVal + '" class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs text-slate-800 dark:text-slate-100" placeholder="https://drive.google.com/..."></div>'
-          + '<div><label class="block text-[11px] font-medium mb-0.5">提出コメント (任意):</label>'
-          + '<textarea id="deliv_comment_' + t.id + '" rows="2" class="w-full px-2.5 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs text-slate-800 dark:text-slate-100" placeholder="調整点や確認してほしいポイントを入力..."></textarea></div>'
-          + '<div class="flex justify-between items-center pt-1">'
-          + statusBadge
-          + '<button onclick="submitTaskWithLog(\'' + t.id + '\')" class="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 transition shadow-sm">'
-          + '提出して確認待ちにする'
-          + '</button>'
-          + '</div>'
+          + '<div class="flex justify-between items-center pt-1 border-t border-slate-200 dark:border-slate-800 text-[11px]">'
+          + deliverableLink
+          + '<button onclick="openTaskLogModal(\'' + t.id + '\')" class="text-slate-500 hover:text-blue-600">💬 ログ履歴 (' + logsCount + ')</button>'
           + '</div>'
           + '</div>';
       }).join('');
