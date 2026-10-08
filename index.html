@@ -72,7 +72,7 @@
             + 新規案件起票
           </button>
         </div>
-        <div id="projectList" class="space-y-6"></div>
+        <div id="projectList" class="space-y-4"></div>
       </div>
 
       <!-- Admin: 営業ボード -->
@@ -219,17 +219,18 @@
     let currentUser = null;
     let userProfile = null;
     let allProfiles = [];
+    const collapsedProjects = new Set();
 
-    // 業務パイプライン定義（先行工程依存・トラック区分）
+    // 業務パイプライン定義（先行工程依存・並び順）
     const WORKFLOW_DEF = [
-      { key: 'compose', name: '作曲', days: 7, track: 'music', depends: [] },
-      { key: 'lyrics', name: '作詞', days: 5, track: 'music', depends: ['作曲'] },
-      { key: 'arrange', name: '編曲', days: 7, track: 'music', depends: ['作曲'] },
-      { key: 'rec', name: 'レコーディング', days: 3, track: 'music', depends: ['作詞', '編曲'] },
-      { key: 'mix', name: 'ミキシング', days: 5, track: 'music', depends: ['レコーディング'] },
-      { key: 'mastering', name: 'マスタリング', days: 2, track: 'music', depends: ['ミキシング'] },
-      { key: 'illust', name: 'イラスト', days: 14, track: 'mv', depends: [] },
-      { key: 'movie', name: '映像 (MV)', days: 10, track: 'mv', depends: ['イラスト'] }
+      { key: 'compose', name: '作曲', days: 7, track: 'music', order: 1, depends: [] },
+      { key: 'lyrics', name: '作詞', days: 5, track: 'music', order: 2, depends: ['作曲'] },
+      { key: 'arrange', name: '編曲', days: 7, track: 'music', order: 3, depends: ['作曲'] },
+      { key: 'rec', name: 'レコーディング', days: 3, track: 'music', order: 4, depends: ['作詞', '編曲'] },
+      { key: 'mix', name: 'ミキシング', days: 5, track: 'music', order: 5, depends: ['レコーディング'] },
+      { key: 'mastering', name: 'マスタリング', days: 2, track: 'music', order: 6, depends: ['ミキシング'] },
+      { key: 'illust', name: 'イラスト', days: 14, track: 'mv', order: 1, depends: [] },
+      { key: 'movie', name: '映像 (MV)', days: 10, track: 'mv', order: 2, depends: ['イラスト'] }
     ];
 
     async function handlePasswordLogin() {
@@ -425,7 +426,6 @@
       renderMembersTable();
     }
 
-    // 依存関係・並行ボール判定ロジック
     function getActiveBallTasks(tasks) {
       const completedSet = new Set(tasks.filter(t => t.status === '完了').map(t => t.title));
       const activeTasks = [];
@@ -433,13 +433,21 @@
       tasks.forEach(t => {
         if (t.status === '完了') return;
         const def = WORKFLOW_DEF.find(w => w.name === t.title);
-        // 先行工程がすべて完了しているか判定
         const isReady = !def || def.depends.every(dep => completedSet.has(dep));
         if (isReady) {
           activeTasks.push(t);
         }
       });
       return activeTasks;
+    }
+
+    function toggleProjectCollapse(prjId) {
+      if (collapsedProjects.has(prjId)) {
+        collapsedProjects.delete(prjId);
+      } else {
+        collapsedProjects.add(prjId);
+      }
+      loadCreativeProjects();
     }
 
     async function loadCreativeProjects() {
@@ -458,10 +466,19 @@
       const todayStr = new Date().toISOString().split('T')[0];
 
       container.innerHTML = prjs.map(p => {
-        const tasks = (p.tasks || []).sort((a,b) => a.sort_order - b.sort_order);
+        const isCollapsed = collapsedProjects.has(p.id);
+
+        // 工程フロー順にタスクを厳密ソート
+        const tasks = (p.tasks || []).sort((a,b) => {
+          const defA = WORKFLOW_DEF.find(w => w.name === a.title);
+          const defB = WORKFLOW_DEF.find(w => w.name === b.title);
+          const orderA = defA ? defA.order : (a.sort_order || 99);
+          const orderB = defB ? defB.order : (b.sort_order || 99);
+          return orderA - orderB;
+        });
+
         const activeTasks = getActiveBallTasks(tasks);
 
-        // ボールバッジ生成（複数並行表示）
         let ballBadgeHtml = '';
         if (tasks.length > 0 && tasks.every(t => t.status === '完了')) {
           ballBadgeHtml = '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">✓ 全工程完了</span>';
@@ -482,9 +499,9 @@
           }).join(' ');
         }
 
-        const driveLinkHtml = p.drive_url ? '<a href="' + p.drive_url + '" target="_blank" class="text-xs px-2.5 py-1 bg-slate-100 hover:bg-slate-200 rounded text-slate-700 font-medium">Drive ↗</a>' : '';
+        const driveLinkHtml = p.drive_url ? '<a href="' + p.drive_url + '" target="_blank" onclick="event.stopPropagation();" class="text-xs px-2.5 py-1 bg-slate-100 hover:bg-slate-200 rounded text-slate-700 font-medium">Drive ↗</a>' : '';
 
-        // 楽曲ラインとMVラインに分離して表示
+        // トラック別に分類（ソート順維持）
         const musicTasks = tasks.filter(t => {
           const w = WORKFLOW_DEF.find(def => def.name === t.title);
           return !w || w.track === 'music';
@@ -544,11 +561,17 @@
           }).join('');
         };
 
-        return '<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">'
-          + '<div class="flex flex-wrap items-center justify-between gap-2 border-b pb-3">'
+        const toggleBtnIcon = isCollapsed ? '▼ 展開' : '▲ 閉じる';
+
+        return '<div class="bg-white rounded-xl border border-slate-200 shadow-sm transition overflow-hidden">'
+          // ヘッダー（クリックで開閉）
+          + '<div onclick="toggleProjectCollapse(\'' + p.id + '\')" class="p-4 flex flex-wrap items-center justify-between gap-2 cursor-pointer hover:bg-slate-50 transition ' + (isCollapsed ? '' : 'border-b') + '">'
+          + '<div class="flex items-center space-x-3">'
+          + '<button type="button" class="text-xs font-semibold px-2 py-1 bg-slate-100 text-slate-600 rounded hover:bg-slate-200">' + toggleBtnIcon + '</button>'
           + '<div>'
           + '<span class="text-xs text-slate-400 font-medium">' + (p.client_name || 'クライアント未設定') + '</span>'
-          + '<h3 class="text-lg font-bold text-slate-800">' + p.title + '</h3>'
+          + '<h3 class="text-base font-bold text-slate-800">' + p.title + '</h3>'
+          + '</div>'
           + '</div>'
           + '<div class="flex flex-wrap items-center gap-2">'
           + ballBadgeHtml
@@ -556,21 +579,26 @@
           + '</div>'
           + '</div>'
 
-          // 楽曲トラック表示
-          + '<div class="space-y-1.5">'
-          + '<div class="flex items-center space-x-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span><span class="text-xs font-bold text-slate-700">楽曲トラック (作曲 ➔ 作詞/編曲 ➔ Rec ➔ Mix ➔ Mas)</span></div>'
-          + '<div class="grid gap-2.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">'
-          + renderTaskCards(musicTasks)
-          + '</div>'
-          + '</div>'
-
-          // MVトラック表示
-          + (mvTasks.length > 0 ? (
-            '<div class="space-y-1.5 pt-2 border-t border-dashed">'
-            + '<div class="flex items-center space-x-2"><span class="w-2 h-2 rounded-full bg-purple-500"></span><span class="text-xs font-bold text-slate-700">MVトラック (イラスト ➔ 映像)</span></div>'
-            + '<div class="grid gap-2.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">'
-            + renderTaskCards(mvTasks)
+          // アコーディオン中身（折りたたみ対象）
+          + (!isCollapsed ? (
+            '<div class="p-5 space-y-4 bg-white">'
+            // 楽曲トラック表示
+            + '<div class="space-y-1.5">'
+            + '<div class="flex items-center space-x-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span><span class="text-xs font-bold text-slate-700">楽曲トラック (作曲 ➔ 作詞 ➔ 編曲 ➔ Rec ➔ Mix ➔ Mas)</span></div>'
+            + '<div class="grid gap-2.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">'
+            + renderTaskCards(musicTasks)
             + '</div>'
+            + '</div>'
+
+            // MVトラック表示
+            + (mvTasks.length > 0 ? (
+              '<div class="space-y-1.5 pt-2 border-t border-dashed">'
+              + '<div class="flex items-center space-x-2"><span class="w-2 h-2 rounded-full bg-purple-500"></span><span class="text-xs font-bold text-slate-700">MVトラック (イラスト ➔ 映像)</span></div>'
+              + '<div class="grid gap-2.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">'
+              + renderTaskCards(mvTasks)
+              + '</div>'
+              + '</div>'
+            ) : '')
             + '</div>'
           ) : '')
 
@@ -593,7 +621,6 @@
       loadCreativeProjects();
     }
 
-    // 並行パイプライン納期自動計算
     async function createCreativeProject() {
       const title = document.getElementById('newPrjTitle').value;
       const client = document.getElementById('newPrjClient').value;
@@ -621,49 +648,30 @@
       };
       const fmt = (d) => d.toISOString().split('T')[0];
 
-      // 各工程の日数取得ヘルパー
       const getD = (k) => {
         const found = WORKFLOW_DEF.find(w => w.key === k);
         return found ? found.days : 0;
       };
 
-      // 依存関係に基づいた日付計算
       const dates = {};
-
-      // 1. 作曲 (着手日 + 作曲日数)
       dates.compose = addDays(baseDate, getD('compose'));
-
-      // 2. 作詞 & 編曲（作曲完了から並行スタート）
       dates.lyrics = addDays(dates.compose, getD('lyrics'));
       dates.arrange = addDays(dates.compose, getD('arrange'));
-
-      // 3. Rec（作詞・編曲の両方が完了した最新日からスタート）
       const recStart = (dates.lyrics > dates.arrange) ? dates.lyrics : dates.arrange;
       dates.rec = addDays(recStart, getD('rec'));
-
-      // 4. Mix
       dates.mix = addDays(dates.rec, getD('mix'));
-
-      // 5. マスタリング
       dates.mastering = addDays(dates.mix, getD('mastering'));
-
-      // 6. イラスト（独立軸として着手日スタート）
       dates.illust = addDays(baseDate, getD('illust'));
-
-      // 7. 映像（イラスト完了からスタート）
       dates.movie = addDays(dates.illust, getD('movie'));
 
-      // タスク配列生成
       const tasksToInsert = [];
-      let sortOrder = 1;
-
       WORKFLOW_DEF.forEach(w => {
         if (checkedKeys.has(w.key)) {
           tasksToInsert.push({
             project_id: prj.id,
             title: w.name,
             deadline: fmt(dates[w.key]),
-            sort_order: sortOrder++,
+            sort_order: w.order,
             status: '未着手'
           });
         }
