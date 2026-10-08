@@ -86,7 +86,7 @@
         <button onclick="switchTab('members')" id="tabMembers" class="pb-3 px-2 font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">メンバー管理</button>
       </div>
 
-      <!-- クリエイター用タスク表示（UserまたはAdminの切替時） -->
+      <!-- クリエイター用タスク表示 -->
       <div id="userTaskSection" class="hidden space-y-4">
         <div class="flex justify-between items-center">
           <h2 class="text-lg font-bold">自分の担当タスク一覧</h2>
@@ -106,15 +106,31 @@
         <div id="projectList" class="space-y-4"></div>
       </div>
 
-      <!-- Admin: 営業ボード -->
+      <!-- Admin: 営業・商談ボード（チケットCRM） -->
       <div id="salesSection" class="hidden space-y-6">
-        <div class="flex justify-between items-center">
-          <h2 class="text-lg font-bold">営業・商談パイプライン</h2>
-          <button onclick="openModal('newSalesModal')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition shadow-sm">
-            + 営業リード追加
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 class="text-lg font-bold">営業・商談チケットプール</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400">カードをクリックすると詳細・定型文・送受信ログの記録ができます</p>
+          </div>
+          <button onclick="openModal('newLeadModal')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition shadow-sm">
+            + 営業チケット起票
           </button>
         </div>
-        <div id="salesList" class="grid gap-4 md:grid-cols-3"></div>
+
+        <!-- ステータスフィルター -->
+        <div class="flex flex-wrap gap-2 text-xs">
+          <button onclick="filterLeads('all')" class="lead-filter-btn px-3 py-1.5 rounded-lg border dark:border-slate-700 bg-blue-600 text-white font-medium" data-status="all">すべて</button>
+          <button onclick="filterLeads('未対応（HOT）')" class="lead-filter-btn px-3 py-1.5 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300" data-status="未対応（HOT）">未対応（HOT）</button>
+          <button onclick="filterLeads('再送付')" class="lead-filter-btn px-3 py-1.5 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300" data-status="再送付">再送付</button>
+          <button onclick="filterLeads('対応待ち')" class="lead-filter-btn px-3 py-1.5 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300" data-status="対応待ち">対応待ち</button>
+          <button onclick="filterLeads('先方返信あり（要対応）')" class="lead-filter-btn px-3 py-1.5 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300" data-status="先方返信あり（要対応）">先方返信あり</button>
+          <button onclick="filterLeads('相談決定')" class="lead-filter-btn px-3 py-1.5 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300" data-status="相談決定">相談決定</button>
+          <button onclick="filterLeads('対応停止')" class="lead-filter-btn px-3 py-1.5 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300" data-status="対応停止">対応停止</button>
+        </div>
+
+        <!-- チケット一覧グリッド -->
+        <div id="leadsList" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
       </div>
 
       <!-- Admin: 工程マスター設定 -->
@@ -169,7 +185,130 @@
     </div>
   </main>
 
-  <!-- モーダル: マイアカウント設定（ID・表示名・PW変更） -->
+  <!-- モーダル: 営業チケット起票（A担当） -->
+  <div id="newLeadModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800">
+      <h3 class="font-bold text-lg">新規営業チケット起票</h3>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">相手の名前（VTuber名・アーティスト名など） *</label>
+        <input type="text" id="leadClientName" required class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="例: 星野 アリス">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">X (Twitter) ID</label>
+        <div class="flex items-center">
+          <span class="px-3 py-2 border border-r-0 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-400 text-sm rounded-l-lg">@</span>
+          <input type="text" id="leadTwitterId" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-r-lg text-sm" placeholder="username">
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">YouTube チャンネルURL</label>
+        <input type="url" id="leadYoutubeUrl" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="https://youtube.com/@...">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">連絡先メールアドレス（任意）</label>
+        <input type="email" id="leadContactEmail" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="contact@example.com">
+      </div>
+      <div class="flex justify-end space-x-2 pt-2">
+        <button onclick="closeModal('newLeadModal')" class="px-4 py-2 border dark:border-slate-700 rounded-lg text-sm">キャンセル</button>
+        <button onclick="createLeadTicket()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">起票（未対応HOT）</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル: 営業チケット詳細・追客操作 -->
+  <div id="leadDetailModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full p-6 space-y-5 border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
+      
+      <!-- 詳細ヘッダー -->
+      <div class="flex flex-wrap items-start justify-between gap-3 border-b dark:border-slate-800 pb-3">
+        <div>
+          <span id="detailStatusBadge" class="px-2.5 py-0.5 rounded-full text-xs font-bold"></span>
+          <h3 id="detailClientName" class="text-xl font-bold mt-1 text-slate-800 dark:text-slate-100"></h3>
+        </div>
+        <div class="flex items-center space-x-2" id="detailLinks"></div>
+      </div>
+
+      <!-- 送信回数 & 次回送信予定日 -->
+      <div class="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl text-xs">
+        <div>
+          <span class="text-slate-400">追客回数:</span>
+          <span id="detailSendCount" class="font-bold ml-1 text-slate-700 dark:text-slate-200 text-sm">0 / 3回</span>
+        </div>
+        <div>
+          <span class="text-slate-400">次回送付予定日:</span>
+          <span id="detailNextFollowup" class="font-bold ml-1 text-slate-700 dark:text-slate-200 text-sm">未設定</span>
+        </div>
+      </div>
+
+      <!-- 定型文（テンプレ）呼び出し & コピペ機能 -->
+      <div class="space-y-2 border-t dark:border-slate-800 pt-3">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-bold text-slate-700 dark:text-slate-300">定型文テンプレート（名前自動反映）</label>
+          <select id="templateSelector" onchange="applyTemplateToBox()" class="text-xs px-2 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800">
+            <option value="">-- 定型文を選択 --</option>
+          </select>
+        </div>
+        <div class="relative">
+          <textarea id="templateMessageBox" rows="4" class="w-full p-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs font-mono outline-none focus:ring-2 focus:ring-blue-500" placeholder="定型文を選択するとここに名前が反映されて表示されます。編集も可能です。"></textarea>
+          <button onclick="copyTemplateBox()" type="button" class="absolute bottom-2 right-2 px-2.5 py-1 bg-slate-800 dark:bg-slate-700 text-white rounded text-[11px] font-medium hover:bg-slate-700 transition shadow">
+            📋 コピー
+          </button>
+        </div>
+      </div>
+
+      <!-- 送信・返信アクション入力 -->
+      <div class="space-y-3 border-t dark:border-slate-800 pt-3 bg-blue-50/50 dark:bg-blue-950/20 p-3 rounded-xl border border-blue-100 dark:border-blue-900/40">
+        <label class="block text-xs font-bold text-blue-900 dark:text-blue-300">送受信の記録 & ステータス更新</label>
+        <div>
+          <textarea id="logMessageInput" rows="2" class="w-full p-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none" placeholder="送信した内容の要約、または先方からの返信内容を入力..."></textarea>
+        </div>
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+          <div class="flex items-center space-x-2">
+            <label class="text-xs text-slate-600 dark:text-slate-400">次回送付指定:</label>
+            <input type="date" id="actionNextDate" class="text-xs px-2 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded">
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="recordLeadAction('send')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition shadow-sm">
+              送信を記録（カウント+1）
+            </button>
+            <button onclick="recordLeadAction('reply')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-medium transition shadow-sm">
+              返信ありを記録
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 特殊ステータス変更（相談決定 / 対応停止） -->
+      <div class="flex flex-wrap items-center justify-between gap-2 border-t dark:border-slate-800 pt-3">
+        <div class="flex items-center space-x-2">
+          <select id="stopReasonSelect" class="text-xs px-2 py-1.5 border dark:border-slate-700 rounded bg-white dark:bg-slate-800">
+            <option value="直近の相談予定なし">直近の相談予定なし（断り等）</option>
+            <option value="追客上限">追客上限（未返信）</option>
+          </select>
+          <button onclick="markLeadStopped()" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded text-xs font-medium hover:bg-slate-300 transition">
+            対応停止にする
+          </button>
+        </div>
+        <div>
+          <button onclick="markLeadConsultation()" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-bold transition shadow-sm">
+            🎉 相談決定 ➔ 制作案件を起票
+          </button>
+        </div>
+      </div>
+
+      <!-- 履歴タイムライン -->
+      <div class="space-y-2 border-t dark:border-slate-800 pt-3">
+        <h4 class="text-xs font-bold text-slate-500">送受信ログ履歴</h4>
+        <div id="detailLogsTimeline" class="space-y-2 max-h-40 overflow-y-auto text-xs"></div>
+      </div>
+
+      <div class="flex justify-end pt-2 border-t dark:border-slate-800">
+        <button onclick="closeModal('leadDetailModal')" class="px-4 py-1.5 border dark:border-slate-700 rounded-lg text-xs">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル: マイアカウント設定 -->
   <div id="myAccountModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800">
       <h3 class="font-bold text-lg">マイアカウント設定</h3>
@@ -260,29 +399,6 @@
     </div>
   </div>
 
-  <!-- モーダル: 営業リード追加 -->
-  <div id="newSalesModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800">
-      <h3 class="font-bold text-lg">営業リード追加</h3>
-      <div>
-        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">クライアント名 / 案件名 *</label>
-        <input type="text" id="salesTitle" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm">
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">次回MTG日時</label>
-        <input type="datetime-local" id="salesMeeting" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm">
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">議事録 / メモURL</label>
-        <input type="url" id="salesNotesUrl" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm">
-      </div>
-      <div class="flex justify-end space-x-2 pt-2">
-        <button onclick="closeModal('newSalesModal')" class="px-4 py-2 border dark:border-slate-700 rounded-lg text-sm">キャンセル</button>
-        <button onclick="createSalesLead()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">追加</button>
-      </div>
-    </div>
-  </div>
-
   <script>
     let currentUser = null;
     let userProfile = null;
@@ -290,7 +406,11 @@
     const collapsedProjects = new Set();
     let adminViewMode = 'admin';
 
-    // ユーザー表示名の共通フォーマット関数（メアドは一切出さず、表示名優先、無ければID）
+    let allLeads = [];
+    let currentFilterStatus = 'all';
+    let selectedLead = null;
+    let salesTemplates = [];
+
     function getDisplayName(profile) {
       if (!profile) return '未アサイン';
       return profile.name || profile.user_id || '未設定';
@@ -509,12 +629,12 @@
     }
 
     async function loadDashboard() {
-      await Promise.all([loadMasterFromDB(), loadAllProfiles()]);
+      await Promise.all([loadMasterFromDB(), loadAllProfiles(), loadSalesTemplates()]);
       renderMasterTable();
       renderCheckboxes();
       if (userProfile.role === 'admin') {
         loadCreativeProjects();
-        loadSalesProjects();
+        loadLeads();
         renderMembersTable();
       }
     }
@@ -541,6 +661,305 @@
       allProfiles = data || [];
     }
 
+    async function loadSalesTemplates() {
+      const { data } = await supabaseClient.from('sales_templates').select('*').order('sort_order');
+      salesTemplates = data || [];
+
+      const selector = document.getElementById('templateSelector');
+      if (!selector) return;
+      selector.innerHTML = '<option value="">-- 定型文を選択 --</option>' + salesTemplates.map(t => {
+        return '<option value="' + t.id + '">' + t.title + '</option>';
+      }).join('');
+    }
+
+    // ----------------------------------------------------
+    // 営業・商談チケット CRM ロジック
+    // ----------------------------------------------------
+    async function loadLeads() {
+      const { data } = await supabaseClient.from('leads').select('*').order('created_at', { ascending: false });
+      allLeads = data || [];
+
+      // 7日経過した「対応待ち（3回目送信済）」の自動対応停止チェック
+      const now = new Date();
+      const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+      const updates = [];
+
+      allLeads.forEach(lead => {
+        if (lead.status === '対応待ち' && lead.send_count >= 3 && lead.last_sent_at) {
+          const sentDate = new Date(lead.last_sent_at);
+          if (sentDate <= sevenDaysAgo) {
+            lead.status = '対応停止';
+            lead.stop_reason = '追客上限';
+            updates.push(supabaseClient.from('leads').update({
+              status: '対応停止',
+              stop_reason: '追客上限'
+            }).eq('id', lead.id));
+          }
+        }
+      });
+
+      if (updates.length > 0) {
+        await Promise.all(updates);
+      }
+
+      renderLeadsGrid();
+    }
+
+    function filterLeads(status) {
+      currentFilterStatus = status;
+      document.querySelectorAll('.lead-filter-btn').forEach(btn => {
+        const isMatch = btn.dataset.status === status;
+        btn.className = isMatch 
+          ? 'lead-filter-btn px-3 py-1.5 rounded-lg border dark:border-slate-700 bg-blue-600 text-white font-medium'
+          : 'lead-filter-btn px-3 py-1.5 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300';
+      });
+      renderLeadsGrid();
+    }
+
+    function getLeadStatusBadge(lead) {
+      const st = lead.status;
+      if (st === '未対応（HOT）') return '<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-red-100 text-red-700 border border-red-200">🔥 未対応(HOT)</span>';
+      if (st === '再送付') return '<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200">再送付</span>';
+      if (st === '対応待ち') return '<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-100 text-blue-700 border border-blue-200">対応待ち</span>';
+      if (st === '先方返信あり（要対応）') return '<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">📬 返信あり</span>';
+      if (st === '相談決定') return '<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-100 text-indigo-700 border border-indigo-200">🎉 相談決定</span>';
+      if (st === '対応停止') return '<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-500 border border-slate-200">停止 (' + (lead.stop_reason || '') + ')</span>';
+      return '<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-600">' + st + '</span>';
+    }
+
+    function renderLeadsGrid() {
+      const container = document.getElementById('leadsList');
+      if (!container) return;
+
+      const filtered = allLeads.filter(l => {
+        if (currentFilterStatus === 'all') return true;
+        if (currentFilterStatus === '対応停止') return l.status === '対応停止';
+        return l.status === currentFilterStatus;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="col-span-3 p-8 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">該当するチケットはありません</div>';
+        return;
+      }
+
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      container.innerHTML = filtered.map(l => {
+        const isFollowupDue = l.next_followup_at && l.next_followup_at <= todayStr && l.status !== '対応停止' && l.status !== '相談決定';
+        const countBadge = '<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">' + (l.send_count || 0) + ' / 3回</span>';
+
+        return '<div onclick="openLeadDetail(\'' + l.id + '\')" class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-blue-500 dark:hover:border-blue-400 cursor-pointer transition space-y-3 relative">'
+          + '<div class="flex justify-between items-start gap-2">'
+          + '<div>'
+          + '<h4 class="font-bold text-base text-slate-800 dark:text-slate-100 hover:text-blue-600 transition">' + l.client_name + '</h4>'
+          + (l.twitter_id ? '<span class="text-xs text-blue-500 dark:text-blue-400">@' + l.twitter_id + '</span>' : '')
+          + '</div>'
+          + '<div class="text-right space-y-1">'
+          + getLeadStatusBadge(l)
+          + '<div>' + countBadge + '</div>'
+          + '</div>'
+          + '</div>'
+
+          + '<div class="flex flex-wrap items-center justify-between text-xs pt-2 border-t border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400">'
+          + '<div>'
+          + (l.next_followup_at ? ('次回: <span class="' + (isFollowupDue ? 'text-red-500 font-bold' : '') + '">' + l.next_followup_at + (isFollowupDue ? ' ⚠期日' : '') + '</span>') : '次回予定: 未定')
+          + '</div>'
+          + '<div class="text-[11px] text-blue-600 dark:text-blue-400 font-medium">詳細・記録 ➔</div>'
+          + '</div>'
+          + '</div>';
+      }).join('');
+    }
+
+    async function createLeadTicket() {
+      const name = document.getElementById('leadClientName').value.trim();
+      const twitter = document.getElementById('leadTwitterId').value.trim().replace(/^@/, '');
+      const yt = document.getElementById('leadYoutubeUrl').value.trim();
+      const email = document.getElementById('leadContactEmail').value.trim();
+
+      if (!name) return alert('相手の名前を入力してください');
+
+      const { error } = await supabaseClient.from('leads').insert({
+        client_name: name,
+        twitter_id: twitter || null,
+        youtube_url: yt || null,
+        contact_email: email || null,
+        status: '未対応（HOT）',
+        send_count: 0,
+        logs: [{
+          type: 'created',
+          text: 'チケット起票',
+          at: new Date().toISOString()
+        }]
+      });
+
+      if (error) return alert('起票失敗: ' + error.message);
+
+      closeModal('newLeadModal');
+      document.getElementById('leadClientName').value = '';
+      document.getElementById('leadTwitterId').value = '';
+      document.getElementById('leadYoutubeUrl').value = '';
+      document.getElementById('leadContactEmail').value = '';
+      loadLeads();
+    }
+
+    function openLeadDetail(leadId) {
+      selectedLead = allLeads.find(l => l.id === leadId);
+      if (!selectedLead) return;
+
+      document.getElementById('detailClientName').innerText = selectedLead.client_name;
+      document.getElementById('detailStatusBadge').innerHTML = getLeadStatusBadge(selectedLead);
+      document.getElementById('detailSendCount').innerText = (selectedLead.send_count || 0) + ' / 3回';
+      document.getElementById('detailNextFollowup').innerText = selectedLead.next_followup_at || '未設定';
+
+      // リンク
+      let linksHtml = '';
+      if (selectedLead.twitter_id) {
+        linksHtml += '<a href="https://twitter.com/' + selectedLead.twitter_id + '" target="_blank" class="px-2.5 py-1 bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300 rounded text-xs font-semibold hover:underline">X (@' + selectedLead.twitter_id + ') ↗</a>';
+      }
+      if (selectedLead.youtube_url) {
+        linksHtml += '<a href="' + selectedLead.youtube_url + '" target="_blank" class="px-2.5 py-1 bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-300 rounded text-xs font-semibold hover:underline">YouTube ↗</a>';
+      }
+      if (selectedLead.contact_email) {
+        linksHtml += '<a href="mailto:' + selectedLead.contact_email + '" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded text-xs font-semibold hover:underline">Mail ↗</a>';
+      }
+      document.getElementById('detailLinks').innerHTML = linksHtml;
+
+      // ログ履歴タイムライン
+      const logs = selectedLead.logs || [];
+      document.getElementById('detailLogsTimeline').innerHTML = logs.length > 0 
+        ? logs.map(lg => {
+            const dateStr = new Date(lg.at).toLocaleString('ja-JP');
+            return '<div class="p-2 bg-slate-50 dark:bg-slate-800 rounded border dark:border-slate-700">'
+              + '<div class="flex justify-between text-[10px] text-slate-400 mb-0.5"><span>' + lg.type + '</span><span>' + dateStr + '</span></div>'
+              + '<div class="text-slate-700 dark:text-slate-300 font-mono text-[11px] whitespace-pre-wrap">' + lg.text + '</div>'
+              + '</div>';
+          }).join('')
+        : '<div class="text-slate-400 text-center py-2">ログはありません</div>';
+
+      // フォームリセット
+      document.getElementById('templateSelector').value = '';
+      document.getElementById('templateMessageBox').value = '';
+      document.getElementById('logMessageInput').value = '';
+      
+      // デフォルト次回日（今日から3日後）
+      const defaultNext = new Date();
+      defaultNext.setDate(defaultNext.getDate() + 3);
+      document.getElementById('actionNextDate').value = defaultNext.toISOString().split('T')[0];
+
+      openModal('leadDetailModal');
+    }
+
+    function applyTemplateToBox() {
+      const templateId = document.getElementById('templateSelector').value;
+      if (!templateId || !selectedLead) return;
+      const t = salesTemplates.find(item => item.id === templateId);
+      if (t) {
+        // {name} を相手の名前に自動置換
+        const replaced = t.body.replace(/\{name\}/g, selectedLead.client_name);
+        document.getElementById('templateMessageBox').value = replaced;
+        document.getElementById('logMessageInput').value = replaced;
+      }
+    }
+
+    function copyTemplateBox() {
+      const text = document.getElementById('templateMessageBox').value;
+      if (!text) return alert('コピーする文章がありません');
+      navigator.clipboard.writeText(text);
+      alert('クリップボードにコピーしました！そのままXやメールにペーストできます。');
+    }
+
+    async function recordLeadAction(actionType) {
+      if (!selectedLead) return;
+      const logText = document.getElementById('logMessageInput').value.trim();
+      const nextDate = document.getElementById('actionNextDate').value;
+
+      if (!logText) return alert('送受信内容を入力してください');
+
+      let newStatus = selectedLead.status;
+      let newCount = selectedLead.send_count || 0;
+
+      if (actionType === 'send') {
+        newCount += 1;
+        if (newCount >= 3) {
+          newStatus = '対応待ち'; // 3回送信時は対応待ち
+        } else {
+          newStatus = '再送付';  // 1回目、2回目は再送付
+        }
+      } else if (actionType === 'reply') {
+        newStatus = '先方返信あり（要対応）';
+      }
+
+      const logs = selectedLead.logs || [];
+      logs.unshift({
+        type: actionType === 'send' ? ('送信(' + newCount + '回目)') : '返信受信',
+        text: logText,
+        at: new Date().toISOString()
+      });
+
+      const { error } = await supabaseClient.from('leads').update({
+        status: newStatus,
+        send_count: newCount,
+        next_followup_at: nextDate || null,
+        last_sent_at: actionType === 'send' ? new Date().toISOString() : selectedLead.last_sent_at,
+        logs: logs
+      }).eq('id', selectedLead.id);
+
+      if (error) return alert('更新エラー: ' + error.message);
+
+      alert('記録を保存しました！');
+      closeModal('leadDetailModal');
+      loadLeads();
+    }
+
+    async function markLeadStopped() {
+      if (!selectedLead) return;
+      const reason = document.getElementById('stopReasonSelect').value;
+
+      const logs = selectedLead.logs || [];
+      logs.unshift({
+        type: '対応停止',
+        text: '停止理由: ' + reason,
+        at: new Date().toISOString()
+      });
+
+      await supabaseClient.from('leads').update({
+        status: '対応停止',
+        stop_reason: reason,
+        logs: logs
+      }).eq('id', selectedLead.id);
+
+      alert('対応停止に更新しました');
+      closeModal('leadDetailModal');
+      loadLeads();
+    }
+
+    async function markLeadConsultation() {
+      if (!selectedLead) return;
+
+      const logs = selectedLead.logs || [];
+      logs.unshift({
+        type: '相談決定',
+        text: 'MTG・案件相談へ移行',
+        at: new Date().toISOString()
+      });
+
+      await supabaseClient.from('leads').update({
+        status: '相談決定',
+        logs: logs
+      }).eq('id', selectedLead.id);
+
+      closeModal('leadDetailModal');
+      loadLeads();
+
+      // 新規制作案件モーダルを自動展開し、名前を事前入力
+      document.getElementById('newPrjTitle').value = selectedLead.client_name + ' 様 制作案件';
+      document.getElementById('newPrjClient').value = selectedLead.client_name;
+      openModal('newProjectModal');
+    }
+
+    // ----------------------------------------------------
+    // 制作進行ボード ロジック
+    // ----------------------------------------------------
     function renderMasterTable() {
       const tbody = document.getElementById('masterTableBody');
       if (!tbody) return;
@@ -945,61 +1364,6 @@
 
       closeModal('newProjectModal');
       loadCreativeProjects();
-    }
-
-    async function loadSalesProjects() {
-      const { data: sales } = await supabaseClient.from('projects').select('*').eq('type', 'sales').order('created_at', { ascending: false });
-      const container = document.getElementById('salesList');
-      if (!sales || sales.length === 0) {
-        container.innerHTML = '<div class="col-span-3 p-8 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">営業リードはありません</div>';
-        return;
-      }
-
-      container.innerHTML = sales.map(s => {
-        const statusOptions = ['リード', '初回MTG', '提案中', '成約', '失注'].map(st => {
-          const selected = s.status === st ? 'selected' : '';
-          return '<option value="' + st + '" ' + selected + '>' + st + '</option>';
-        }).join('');
-
-        const meetingText = s.next_meeting_at ? new Date(s.next_meeting_at).toLocaleString('ja-JP') : '未定';
-        const notesHtml = s.meeting_notes_url ? '<a href="' + s.meeting_notes_url + '" target="_blank" class="text-xs text-blue-600 dark:text-blue-400 block hover:underline truncate">議事録リンク ↗</a>' : '';
-        const wonBadgeHtml = s.status === '成約' ? '<div class="p-2 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[11px] rounded font-medium">✓ 成約済</div>' : '';
-
-        return '<div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">'
-          + '<div class="flex justify-between items-start">'
-          + '<h4 class="font-bold text-sm text-slate-800 dark:text-slate-100">' + s.title + '</h4>'
-          + '<select onchange="updateSalesStatus(\'' + s.id + '\', this.value)" class="text-xs px-2 py-1 border dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-800 font-medium">'
-          + statusOptions
-          + '</select>'
-          + '</div>'
-          + '<div class="text-xs text-slate-500 dark:text-slate-400">次回MTG: ' + meetingText + '</div>'
-          + notesHtml
-          + wonBadgeHtml
-          + '</div>';
-      }).join('');
-    }
-
-    async function updateSalesStatus(id, newStatus) {
-      await supabaseClient.from('projects').update({ status: newStatus }).eq('id', id);
-      loadSalesProjects();
-    }
-
-    async function createSalesLead() {
-      const title = document.getElementById('salesTitle').value;
-      const meeting = document.getElementById('salesMeeting').value;
-      const notes = document.getElementById('salesNotesUrl').value;
-      if (!title) return alert('案件名を入力してください');
-
-      await supabaseClient.from('projects').insert({
-        type: 'sales',
-        title,
-        next_meeting_at: meeting ? new Date(meeting).toISOString() : null,
-        meeting_notes_url: notes,
-        status: 'リード'
-      });
-
-      closeModal('newSalesModal');
-      loadSalesProjects();
     }
 
     async function loadUserTasks() {
