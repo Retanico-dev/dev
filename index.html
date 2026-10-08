@@ -231,7 +231,7 @@
       <!-- 送信回数 & 次回送信予定日 -->
       <div class="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl text-xs">
         <div>
-          <span class="text-slate-400">追客回数:</span>
+          <span class="text-slate-400">進行フェーズ:</span>
           <span id="detailSendCount" class="font-bold ml-1 text-slate-700 dark:text-slate-200 text-sm">0 / 3回</span>
         </div>
         <div>
@@ -258,7 +258,10 @@
 
       <!-- 送信・返信アクション入力 -->
       <div class="space-y-3 border-t dark:border-slate-800 pt-3 bg-blue-50/50 dark:bg-blue-950/20 p-3 rounded-xl border border-blue-100 dark:border-blue-900/40">
-        <label class="block text-xs font-bold text-blue-900 dark:text-blue-300">送受信の記録 & ステータス更新</label>
+        <div class="flex items-center justify-between">
+          <label class="block text-xs font-bold text-blue-900 dark:text-blue-300">送受信の記録 & ステータス更新</label>
+          <span id="phaseGuideText" class="text-[11px] font-medium text-slate-500 dark:text-slate-400"></span>
+        </div>
         <div>
           <textarea id="logMessageInput" rows="2" class="w-full p-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none" placeholder="送信した内容の要約、または先方からの返信内容を入力..."></textarea>
         </div>
@@ -268,8 +271,8 @@
             <input type="date" id="actionNextDate" class="text-xs px-2 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded">
           </div>
           <div class="flex items-center space-x-2">
-            <button onclick="recordLeadAction('send')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition shadow-sm">
-              送信を記録（カウント+1）
+            <button id="btnRecordSend" onclick="recordLeadAction('send')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition shadow-sm">
+              送信を記録
             </button>
             <button onclick="recordLeadAction('reply')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-medium transition shadow-sm">
               返信ありを記録
@@ -673,13 +676,13 @@
     }
 
     // ----------------------------------------------------
-    // 営業・商談チケット CRM ロジック
+    // 営業・商談チケット CRM ロジック (パターンA実装)
     // ----------------------------------------------------
     async function loadLeads() {
       const { data } = await supabaseClient.from('leads').select('*').order('created_at', { ascending: false });
       allLeads = data || [];
 
-      // 7日経過した「対応待ち（3回目送信済）」の自動対応停止チェック
+      // 自動停止判定: 「対応待ち（未返信のまま3回送信済）」かつ最終送信から7日経過
       const now = new Date();
       const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
       const updates = [];
@@ -727,6 +730,17 @@
       return '<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-600">' + st + '</span>';
     }
 
+    // パターンA: 返信ありの場合は「商談ラリー中」バッジを表示
+    function getLeadPhaseBadge(lead) {
+      if (lead.status === '先方返信あり（要対応）') {
+        return '<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">💬 商談ラリー中</span>';
+      }
+      if (lead.status === '相談決定') {
+        return '<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">相談・MTG段階</span>';
+      }
+      return '<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">追客: ' + (lead.send_count || 0) + ' / 3回</span>';
+    }
+
     function renderLeadsGrid() {
       const container = document.getElementById('leadsList');
       if (!container) return;
@@ -746,7 +760,7 @@
 
       container.innerHTML = filtered.map(l => {
         const isFollowupDue = l.next_followup_at && l.next_followup_at <= todayStr && l.status !== '対応停止' && l.status !== '相談決定';
-        const countBadge = '<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">' + (l.send_count || 0) + ' / 3回</span>';
+        const phaseBadge = getLeadPhaseBadge(l);
 
         return '<div onclick="openLeadDetail(\'' + l.id + '\')" class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-blue-500 dark:hover:border-blue-400 cursor-pointer transition space-y-3 relative">'
           + '<div class="flex justify-between items-start gap-2">'
@@ -756,7 +770,7 @@
           + '</div>'
           + '<div class="text-right space-y-1">'
           + getLeadStatusBadge(l)
-          + '<div>' + countBadge + '</div>'
+          + '<div>' + phaseBadge + '</div>'
           + '</div>'
           + '</div>'
 
@@ -806,9 +820,22 @@
       selectedLead = allLeads.find(l => l.id === leadId);
       if (!selectedLead) return;
 
+      const isReplied = selectedLead.status === '先方返信あり（要対応）';
+
       document.getElementById('detailClientName').innerText = selectedLead.client_name;
       document.getElementById('detailStatusBadge').innerHTML = getLeadStatusBadge(selectedLead);
-      document.getElementById('detailSendCount').innerText = (selectedLead.send_count || 0) + ' / 3回';
+      
+      // フェーズ表示（返信後は商談ラリー中）
+      if (isReplied) {
+        document.getElementById('detailSendCount').innerHTML = '<span class="text-emerald-600 font-bold">💬 商談ラリー進行中（追客上限解除）</span>';
+        document.getElementById('phaseGuideText').innerText = '※返信後のラリー中（送信しても追客上限は増えません）';
+        document.getElementById('btnRecordSend').innerText = '返信・メッセージ送信を記録';
+      } else {
+        document.getElementById('detailSendCount').innerText = (selectedLead.send_count || 0) + ' / 3回';
+        document.getElementById('phaseGuideText').innerText = '※未返信のアプローチ中（3回目送信で対応待ちへ）';
+        document.getElementById('btnRecordSend').innerText = '送信を記録（カウント+1）';
+      }
+
       document.getElementById('detailNextFollowup').innerText = selectedLead.next_followup_at || '未設定';
 
       // リンク
@@ -824,24 +851,22 @@
       }
       document.getElementById('detailLinks').innerHTML = linksHtml;
 
-      // ログ履歴タイムライン
+      // ログ履歴
       const logs = selectedLead.logs || [];
       document.getElementById('detailLogsTimeline').innerHTML = logs.length > 0 
         ? logs.map(lg => {
             const dateStr = new Date(lg.at).toLocaleString('ja-JP');
             return '<div class="p-2 bg-slate-50 dark:bg-slate-800 rounded border dark:border-slate-700">'
-              + '<div class="flex justify-between text-[10px] text-slate-400 mb-0.5"><span>' + lg.type + '</span><span>' + dateStr + '</span></div>'
+              + '<div class="flex justify-between text-[10px] text-slate-400 mb-0.5 font-bold"><span>' + lg.type + '</span><span>' + dateStr + '</span></div>'
               + '<div class="text-slate-700 dark:text-slate-300 font-mono text-[11px] whitespace-pre-wrap">' + lg.text + '</div>'
               + '</div>';
           }).join('')
         : '<div class="text-slate-400 text-center py-2">ログはありません</div>';
 
-      // フォームリセット
       document.getElementById('templateSelector').value = '';
       document.getElementById('templateMessageBox').value = '';
       document.getElementById('logMessageInput').value = '';
       
-      // デフォルト次回日（今日から3日後）
       const defaultNext = new Date();
       defaultNext.setDate(defaultNext.getDate() + 3);
       document.getElementById('actionNextDate').value = defaultNext.toISOString().split('T')[0];
@@ -854,7 +879,6 @@
       if (!templateId || !selectedLead) return;
       const t = salesTemplates.find(item => item.id === templateId);
       if (t) {
-        // {name} を相手の名前に自動置換
         const replaced = t.body.replace(/\{name\}/g, selectedLead.client_name);
         document.getElementById('templateMessageBox').value = replaced;
         document.getElementById('logMessageInput').value = replaced;
@@ -865,9 +889,10 @@
       const text = document.getElementById('templateMessageBox').value;
       if (!text) return alert('コピーする文章がありません');
       navigator.clipboard.writeText(text);
-      alert('クリップボードにコピーしました！そのままXやメールにペーストできます。');
+      alert('クリップボードにコピーしました！そのままペーストして送信できます。');
     }
 
+    // パターンA 送信/返信アクション
     async function recordLeadAction(actionType) {
       if (!selectedLead) return;
       const logText = document.getElementById('logMessageInput').value.trim();
@@ -877,21 +902,31 @@
 
       let newStatus = selectedLead.status;
       let newCount = selectedLead.send_count || 0;
+      let logType = '';
 
       if (actionType === 'send') {
-        newCount += 1;
-        if (newCount >= 3) {
-          newStatus = '対応待ち'; // 3回送信時は対応待ち
+        if (selectedLead.status === '先方返信あり（要対応）') {
+          // 返信後のメッセージ送信: 追客カウントは増やさず、ステータスは維持
+          logType = 'メッセージ送信 (ラリー中)';
         } else {
-          newStatus = '再送付';  // 1回目、2回目は再送付
+          // 未返信のアプローチ・追客: カウント+1
+          newCount += 1;
+          logType = '送信 (' + newCount + '回目)';
+          if (newCount >= 3) {
+            newStatus = '対応待ち';
+          } else {
+            newStatus = '再送付';
+          }
         }
       } else if (actionType === 'reply') {
+        // 返信受信: ステータスを返信ありへ切り替え（追客リミット解除）
         newStatus = '先方返信あり（要対応）';
+        logType = '返信受信';
       }
 
       const logs = selectedLead.logs || [];
       logs.unshift({
-        type: actionType === 'send' ? ('送信(' + newCount + '回目)') : '返信受信',
+        type: logType,
         text: logText,
         at: new Date().toISOString()
       });
@@ -900,7 +935,7 @@
         status: newStatus,
         send_count: newCount,
         next_followup_at: nextDate || null,
-        last_sent_at: actionType === 'send' ? new Date().toISOString() : selectedLead.last_sent_at,
+        last_sent_at: (actionType === 'send') ? new Date().toISOString() : selectedLead.last_sent_at,
         logs: logs
       }).eq('id', selectedLead.id);
 
@@ -951,7 +986,6 @@
       closeModal('leadDetailModal');
       loadLeads();
 
-      // 新規制作案件モーダルを自動展開し、名前を事前入力
       document.getElementById('newPrjTitle').value = selectedLead.client_name + ' 様 制作案件';
       document.getElementById('newPrjClient').value = selectedLead.client_name;
       openModal('newProjectModal');
