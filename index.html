@@ -226,7 +226,7 @@
     </div>
   </div>
 
-  <!-- モーダル: タスク提出・フィードバックログ詳細 -->
+  <!-- モーダル: タスク提出・フィードバックログ詳細（既読化リアルタイム対応） -->
   <div id="taskLogModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-4 sm:p-6 space-y-4 border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
       <div class="flex items-start justify-between border-b dark:border-slate-800 pb-3">
@@ -259,7 +259,7 @@
       <div class="space-y-2 pt-1">
         <div class="flex justify-between items-center">
           <h4 class="text-xs font-bold text-slate-500">提出・やり取りタイムライン</h4>
-          <button onclick="markCurrentTaskLogsAsRead()" class="text-[11px] text-blue-600 dark:text-blue-400 hover:underline">
+          <button id="btnMarkReadInModal" onclick="markCurrentTaskLogsAsRead()" class="text-[11px] px-2.5 py-1 rounded font-medium border transition">
             ✓ 既読にする
           </button>
         </div>
@@ -521,17 +521,22 @@
       return m + '/' + d;
     }
 
+    // ログ未読判定（各ログ単体の未読判定）
+    function isLogItemUnread(logItem, taskId) {
+      if (!logItem) return false;
+      const currentUserName = userProfile ? (userProfile.name || userProfile.user_id || '') : '';
+      if (logItem.user === currentUserName) return false;
+
+      const readStorageKey = 'read_task_log_' + (currentUser ? currentUser.id : 'anon') + '_' + taskId;
+      const lastReadAt = localStorage.getItem(readStorageKey);
+      if (!lastReadAt) return true;
+      return new Date(logItem.at) > new Date(lastReadAt);
+    }
+
     function getTaskUnreadStatus(task) {
       const logs = task.logs || [];
       if (logs.length === 0) return false;
-      const currentUserName = userProfile ? (userProfile.name || userProfile.user_id || '') : '';
-      const lastLog = logs[0];
-      if (lastLog.user === currentUserName) return false;
-
-      const readStorageKey = 'read_task_log_' + (currentUser ? currentUser.id : 'anon') + '_' + task.id;
-      const lastReadAt = localStorage.getItem(readStorageKey);
-      if (!lastReadAt) return true;
-      return new Date(lastLog.at) > new Date(lastReadAt);
+      return logs.some(l => isLogItemUnread(l, task.id));
     }
 
     function setTaskAsRead(taskId) {
@@ -1195,20 +1200,35 @@
       document.getElementById('taskLogInputText').value = '';
       document.getElementById('taskLogStatusSelect').value = '';
 
+      updateModalReadButtonUI();
       renderTaskLogTimeline(targetTask.logs || []);
-      setTaskAsRead(targetTask.id);
       openModal('taskLogModal');
+    }
+
+    function updateModalReadButtonUI() {
+      const btn = document.getElementById('btnMarkReadInModal');
+      if (!btn || !selectedTaskForLog) return;
+      const isUnread = getTaskUnreadStatus(selectedTaskForLog);
+      if (isUnread) {
+        btn.innerText = '✓ 既読にする';
+        btn.className = 'text-[11px] px-2.5 py-1 rounded font-bold bg-blue-50 dark:bg-blue-950/70 border border-blue-400 text-blue-700 dark:text-blue-300 hover:bg-blue-100 cursor-pointer transition';
+      } else {
+        btn.innerText = '✓ 既読済み';
+        btn.className = 'text-[11px] px-2.5 py-1 rounded font-medium bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700 cursor-default transition';
+      }
     }
 
     function markCurrentTaskLogsAsRead() {
       if (!selectedTaskForLog) return;
       setTaskAsRead(selectedTaskForLog.id);
-      alert('既読に設定しました');
-      closeModal('taskLogModal');
+      
+      // リアルタイムにUI更新（モーダルを閉じずにスッと反映）
+      updateModalReadButtonUI();
+      renderTaskLogTimeline(selectedTaskForLog.logs || []);
+      
+      // ボード・タスク一覧を両方更新して赤い新着マークを消す
       loadCreativeProjects();
-      if (userProfile.role !== 'admin') {
-        loadUserTasks();
-      }
+      loadUserTasks();
     }
 
     function renderTaskLogTimeline(logs) {
@@ -1220,13 +1240,18 @@
       }
 
       container.innerHTML = logs.map(l => {
+        const isUnread = selectedTaskForLog ? isLogItemUnread(l, selectedTaskForLog.id) : false;
         const dateStr = new Date(l.at).toLocaleString('ja-JP');
         const urlHtml = l.url ? '<div class="mt-1"><a href="' + l.url + '" target="_blank" class="inline-flex items-center text-blue-600 dark:text-blue-400 font-bold hover:underline bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded text-[11px]">📦 提出URL: ' + l.url + ' ↗</a></div>' : '';
         const badgeColor = l.type === '提出' ? 'bg-blue-100 text-blue-700' : l.type === 'リテイク指示' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700';
+        const unreadTag = isUnread ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500 text-white animate-pulse">NEW</span>' : '';
 
-        return '<div class="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-lg border dark:border-slate-700 space-y-1">'
+        return '<div class="p-2.5 rounded-lg border transition ' + (isUnread ? 'bg-amber-50/60 dark:bg-amber-950/30 border-amber-300 dark:border-amber-700' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700') + ' space-y-1">'
           + '<div class="flex justify-between items-center text-[10px]">'
+          + '<div class="flex items-center space-x-1.5">'
           + '<span class="font-bold px-1.5 py-0.5 rounded ' + badgeColor + '">' + l.type + ' (' + (l.user || '不明') + ')</span>'
+          + unreadTag
+          + '</div>'
           + '<span class="text-slate-400">' + dateStr + '</span>'
           + '</div>'
           + (l.comment ? '<div class="text-slate-700 dark:text-slate-300 font-mono text-[11px] whitespace-pre-wrap mt-0.5">' + l.comment + '</div>' : '')
@@ -1268,10 +1293,8 @@
       alert('ログを更新しました！');
       closeModal('taskLogModal');
       await loadCreativeProjects();
+      loadUserTasks();
       renderAllUpdatesLogs();
-      if (userProfile.role !== 'admin') {
-        loadUserTasks();
-      }
     }
 
     function renderAllUpdatesLogs() {
@@ -1819,7 +1842,6 @@
       loadCreativeProjects();
     }
 
-    // クリエイター視点タスク一覧（進行中と完了タスクの完全分離）
     async function loadUserTasks() {
       const { data: tasks } = await supabaseClient
         .from('tasks')
@@ -1831,6 +1853,8 @@
       const completedContainer = document.getElementById('userCompletedTaskList');
       const accordionLabel = document.getElementById('completedAccordionLabel');
 
+      if (!activeContainer || !completedContainer) return;
+
       if (!tasks || tasks.length === 0) {
         activeContainer.innerHTML = '<div class="col-span-full p-8 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">現在アサインされているタスクはありません</div>';
         completedContainer.innerHTML = '';
@@ -1840,13 +1864,11 @@
 
       const todayStr = new Date().toISOString().split('T')[0];
 
-      // 進行中と完了を分離
       const activeTasks = tasks.filter(t => t.status !== '完了');
       const completedTasks = tasks.filter(t => t.status === '完了');
 
       accordionLabel.innerText = '完了したタスク (' + completedTasks.length + '件)';
 
-      // 進行中タスクのレンダリング
       if (activeTasks.length === 0) {
         activeContainer.innerHTML = '<div class="col-span-full p-6 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">現在対応待ちの進行中タスクはありません 🎉</div>';
       } else {
@@ -1901,7 +1923,6 @@
         }).join('');
       }
 
-      // 完了タスクのレンダリング（アコーディオン内・シンプル表示）
       completedContainer.innerHTML = completedTasks.map(t => {
         const prjTitle = (t.projects && t.projects.title) ? t.projects.title : '案件名なし';
         const logsCount = (t.logs || []).length;
