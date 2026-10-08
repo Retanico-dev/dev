@@ -225,7 +225,7 @@
     </div>
   </div>
 
-  <!-- モーダル: タスク提出・フィードバックログ詳細（ユーザー画面・管理画面共通対応） -->
+  <!-- モーダル: タスク提出・フィードバックログ詳細 -->
   <div id="taskLogModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-4 sm:p-6 space-y-4 border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
       <div class="flex items-start justify-between border-b dark:border-slate-800 pb-3">
@@ -491,7 +491,7 @@
     let salesTemplates = [];
     let selectedTaskForLog = null;
     let cachedCreativeProjects = [];
-    let cachedUserTasks = []; // クリエイター用タスクキャッシュ
+    let cachedUserTasks = [];
     let isCompletedAccordionOpen = false;
 
     function getCurrentUserIdentifier() {
@@ -504,9 +504,10 @@
       return profile.name || profile.user_id || '未設定';
     }
 
+    // ② トラック判定：イラスト・映像をMVトラック、それ以外を楽曲トラックに完全統一
     function getTaskTrack(taskTitle) {
       const t = taskTitle.trim();
-      if (t.includes('イラスト') || t.includes('絵') || t.includes('映像') || t.includes('動画') || t.includes('MV') || t.includes('ムービー')) {
+      if (t === 'イラスト' || t === '映像') {
         return 'mv';
       }
       return 'music';
@@ -621,6 +622,7 @@
       document.getElementById('themeToggleIcon').innerText = isDark ? '☀️' : '🌙';
     }
 
+    // ② マスター工程定義：イラスト ➔ 映像 に完全統一
     let workflowMasters = [
       { key: 'compose', name: '作曲', days: 7, track: 'music', order: 1, depends: [] },
       { key: 'lyrics', name: '作詞', days: 5, track: 'music', order: 2, depends: ['作曲'] },
@@ -629,7 +631,7 @@
       { key: 'mix', name: 'ミキシング', days: 5, track: 'music', order: 5, depends: ['レコーディング'] },
       { key: 'mastering', name: 'マスタリング', days: 2, track: 'music', order: 6, depends: ['ミキシング'] },
       { key: 'illust', name: 'イラスト', days: 14, track: 'mv', order: 1, depends: [] },
-      { key: 'movie', name: '映像 (MV)', days: 10, track: 'mv', order: 2, depends: ['イラスト'] }
+      { key: 'movie', name: '映像', days: 10, track: 'mv', order: 2, depends: ['イラスト'] }
     ];
 
     async function handleSmartLogin() {
@@ -1228,7 +1230,6 @@
       let targetTask = null;
       let targetPrj = null;
 
-      // 1. 管理者用のキャッシュから検索
       for (const p of cachedCreativeProjects) {
         const found = (p.tasks || []).find(t => t.id === taskId);
         if (found) {
@@ -1238,7 +1239,6 @@
         }
       }
 
-      // 2. 見つからなければユーザー画面用のキャッシュから検索
       if (!targetTask) {
         const foundUserTask = cachedUserTasks.find(t => t.id === taskId);
         if (foundUserTask) {
@@ -1263,7 +1263,6 @@
       renderTaskLogTimeline(targetTask.logs || []);
       openModal('taskLogModal');
 
-      // 開いた瞬間に自動既読化
       await autoMarkTaskAsRead(targetTask);
     }
 
@@ -1624,6 +1623,7 @@
 
         const activeTasks = getActiveBallTasks(tasks);
 
+        // ① バッジ文頭：作業中 / 未着手 / 確認待ち / リテイク / 超過に完全連動
         let ballBadgeHtml = '';
         if (tasks.length > 0 && tasks.every(t => t.status === '完了')) {
           ballBadgeHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">✓ 全工程完了</span>';
@@ -1638,10 +1638,11 @@
 
             const isPendingConfirm = t.status === '提出・確認待ち';
             const isRetake = t.status === 'リテイク';
+            const isWorking = t.status === '作業中';
 
             let ballIcon = '🔵';
             let badgeClass = 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 font-medium';
-            let prefixLabel = 'ボール';
+            let prefixLabel = isWorking ? '作業中' : '未着手';
 
             if (isPendingConfirm) {
               ballIcon = '🟡';
@@ -1903,7 +1904,7 @@
         .eq('assignee_id', currentUser.id)
         .order('deadline', { ascending: true });
 
-      cachedUserTasks = tasks || []; // キャッシュ保存
+      cachedUserTasks = tasks || [];
       const activeContainer = document.getElementById('userActiveTaskList');
       const completedContainer = document.getElementById('userCompletedTaskList');
       const accordionLabel = document.getElementById('completedAccordionLabel');
