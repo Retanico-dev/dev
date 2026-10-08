@@ -29,15 +29,20 @@
   <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50 transition-colors">
     <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
       <div class="flex items-center space-x-3">
-        <!-- ロゴ画像 -->
+        <!-- ロゴ画像（反転解除: 元データのまま表示） -->
         <div class="flex items-center space-x-2">
-          <img src="./ARTGATHER_w_rgb_1.png" alt="ARTGATHER Logo" class="h-8 w-auto object-contain dark:brightness-100 brightness-90 filter invert dark:invert-0 transition" onerror="this.style.display='none'">
+          <img src="./ARTGATHER_w_rgb_1.png" alt="ARTGATHER Logo" class="h-8 w-auto object-contain" onerror="this.style.display='none'">
           <span class="text-xl font-bold bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-transparent">ProjectFlow</span>
         </div>
         <span id="roleBadge" class="hidden text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">Guest</span>
       </div>
       
       <div class="flex items-center space-x-3">
+        <!-- 管理者用: 視点切り替えボタン -->
+        <button id="viewToggleBtn" onclick="toggleAdminViewMode()" type="button" class="hidden px-2.5 py-1 text-xs font-semibold rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 transition">
+          クリエイター視点に切替
+        </button>
+
         <!-- ダークモード切り替えボタン -->
         <button onclick="toggleDarkMode()" id="themeToggleBtn" type="button" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" title="テーマ切り替え">
           <span id="themeToggleIcon">🌙</span>
@@ -48,13 +53,13 @@
   </header>
 
   <main class="max-w-7xl mx-auto px-4 py-8">
-    <!-- ログイン画面 -->
+    <!-- 1. ログイン画面 -->
     <div id="loginView" class="max-w-md mx-auto mt-12 p-6 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
       <h2 class="text-xl font-bold mb-4 text-center">ログイン</h2>
-      <form onsubmit="event.preventDefault(); handlePasswordLogin();" class="space-y-4">
+      <form onsubmit="event.preventDefault(); handleSmartLogin();" class="space-y-4">
         <div>
-          <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">メールアドレス</label>
-          <input type="email" id="loginEmail" required class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="user@example.com">
+          <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">ユーザーID または メールアドレス</label>
+          <input type="text" id="loginIdentifier" required class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="ユーザーID または user@example.com">
         </div>
         <div>
           <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">パスワード</label>
@@ -64,10 +69,15 @@
           ログイン
         </button>
       </form>
+      <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 text-center">
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          ID・パスワードをお忘れの場合は、<strong>システム管理者</strong>まで直接お問い合わせください。
+        </p>
+      </div>
       <p id="loginMsg" class="mt-4 text-sm text-center font-medium"></p>
     </div>
 
-    <!-- ダッシュボード画面 -->
+    <!-- 2. ダッシュボード画面 -->
     <div id="appView" class="hidden space-y-6">
       <div id="adminTabs" class="flex border-b border-slate-200 dark:border-slate-800 space-x-4">
         <button onclick="switchTab('creative')" id="tabCreative" class="pb-3 px-2 font-medium text-sm border-b-2 border-blue-600 text-blue-600">制作進行ボード</button>
@@ -76,9 +86,12 @@
         <button onclick="switchTab('members')" id="tabMembers" class="pb-3 px-2 font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">メンバー管理</button>
       </div>
 
-      <!-- クリエイター用タスク表示 -->
+      <!-- クリエイター用タスク表示（UserまたはAdminの切替時） -->
       <div id="userTaskSection" class="hidden space-y-4">
-        <h2 class="text-lg font-bold">担当タスク一覧</h2>
+        <div class="flex justify-between items-center">
+          <h2 class="text-lg font-bold">自分の担当タスク一覧</h2>
+          <span class="text-xs text-slate-500 dark:text-slate-400">期限が近い順に表示されています</span>
+        </div>
         <div id="userTaskList" class="grid gap-4 md:grid-cols-2"></div>
       </div>
 
@@ -104,7 +117,7 @@
         <div id="salesList" class="grid gap-4 md:grid-cols-3"></div>
       </div>
 
-      <!-- Admin: 工程マスター設定（UI編集可能） -->
+      <!-- Admin: 工程マスター設定 -->
       <div id="masterSection" class="hidden space-y-6 max-w-3xl">
         <div class="flex justify-between items-center">
           <div>
@@ -143,6 +156,7 @@
           <table class="w-full text-sm">
             <thead class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-xs text-left">
               <tr>
+                <th class="p-3">ユーザーID</th>
                 <th class="p-3">表示名</th>
                 <th class="p-3">メールアドレス</th>
                 <th class="p-3">権限</th>
@@ -155,12 +169,39 @@
     </div>
   </main>
 
+  <!-- モーダル: マイアカウント設定（ID・表示名・PW変更） -->
+  <div id="myAccountModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800">
+      <h3 class="font-bold text-lg">マイアカウント設定</h3>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">表示名</label>
+        <input type="text" id="myAccountName" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">ログイン用ID（半角英数字）</label>
+        <input type="text" id="myAccountUserId" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm">
+      </div>
+      <div class="border-t border-slate-100 dark:border-slate-800 pt-3">
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">新しいパスワード（変更する場合のみ入力）</label>
+        <input type="password" id="myAccountNewPassword" placeholder="6文字以上で入力" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm">
+      </div>
+      <div class="flex justify-end space-x-2 pt-2">
+        <button onclick="closeModal('myAccountModal')" class="px-4 py-2 border dark:border-slate-700 rounded-lg text-sm">キャンセル</button>
+        <button onclick="saveMyAccount()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">変更を保存</button>
+      </div>
+    </div>
+  </div>
+
   <!-- モーダル: 新規メンバー追加 -->
   <div id="newMemberModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800">
-      <h3 class="font-bold text-lg">新規メンバー（クリエイター）の追加</h3>
+      <h3 class="font-bold text-lg">新規メンバーの追加</h3>
       <div>
-        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">表示名（クリエイター名） *</label>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">ユーザーID（半角英数） *</label>
+        <input type="text" id="newMemberUserId" required class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="yamada_t">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">表示名 *</label>
         <input type="text" id="newMemberName" required class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="山田 太郎">
       </div>
       <div>
@@ -247,8 +288,8 @@
     let userProfile = null;
     let allProfiles = [];
     const collapsedProjects = new Set();
+    let adminViewMode = 'admin'; // 'admin' | 'creator'
 
-    // ダークモード制御
     function initTheme() {
       const savedTheme = localStorage.getItem('theme');
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -267,7 +308,6 @@
       document.getElementById('themeToggleIcon').innerText = isDark ? '☀️' : '🌙';
     }
 
-    // デフォルトの業務パイプライン定義
     let workflowMasters = [
       { key: 'compose', name: '作曲', days: 7, track: 'music', order: 1, depends: [] },
       { key: 'lyrics', name: '作詞', days: 5, track: 'music', order: 2, depends: ['作曲'] },
@@ -279,17 +319,40 @@
       { key: 'movie', name: '映像 (MV)', days: 10, track: 'mv', order: 2, depends: ['イラスト'] }
     ];
 
-    async function handlePasswordLogin() {
-      const email = document.getElementById('loginEmail').value.trim();
+    // スマートログイン（IDまたはメアドでログイン）
+    async function handleSmartLogin() {
+      const identifier = document.getElementById('loginIdentifier').value.trim();
       const password = document.getElementById('loginPassword').value.trim();
       const msg = document.getElementById('loginMsg');
 
-      if (!email || !password) return alert('入力してください');
-      msg.innerText = "ログイン確認中...";
+      if (!identifier || !password) return alert('入力してください');
+      msg.innerText = "認証確認中...";
       msg.className = "mt-4 text-sm text-center text-blue-500 font-medium";
 
+      let loginEmail = identifier;
+
+      // 入力値に @ が含まれない場合はIDとみなし、profilesテーブルからメールアドレスを逆引き
+      if (!identifier.includes('@')) {
+        const { data: profile, error: searchErr } = await supabaseClient
+          .from('profiles')
+          .select('email')
+          .eq('user_id', identifier)
+          .maybeSingle();
+
+        if (searchErr || !profile || !profile.email) {
+          msg.innerText = "エラー: 該当するユーザーIDが見つかりません";
+          msg.className = "mt-4 text-sm text-center text-red-500 font-medium";
+          return;
+        }
+        loginEmail = profile.email;
+      }
+
       try {
-        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ 
+          email: loginEmail, 
+          password: password 
+        });
+
         if (error) {
           msg.innerText = "ログイン失敗: " + error.message;
           msg.className = "mt-4 text-sm text-center text-red-500 font-medium";
@@ -322,7 +385,12 @@
     async function loadUserProfile() {
       try {
         const { data } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).single();
-        userProfile = data || { role: 'admin', email: currentUser.email, name: currentUser.email.split('@')[0] };
+        userProfile = data || { 
+          role: 'admin', 
+          email: currentUser.email, 
+          name: currentUser.email.split('@')[0],
+          user_id: currentUser.email.split('@')[0]
+        };
         renderAuthUI(true);
         loadDashboard();
       } catch (err) {
@@ -335,6 +403,7 @@
       const appView = document.getElementById('appView');
       const authActions = document.getElementById('authActions');
       const roleBadge = document.getElementById('roleBadge');
+      const viewToggleBtn = document.getElementById('viewToggleBtn');
 
       if (isLoggedIn && userProfile) {
         loginView.classList.add('hidden');
@@ -345,14 +414,17 @@
           ? 'text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300' 
           : 'text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300';
 
-        authActions.innerHTML = '<span class="text-xs text-slate-500 dark:text-slate-400">' + (userProfile.name || userProfile.email) + '</span>'
+        // アカウント設定モーダルを開くリンク
+        authActions.innerHTML = '<button onclick="openMyAccountModal()" class="text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600 underline" title="アカウント設定">'
+          + (userProfile.name || userProfile.user_id || userProfile.email) + ' ⚙️'
+          + '</button>'
           + '<button onclick="logout()" class="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 underline">ログアウト</button>';
 
         if (userProfile.role === 'admin') {
-          document.getElementById('adminTabs').classList.remove('hidden');
-          document.getElementById('userTaskSection').classList.add('hidden');
-          switchTab('creative');
+          viewToggleBtn.classList.remove('hidden');
+          applyAdminViewMode();
         } else {
+          viewToggleBtn.classList.add('hidden');
           document.getElementById('adminTabs').classList.add('hidden');
           document.getElementById('creativeSection').classList.add('hidden');
           document.getElementById('salesSection').classList.add('hidden');
@@ -365,8 +437,71 @@
         loginView.classList.remove('hidden');
         appView.classList.add('hidden');
         roleBadge.classList.add('hidden');
+        viewToggleBtn.classList.add('hidden');
         authActions.innerHTML = '';
       }
+    }
+
+    // Admin ⇄ クリエイター視点の切り替え
+    function toggleAdminViewMode() {
+      adminViewMode = (adminViewMode === 'admin') ? 'creator' : 'admin';
+      applyAdminViewMode();
+    }
+
+    function applyAdminViewMode() {
+      const btn = document.getElementById('viewToggleBtn');
+      if (adminViewMode === 'creator') {
+        btn.innerText = '管理者画面に戻る';
+        btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 hover:bg-amber-100 transition";
+        document.getElementById('adminTabs').classList.add('hidden');
+        document.getElementById('creativeSection').classList.add('hidden');
+        document.getElementById('salesSection').classList.add('hidden');
+        document.getElementById('masterSection').classList.add('hidden');
+        document.getElementById('membersSection').classList.add('hidden');
+        document.getElementById('userTaskSection').classList.remove('hidden');
+        loadUserTasks();
+      } else {
+        btn.innerText = 'クリエイター視点に切替';
+        btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 transition";
+        document.getElementById('adminTabs').classList.remove('hidden');
+        document.getElementById('userTaskSection').classList.add('hidden');
+        switchTab('creative');
+      }
+    }
+
+    // マイアカウント設定モーダル
+    function openMyAccountModal() {
+      document.getElementById('myAccountName').value = userProfile.name || '';
+      document.getElementById('myAccountUserId').value = userProfile.user_id || '';
+      document.getElementById('myAccountNewPassword').value = '';
+      openModal('myAccountModal');
+    }
+
+    async function saveMyAccount() {
+      const newName = document.getElementById('myAccountName').value.trim();
+      const newUserId = document.getElementById('myAccountUserId').value.trim();
+      const newPassword = document.getElementById('myAccountNewPassword').value.trim();
+
+      if (!newName || !newUserId) return alert('表示名とユーザーIDは必須です');
+
+      // 1. profilesテーブル更新
+      const { error: profileErr } = await supabaseClient
+        .from('profiles')
+        .update({ name: newName, user_id: newUserId })
+        .eq('id', currentUser.id);
+
+      if (profileErr) return alert('更新エラー: ' + profileErr.message);
+
+      // 2. パスワード変更（入力があった場合のみ）
+      if (newPassword) {
+        if (newPassword.length < 6) return alert('パスワードは6文字以上で設定してください');
+        const { error: pwErr } = await supabaseClient.auth.updateUser({ password: newPassword });
+        if (pwErr) return alert('パスワード変更エラー: ' + pwErr.message);
+      }
+
+      alert('アカウント設定を保存しました！');
+      closeModal('myAccountModal');
+      await loadUserProfile();
     }
 
     async function logout() {
@@ -387,7 +522,7 @@
 
     async function loadMasterFromDB() {
       try {
-        const { data, error } = await supabaseClient.from('process_masters').select('*');
+        const { data } = await supabaseClient.from('process_masters').select('*');
         if (data && data.length > 0) {
           workflowMasters.forEach(w => {
             const found = data.find(d => d.name === w.name);
@@ -396,13 +531,6 @@
               w.db_id = found.id;
             }
           });
-        } else {
-          const inserts = workflowMasters.map((w, idx) => ({
-            name: w.name,
-            standard_days: w.days,
-            sort_order: idx + 1
-          }));
-          await supabaseClient.from('process_masters').insert(inserts);
         }
       } catch (err) {
         console.error("Master load error:", err);
@@ -505,6 +633,7 @@
       document.getElementById('autoCalcStartDate').value = today.toISOString().split('T')[0];
     }
 
+    // メンバー管理テーブル（ID対応）
     function renderMembersTable() {
       const tbody = document.getElementById('membersTableBody');
       if (!tbody) return;
@@ -514,6 +643,7 @@
           : 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300';
         const roleName = u.role === 'admin' ? '管理者' : 'クリエイター';
         return '<tr class="border-b border-slate-100 dark:border-slate-800/60 last:border-b-0">'
+          + '<td class="p-3 font-mono text-xs text-blue-600 dark:text-blue-400 font-semibold">' + (u.user_id || '-') + '</td>'
           + '<td class="p-3 font-medium">' + (u.name || '未設定') + '</td>'
           + '<td class="p-3 text-slate-500 dark:text-slate-400">' + (u.email || '-') + '</td>'
           + '<td class="p-3"><span class="px-2 py-0.5 rounded text-xs font-semibold ' + badgeClass + '">' + roleName + '</span></td>'
@@ -522,12 +652,13 @@
     }
 
     async function createNewMember() {
+      const userId = document.getElementById('newMemberUserId').value.trim();
       const name = document.getElementById('newMemberName').value.trim();
       const email = document.getElementById('newMemberEmail').value.trim();
       const password = document.getElementById('newMemberPassword').value.trim();
       const role = document.getElementById('newMemberRole').value;
 
-      if (!name || !email || !password) return alert('全ての項目を入力してください');
+      if (!userId || !name || !email || !password) return alert('全ての項目を入力してください');
       if (password.length < 6) return alert('パスワードは6文字以上で指定してください');
 
       const tempClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -545,14 +676,16 @@
       if (data.user) {
         await supabaseClient.from('profiles').upsert({
           id: data.user.id,
+          user_id: userId,
           email: email,
           name: name,
           role: role
         });
       }
 
-      alert('メンバー「' + name + '」を追加しました！');
+      alert('メンバー「' + name + '（ID: ' + userId + '）」を追加しました！');
       closeModal('newMemberModal');
+      document.getElementById('newMemberUserId').value = '';
       document.getElementById('newMemberName').value = '';
       document.getElementById('newMemberEmail').value = '';
       document.getElementById('newMemberPassword').value = '';
@@ -623,7 +756,7 @@
               return '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">🟡 確認待ち: ' + t.title + '</span>';
             }
             const assignee = allProfiles.find(u => u.id === t.assignee_id);
-            const assigneeName = assignee ? (assignee.name || assignee.email) : '未アサイン';
+            const assigneeName = assignee ? (assignee.name || assignee.user_id || assignee.email) : '未アサイン';
             const isOverdue = t.deadline && t.deadline < todayStr;
             const badgeClass = isOverdue 
               ? 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-800' 
@@ -664,7 +797,8 @@
 
             const profileOptions = allProfiles.map(u => {
               const selected = t.assignee_id === u.id ? 'selected' : '';
-              return '<option value="' + u.id + '" ' + selected + '>' + (u.name || u.email) + '</option>';
+              const label = u.name ? (u.name + (u.user_id ? ' (' + u.user_id + ')' : '')) : (u.user_id || u.email);
+              return '<option value="' + u.id + '" ' + selected + '>' + label + '</option>';
             }).join('');
 
             const deadlineInputClass = isOverdue ? 'text-red-600 dark:text-red-400 font-bold bg-red-50 dark:bg-red-950/50' : 'text-slate-700 dark:text-slate-300';
