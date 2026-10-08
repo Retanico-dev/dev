@@ -76,7 +76,8 @@
       <div id="adminTabs" class="flex border-b border-slate-200 dark:border-slate-800 space-x-2 sm:space-x-4 overflow-x-auto no-scrollbar whitespace-nowrap pb-1">
         <button onclick="switchTab('creative')" id="tabCreative" class="pb-2.5 px-2 font-medium text-xs sm:text-sm border-b-2 border-blue-600 text-blue-600 flex-shrink-0">制作進行ボード</button>
         <button onclick="switchTab('sales')" id="tabSales" class="pb-2.5 px-2 font-medium text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 flex-shrink-0">営業・商談ボード</button>
-        <button onclick="switchTab('master')" id="tabMaster" class="pb-2.5 px-2 font-medium text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 flex-shrink-0">工程マスター・統合ログ</button>
+        <button onclick="switchTab('updates')" id="tabUpdates" class="pb-2.5 px-2 font-medium text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 flex-shrink-0">更新ログ</button>
+        <button onclick="switchTab('master')" id="tabMaster" class="pb-2.5 px-2 font-medium text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 flex-shrink-0">工程マスター設定</button>
         <button onclick="switchTab('members')" id="tabMembers" class="pb-2.5 px-2 font-medium text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 flex-shrink-0">メンバー管理</button>
       </div>
 
@@ -125,46 +126,44 @@
         <div id="leadsList" class="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div>
       </div>
 
-      <!-- Admin: 工程マスター設定 ＆ 全工程統合ログ -->
-      <div id="masterSection" class="hidden space-y-6 max-w-4xl">
-        <div class="space-y-4">
-          <div class="flex justify-between items-center gap-2">
-            <div>
-              <h2 class="text-base sm:text-lg font-bold">標準工程・仕掛日数設定</h2>
-              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">新規案件起票時の自動納期順算に連動します</p>
-            </div>
-            <button onclick="saveAllMasterDays()" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-medium transition shadow-sm whitespace-nowrap">
-              一括保存
-            </button>
+      <!-- 更新ログ（全案件・全工程の最新コミュニケーションログ専用タブ） -->
+      <div id="updatesSection" class="hidden space-y-4 max-w-4xl">
+        <div class="flex flex-wrap justify-between items-center gap-2">
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100">更新ログ（制作アクティビティ）</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400">各案件・タスクで提出されたURLやフィードバック・指示を時系列で網羅</p>
           </div>
-          <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-x-auto">
-            <table class="w-full text-xs sm:text-sm min-w-[500px]">
-              <thead>
-                <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 text-left">
-                  <th class="py-2.5 px-3">ライン</th>
-                  <th class="py-2.5 px-3">工程名</th>
-                  <th class="py-2.5 px-3">先行条件</th>
-                  <th class="py-2.5 px-3">標準所要日数</th>
-                  <th class="py-2.5 px-3 text-right">操作</th>
-                </tr>
-              </thead>
-              <tbody id="masterTableBody"></tbody>
-            </table>
-          </div>
+          <button onclick="renderAllUpdatesLogs()" class="text-xs px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded font-medium text-slate-600 dark:text-slate-300">
+            最新に更新 🔄
+          </button>
         </div>
+        <div id="allUpdatesLogsContainer" class="space-y-2.5 max-h-[600px] overflow-y-auto pr-1"></div>
+      </div>
 
-        <!-- 全工程統合コミュニケーションログ（マスター画面統合ビュー） -->
-        <div class="space-y-3 border-t border-slate-200 dark:border-slate-800 pt-6">
-          <div class="flex flex-wrap justify-between items-center gap-2">
-            <div>
-              <h2 class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100">全工程統合コミュニケーションログ</h2>
-              <p class="text-xs text-slate-500 dark:text-slate-400">全案件・全タスクで提出されたURLやフィードバック・指示を時系列で網羅</p>
-            </div>
-            <button onclick="renderMasterIntegratedLogs()" class="text-xs px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded font-medium text-slate-600 dark:text-slate-300">
-              最新に更新 🔄
-            </button>
+      <!-- Admin: 工程マスター設定 -->
+      <div id="masterSection" class="hidden space-y-4 max-w-3xl">
+        <div class="flex justify-between items-center gap-2">
+          <div>
+            <h2 class="text-base sm:text-lg font-bold">標準工程・仕掛日数設定</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">新規案件起票時の自動納期順算に連動します</p>
           </div>
-          <div id="masterIntegratedLogsContainer" class="space-y-2.5 max-h-[500px] overflow-y-auto pr-1"></div>
+          <button onclick="saveAllMasterDays()" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-medium transition shadow-sm whitespace-nowrap">
+            一括保存
+          </button>
+        </div>
+        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-x-auto">
+          <table class="w-full text-xs sm:text-sm min-w-[500px]">
+            <thead>
+              <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 text-left">
+                <th class="py-2.5 px-3">ライン</th>
+                <th class="py-2.5 px-3">工程名</th>
+                <th class="py-2.5 px-3">先行条件</th>
+                <th class="py-2.5 px-3">標準所要日数</th>
+                <th class="py-2.5 px-3 text-right">操作</th>
+              </tr>
+            </thead>
+            <tbody id="masterTableBody"></tbody>
+          </table>
         </div>
       </div>
 
@@ -193,7 +192,29 @@
     </div>
   </main>
 
-  <!-- モーダル: タスク提出・フィードバックログ詳細（既読機能付き） -->
+  <!-- モーダル: 案件全体統合ログ（各案件ごと） -->
+  <div id="projectLogModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full p-4 sm:p-6 space-y-4 border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-start justify-between border-b dark:border-slate-800 pb-3">
+        <div>
+          <span class="text-xs text-slate-400 font-medium" id="prjLogModalClient"></span>
+          <h3 id="prjLogModalTitle" class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100"></h3>
+        </div>
+        <button onclick="closeModal('projectLogModal')" class="text-slate-400 hover:text-slate-600 text-sm">✕</button>
+      </div>
+
+      <div class="space-y-2">
+        <h4 class="text-xs font-bold text-slate-500">案件内の全工程タイムライン（最新順）</h4>
+        <div id="prjLogModalTimeline" class="space-y-2 max-h-80 overflow-y-auto text-xs pr-1"></div>
+      </div>
+
+      <div class="flex justify-end pt-2 border-t dark:border-slate-800">
+        <button onclick="closeModal('projectLogModal')" class="px-4 py-1.5 border dark:border-slate-700 rounded-lg text-xs">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル: タスク提出・フィードバックログ詳細（単体タスク用） -->
   <div id="taskLogModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-4 sm:p-6 space-y-4 border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
       <div class="flex items-start justify-between border-b dark:border-slate-800 pb-3">
@@ -204,7 +225,6 @@
         <button onclick="closeModal('taskLogModal')" class="text-slate-400 hover:text-slate-600 text-sm">✕</button>
       </div>
 
-      <!-- コメント・フィードバック投稿フォーム -->
       <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border dark:border-slate-700 space-y-2">
         <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">コメント・フィードバックの追記</label>
         <textarea id="taskLogInputText" rows="2" class="w-full p-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none focus:ring-2 focus:ring-blue-500" placeholder="リテイク指示やフィードバック、連絡事項を入力..."></textarea>
@@ -224,7 +244,6 @@
         </div>
       </div>
 
-      <!-- 過去のタイムライン -->
       <div class="space-y-2 pt-1">
         <div class="flex justify-between items-center">
           <h4 class="text-xs font-bold text-slate-500">提出・やり取りタイムライン</h4>
@@ -489,13 +508,12 @@
       return m + '/' + d;
     }
 
-    // 未読ログ判定用（localStorageで各ユーザーのタスク閲覧日時を管理）
     function getTaskUnreadStatus(task) {
       const logs = task.logs || [];
       if (logs.length === 0) return false;
       const currentUserName = userProfile ? (userProfile.name || userProfile.user_id || '') : '';
       const lastLog = logs[0];
-      if (lastLog.user === currentUserName) return false; // 自分が投稿したログは未読対象外
+      if (lastLog.user === currentUserName) return false;
 
       const readStorageKey = 'read_task_log_' + (currentUser ? currentUser.id : 'anon') + '_' + task.id;
       const lastReadAt = localStorage.getItem(readStorageKey);
@@ -644,6 +662,7 @@
           document.getElementById('adminTabs').classList.add('hidden');
           document.getElementById('creativeSection').classList.add('hidden');
           document.getElementById('salesSection').classList.add('hidden');
+          document.getElementById('updatesSection').classList.add('hidden');
           document.getElementById('masterSection').classList.add('hidden');
           document.getElementById('membersSection').classList.add('hidden');
           document.getElementById('userTaskSection').classList.remove('hidden');
@@ -671,6 +690,7 @@
         document.getElementById('adminTabs').classList.add('hidden');
         document.getElementById('creativeSection').classList.add('hidden');
         document.getElementById('salesSection').classList.add('hidden');
+        document.getElementById('updatesSection').classList.add('hidden');
         document.getElementById('masterSection').classList.add('hidden');
         document.getElementById('membersSection').classList.add('hidden');
         document.getElementById('userTaskSection').classList.remove('hidden');
@@ -729,7 +749,7 @@
         await loadCreativeProjects();
         loadLeads();
         renderMembersTable();
-        renderMasterIntegratedLogs();
+        renderAllUpdatesLogs();
       }
     }
 
@@ -1074,7 +1094,58 @@
     }
 
     // ----------------------------------------------------
-    // 制作進行ボード: ログモーダル・既読・統合ビュー
+    // 各案件専用の統合ログモーダル
+    // ----------------------------------------------------
+    function openProjectLogModal(projectId) {
+      const prj = cachedCreativeProjects.find(p => p.id === projectId);
+      if (!prj) return;
+
+      document.getElementById('prjLogModalClient').innerText = prj.client_name || 'クライアント未設定';
+      document.getElementById('prjLogModalTitle').innerText = prj.title;
+
+      const prjLogs = [];
+      (prj.tasks || []).forEach(t => {
+        (t.logs || []).forEach(l => {
+          prjLogs.push({
+            ...l,
+            taskTitle: t.title,
+            taskId: t.id
+          });
+        });
+      });
+
+      // 日時が新しい順
+      prjLogs.sort((a,b) => new Date(b.at) - new Date(a.at));
+
+      const container = document.getElementById('prjLogModalTimeline');
+      if (prjLogs.length === 0) {
+        container.innerHTML = '<div class="text-slate-400 text-center py-6 bg-slate-50 dark:bg-slate-800/40 rounded-lg">この案件にはまだ提出物やコメントのログがありません</div>';
+      } else {
+        container.innerHTML = prjLogs.map(l => {
+          const dateStr = new Date(l.at).toLocaleString('ja-JP');
+          const badgeColor = l.type === '提出' ? 'bg-blue-100 text-blue-700' : l.type === 'リテイク指示' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700';
+          const urlHtml = l.url ? '<div class="mt-1"><a href="' + l.url + '" target="_blank" class="inline-flex items-center text-blue-600 dark:text-blue-400 font-bold hover:underline bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded text-[11px]">📦 成果物URL: ' + l.url + ' ↗</a></div>' : '';
+
+          return '<div class="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-lg border dark:border-slate-700 space-y-1">'
+            + '<div class="flex justify-between items-center text-[10px]">'
+            + '<div class="flex items-center space-x-1.5">'
+            + '<span class="font-bold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">[' + l.taskTitle + ']</span>'
+            + '<span class="font-bold px-1.5 py-0.5 rounded ' + badgeColor + '">' + l.type + '</span>'
+            + '<span class="text-slate-500">(' + (l.user || '不明') + ')</span>'
+            + '</div>'
+            + '<span class="text-slate-400">' + dateStr + '</span>'
+            + '</div>'
+            + (l.comment ? '<div class="text-slate-700 dark:text-slate-300 font-mono text-[11px] whitespace-pre-wrap mt-0.5">' + l.comment + '</div>' : '')
+            + urlHtml
+            + '</div>';
+        }).join('');
+      }
+
+      openModal('projectLogModal');
+    }
+
+    // ----------------------------------------------------
+    // 単体タスクのログモーダル（提出・リテイク）
     // ----------------------------------------------------
     function openTaskLogModal(taskId) {
       let targetTask = null;
@@ -1173,15 +1244,15 @@
       alert('ログを更新しました！');
       closeModal('taskLogModal');
       await loadCreativeProjects();
-      renderMasterIntegratedLogs();
+      renderAllUpdatesLogs();
       if (userProfile.role !== 'admin') {
         loadUserTasks();
       }
     }
 
-    // マスター画面：全案件・全工程の統合コミュニケーションログ表示
-    function renderMasterIntegratedLogs() {
-      const container = document.getElementById('masterIntegratedLogsContainer');
+    // 更新ログ専用タブ（全案件・全工程の時系列フィード）
+    function renderAllUpdatesLogs() {
+      const container = document.getElementById('allUpdatesLogsContainer');
       if (!container) return;
 
       const allTaskLogs = [];
@@ -1199,36 +1270,35 @@
         });
       });
 
-      // 日時が新しい順にソート
       allTaskLogs.sort((a,b) => new Date(b.at) - new Date(a.at));
 
       if (allTaskLogs.length === 0) {
-        container.innerHTML = '<div class="text-center py-8 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs text-slate-400">現在、タスクの提出物やコメント履歴はありません</div>';
+        container.innerHTML = '<div class="text-center py-10 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs text-slate-400">現在、制作更新ログはありません</div>';
         return;
       }
 
       container.innerHTML = allTaskLogs.map(l => {
         const dateStr = new Date(l.at).toLocaleString('ja-JP');
         const badgeColor = l.type === '提出' ? 'bg-blue-100 text-blue-700' : l.type === 'リテイク指示' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700';
-        const urlHtml = l.url ? '<div class="mt-1"><a href="' + l.url + '" target="_blank" class="inline-flex items-center text-blue-600 dark:text-blue-400 font-bold hover:underline bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded text-[11px]">📦 提出URL: ' + l.url + ' ↗</a></div>' : '';
+        const urlHtml = l.url ? '<div class="mt-1"><a href="' + l.url + '" target="_blank" class="inline-flex items-center text-blue-600 dark:text-blue-400 font-bold hover:underline bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded text-[11px]">📦 成果物URL: ' + l.url + ' ↗</a></div>' : '';
 
-        return '<div class="bg-white dark:bg-slate-900 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-1.5 hover:border-slate-300 transition">'
+        return '<div class="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-1.5 hover:border-slate-300 dark:hover:border-slate-700 transition">'
           + '<div class="flex flex-wrap items-center justify-between gap-1 text-[11px]">'
-          + '<div class="flex items-center space-x-1.5">'
-          + '<span class="font-bold text-slate-800 dark:text-slate-200">' + l.projectTitle + '</span>'
+          + '<div class="flex items-center space-x-1.5 min-w-0">'
+          + '<span class="font-bold text-slate-800 dark:text-slate-200 truncate">' + l.projectTitle + '</span>'
           + '<span class="text-slate-400">/</span>'
-          + '<span class="text-blue-600 dark:text-blue-400 font-semibold">[' + l.taskTitle + ']</span>'
+          + '<span class="text-blue-600 dark:text-blue-400 font-semibold truncate">[' + l.taskTitle + ']</span>'
           + '</div>'
-          + '<span class="text-slate-400 text-[10px]">' + dateStr + '</span>'
+          + '<span class="text-slate-400 text-[10px] flex-shrink-0">' + dateStr + '</span>'
           + '</div>'
           + '<div class="flex items-center space-x-2 text-xs">'
           + '<span class="font-bold px-1.5 py-0.5 rounded text-[10px] ' + badgeColor + '">' + l.type + '</span>'
           + '<span class="text-slate-500 font-medium">投稿者: ' + (l.user || '不明') + '</span>'
           + '</div>'
-          + (l.comment ? '<div class="text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-pre-wrap pl-1 border-l-2 border-slate-200 dark:border-slate-700">' + l.comment + '</div>' : '')
+          + (l.comment ? '<div class="text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-pre-wrap pl-1.5 border-l-2 border-slate-200 dark:border-slate-700">' + l.comment + '</div>' : '')
           + urlHtml
           + '<div class="text-right pt-1">'
-          + '<button onclick="openTaskLogModal(\'' + l.taskId + '\')" class="text-[11px] text-blue-600 dark:text-blue-400 hover:underline">このタスクのログを開く ➔</button>'
+          + '<button onclick="openTaskLogModal(\'' + l.taskId + '\')" class="text-[11px] text-blue-600 dark:text-blue-400 hover:underline">このタスクを開く ➔</button>'
           + '</div>'
           + '</div>';
       }).join('');
@@ -1464,7 +1534,6 @@
 
         const activeTasks = getActiveBallTasks(tasks);
 
-        // バッジ生成（リテイク＆超過対応）
         let ballBadgeHtml = '';
         if (tasks.length > 0 && tasks.every(t => t.status === '完了')) {
           ballBadgeHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">✓ 全工程完了</span>';
@@ -1494,7 +1563,6 @@
               badgeClass = 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 font-semibold';
             }
 
-            // ① 超過時はリテイク含め最優先で赤
             if (isOverdue) {
               ballIcon = '🔴';
               badgeClass = 'bg-red-100 dark:bg-red-950/70 text-red-700 dark:text-red-300 border border-red-400 dark:border-red-700 font-bold';
@@ -1507,6 +1575,15 @@
         }
 
         const driveLinkHtml = p.drive_url ? '<a href="' + p.drive_url + '" target="_blank" onclick="event.stopPropagation();" class="text-[11px] px-2 py-0.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded text-slate-700 dark:text-slate-300 font-medium">Drive ↗</a>' : '';
+
+        // 案件全体のログ件数集計
+        let prjTotalLogsCount = 0;
+        (p.tasks || []).forEach(t => { prjTotalLogsCount += (t.logs || []).length; });
+
+        // 案件ごとの統合ログボタン
+        const prjLogBtnHtml = '<button onclick="event.stopPropagation(); openProjectLogModal(\'' + p.id + '\')" class="text-[11px] px-2 py-0.5 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 rounded font-semibold transition border border-indigo-200 dark:border-indigo-800">'
+          + '📋 案件ログ (' + prjTotalLogsCount + ')'
+          + '</button>';
 
         const musicTasks = tasks.filter(t => getTaskTrack(t.title) === 'music');
         const mvTasks = tasks.filter(t => getTaskTrack(t.title) === 'mv');
@@ -1539,7 +1616,6 @@
             const logsCount = (t.logs || []).length;
             const hasUnread = getTaskUnreadStatus(t);
 
-            // ① カードハイライト判定（リテイク＆超過の優先順）
             let cardClass = 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800';
             if (isCompleted) {
               cardClass = 'bg-slate-50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800/60 opacity-40 grayscale';
@@ -1569,10 +1645,9 @@
 
             const deadlineInputClass = isOverdue ? 'text-red-600 dark:text-red-400 font-bold bg-red-100/60 dark:bg-red-950/70 border-red-300' : 'text-slate-700 dark:text-slate-300';
             
-            // 未読ログハイライト表示
             const unreadBadge = hasUnread ? '<span class="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse ml-1" title="新着ログあり"></span>' : '';
             const logButtonClass = hasUnread 
-              ? 'bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-300 border border-amber-300 font-bold'
+              ? 'bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-300 border border-amber-300 font-bold' 
               : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold';
 
             const logButtonHtml = '<button onclick="openTaskLogModal(\'' + t.id + '\')" class="w-full py-1 text-center rounded text-[11px] transition flex items-center justify-center space-x-1 ' + logButtonClass + '">'
@@ -1616,6 +1691,7 @@
           + '</div>'
           + '<div class="flex flex-wrap items-center gap-1.5">'
           + ballBadgeHtml
+          + prjLogBtnHtml
           + driveLinkHtml
           + '</div>'
           + '</div>'
@@ -1722,7 +1798,6 @@
       loadCreativeProjects();
     }
 
-    // クリエイター視点タスク一覧（リテイク黄色・超過赤対応）
     async function loadUserTasks() {
       const { data: tasks } = await supabaseClient
         .from('tasks')
@@ -1750,7 +1825,6 @@
         const isPendingConfirm = t.status === '提出・確認待ち';
         const isOverdue = t.deadline && t.deadline < todayStr && !isCompleted;
 
-        // ① ユーザー側のカラー判定（超過赤 ＞ リテイク黄色）
         let cardBg = 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800';
         let statusBadge = '<span class="text-[11px] font-semibold text-blue-600 dark:text-blue-400">' + t.status + '</span>';
 
@@ -1823,7 +1897,7 @@
     }
 
     function switchTab(tab) {
-      ['creative', 'sales', 'master', 'members'].forEach(t => {
+      ['creative', 'sales', 'updates', 'master', 'members'].forEach(t => {
         const el = document.getElementById(t + 'Section');
         if (el) el.classList.toggle('hidden', t !== tab);
         const btn = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
@@ -1835,8 +1909,8 @@
           }
         }
       });
-      if (tab === 'master') {
-        renderMasterIntegratedLogs();
+      if (tab === 'updates') {
+        renderAllUpdatesLogs();
       }
     }
 
