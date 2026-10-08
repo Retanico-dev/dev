@@ -4,7 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Project Flow - 進行管理</title>
+  <!-- Tailwind CSS CDN (DarkMode: class設定) -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const SUPABASE_URL = "https://griosberitrswzkynewx.supabase.co";
@@ -17,30 +23,42 @@
     }
   </script>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen">
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen transition-colors duration-200">
 
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+  <!-- ヘッダー -->
+  <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50 transition-colors">
     <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
       <div class="flex items-center space-x-3">
-        <span class="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">ProjectFlow</span>
-        <span id="roleBadge" class="hidden text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Guest</span>
+        <!-- ロゴ画像 -->
+        <div class="flex items-center space-x-2">
+          <img src="./ARTGATHER_w_rgb_1.png" alt="ARTGATHER Logo" class="h-8 w-auto object-contain dark:brightness-100 brightness-90 filter invert dark:invert-0 transition" onerror="this.style.display='none'">
+          <span class="text-xl font-bold bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-transparent">ProjectFlow</span>
+        </div>
+        <span id="roleBadge" class="hidden text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">Guest</span>
       </div>
-      <div id="authActions" class="flex items-center space-x-3"></div>
+      
+      <div class="flex items-center space-x-3">
+        <!-- ダークモード切り替えボタン -->
+        <button onclick="toggleDarkMode()" id="themeToggleBtn" type="button" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" title="テーマ切り替え">
+          <span id="themeToggleIcon">🌙</span>
+        </button>
+        <div id="authActions" class="flex items-center space-x-3"></div>
+      </div>
     </div>
   </header>
 
   <main class="max-w-7xl mx-auto px-4 py-8">
     <!-- ログイン画面 -->
-    <div id="loginView" class="max-w-md mx-auto mt-12 p-6 bg-white rounded-xl shadow-sm border border-slate-200">
+    <div id="loginView" class="max-w-md mx-auto mt-12 p-6 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
       <h2 class="text-xl font-bold mb-4 text-center">ログイン</h2>
       <form onsubmit="event.preventDefault(); handlePasswordLogin();" class="space-y-4">
         <div>
-          <label class="block text-xs font-medium text-slate-600 mb-1">メールアドレス</label>
-          <input type="email" id="loginEmail" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="user@example.com">
+          <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">メールアドレス</label>
+          <input type="email" id="loginEmail" required class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="user@example.com">
         </div>
         <div>
-          <label class="block text-xs font-medium text-slate-600 mb-1">パスワード</label>
-          <input type="password" id="loginPassword" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="••••••••">
+          <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">パスワード</label>
+          <input type="password" id="loginPassword" required class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="••••••••">
         </div>
         <button type="submit" id="btnPwLogin" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm transition shadow-sm">
           ログイン
@@ -51,11 +69,11 @@
 
     <!-- ダッシュボード画面 -->
     <div id="appView" class="hidden space-y-6">
-      <div id="adminTabs" class="flex border-b border-slate-200 space-x-4">
+      <div id="adminTabs" class="flex border-b border-slate-200 dark:border-slate-800 space-x-4">
         <button onclick="switchTab('creative')" id="tabCreative" class="pb-3 px-2 font-medium text-sm border-b-2 border-blue-600 text-blue-600">制作進行ボード</button>
-        <button onclick="switchTab('sales')" id="tabSales" class="pb-3 px-2 font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700">営業・商談ボード</button>
-        <button onclick="switchTab('master')" id="tabMaster" class="pb-3 px-2 font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700">工程マスター設定</button>
-        <button onclick="switchTab('members')" id="tabMembers" class="pb-3 px-2 font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700">メンバー管理</button>
+        <button onclick="switchTab('sales')" id="tabSales" class="pb-3 px-2 font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">営業・商談ボード</button>
+        <button onclick="switchTab('master')" id="tabMaster" class="pb-3 px-2 font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">工程マスター設定</button>
+        <button onclick="switchTab('members')" id="tabMembers" class="pb-3 px-2 font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">メンバー管理</button>
       </div>
 
       <!-- クリエイター用タスク表示 -->
@@ -91,16 +109,16 @@
         <div class="flex justify-between items-center">
           <div>
             <h2 class="text-lg font-bold">標準工程・仕掛日数設定</h2>
-            <p class="text-xs text-slate-500 mt-1">ここで変更した日数は、新規案件起票時の自動納期計算に即座に反映されます。</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">ここで変更した日数は、新規案件起票時の自動納期計算に即座に反映されます。</p>
           </div>
           <button onclick="saveAllMasterDays()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition shadow-sm">
             日数を一括保存
           </button>
         </div>
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
           <table class="w-full text-sm">
             <thead>
-              <tr class="border-b text-slate-400 text-xs text-left">
+              <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 text-xs text-left">
                 <th class="py-2.5 px-3">ライン</th>
                 <th class="py-2.5 px-3">工程名</th>
                 <th class="py-2.5 px-3">先行条件</th>
@@ -121,9 +139,9 @@
             + 新規メンバー追加
           </button>
         </div>
-        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
           <table class="w-full text-sm">
-            <thead class="bg-slate-50 border-b text-slate-500 text-xs text-left">
+            <thead class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-xs text-left">
               <tr>
                 <th class="p-3">表示名</th>
                 <th class="p-3">メールアドレス</th>
@@ -138,87 +156,87 @@
   </main>
 
   <!-- モーダル: 新規メンバー追加 -->
-  <div id="newMemberModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4">
+  <div id="newMemberModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800">
       <h3 class="font-bold text-lg">新規メンバー（クリエイター）の追加</h3>
       <div>
-        <label class="block text-xs font-medium text-slate-600 mb-1">表示名（クリエイター名） *</label>
-        <input type="text" id="newMemberName" required class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="山田 太郎">
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">表示名（クリエイター名） *</label>
+        <input type="text" id="newMemberName" required class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="山田 太郎">
       </div>
       <div>
-        <label class="block text-xs font-medium text-slate-600 mb-1">メールアドレス *</label>
-        <input type="email" id="newMemberEmail" required class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="creator@example.com">
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">メールアドレス *</label>
+        <input type="email" id="newMemberEmail" required class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="creator@example.com">
       </div>
       <div>
-        <label class="block text-xs font-medium text-slate-600 mb-1">初期パスワード *</label>
-        <input type="password" id="newMemberPassword" required class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="6文字以上">
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">初期パスワード *</label>
+        <input type="password" id="newMemberPassword" required class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="6文字以上">
       </div>
       <div>
-        <label class="block text-xs font-medium text-slate-600 mb-1">権限ロール</label>
-        <select id="newMemberRole" class="w-full px-3 py-2 border rounded-lg text-sm bg-white">
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">権限ロール</label>
+        <select id="newMemberRole" class="w-full px-3 py-2 border dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-800">
           <option value="user">クリエイター (User: 自身のアサインタスクのみ閲覧)</option>
           <option value="admin">管理者 (Admin: 全案件・営業・メンバー管理可能)</option>
         </select>
       </div>
       <div class="flex justify-end space-x-2 pt-2">
-        <button onclick="closeModal('newMemberModal')" class="px-4 py-2 border rounded-lg text-sm">キャンセル</button>
+        <button onclick="closeModal('newMemberModal')" class="px-4 py-2 border dark:border-slate-700 rounded-lg text-sm">キャンセル</button>
         <button onclick="createNewMember()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">作成・追加</button>
       </div>
     </div>
   </div>
 
   <!-- モーダル: 新規案件起票 -->
-  <div id="newProjectModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+  <div id="newProjectModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-800">
       <h3 class="font-bold text-lg">新規制作案件の起票</h3>
       <div>
-        <label class="block text-xs font-medium text-slate-600 mb-1">案件・曲名 *</label>
-        <input type="text" id="newPrjTitle" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="例: 2nd Single 制作">
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">案件・曲名 *</label>
+        <input type="text" id="newPrjTitle" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="例: 2nd Single 制作">
       </div>
       <div>
-        <label class="block text-xs font-medium text-slate-600 mb-1">クライアント名</label>
-        <input type="text" id="newPrjClient" class="w-full px-3 py-2 border rounded-lg text-sm">
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">クライアント名</label>
+        <input type="text" id="newPrjClient" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm">
       </div>
       <div>
-        <label class="block text-xs font-medium text-slate-600 mb-1">共有ドライブ / フォルダURL</label>
-        <input type="url" id="newPrjDrive" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="https://drive.google.com/...">
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">共有ドライブ / フォルダURL</label>
+        <input type="url" id="newPrjDrive" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="https://drive.google.com/...">
       </div>
 
-      <div class="border-t pt-4">
-        <label class="block text-xs font-bold text-slate-700 mb-2">自動納期計算・工程組み込み</label>
+      <div class="border-t dark:border-slate-800 pt-4">
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">自動納期計算・工程組み込み</label>
         <div class="flex items-center space-x-2 mb-3">
-          <label class="text-xs text-slate-500">着手予定日:</label>
-          <input type="date" id="autoCalcStartDate" class="px-2 py-1 border rounded text-sm">
+          <label class="text-xs text-slate-500 dark:text-slate-400">着手予定日:</label>
+          <input type="date" id="autoCalcStartDate" class="px-2 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-sm">
         </div>
         <div class="text-[11px] text-slate-400 mb-2">※マスター設定の日数をもとに、楽曲とMVの並行納期を自動計算します</div>
-        <div id="processCheckboxes" class="space-y-1.5 max-h-48 overflow-y-auto p-2 bg-slate-50 rounded-lg border text-sm"></div>
+        <div id="processCheckboxes" class="space-y-1.5 max-h-48 overflow-y-auto p-2 bg-slate-50 dark:bg-slate-800 rounded-lg border dark:border-slate-700 text-sm"></div>
       </div>
 
       <div class="flex justify-end space-x-2 pt-2">
-        <button onclick="closeModal('newProjectModal')" class="px-4 py-2 border rounded-lg text-sm">キャンセル</button>
+        <button onclick="closeModal('newProjectModal')" class="px-4 py-2 border dark:border-slate-700 rounded-lg text-sm">キャンセル</button>
         <button onclick="createCreativeProject()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">起票・タスク一括生成</button>
       </div>
     </div>
   </div>
 
   <!-- モーダル: 営業リード追加 -->
-  <div id="newSalesModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4">
+  <div id="newSalesModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 space-y-4 border border-slate-200 dark:border-slate-800">
       <h3 class="font-bold text-lg">営業リード追加</h3>
       <div>
-        <label class="block text-xs font-medium text-slate-600 mb-1">クライアント名 / 案件名 *</label>
-        <input type="text" id="salesTitle" class="w-full px-3 py-2 border rounded-lg text-sm">
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">クライアント名 / 案件名 *</label>
+        <input type="text" id="salesTitle" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm">
       </div>
       <div>
-        <label class="block text-xs font-medium text-slate-600 mb-1">次回MTG日時</label>
-        <input type="datetime-local" id="salesMeeting" class="w-full px-3 py-2 border rounded-lg text-sm">
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">次回MTG日時</label>
+        <input type="datetime-local" id="salesMeeting" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm">
       </div>
       <div>
-        <label class="block text-xs font-medium text-slate-600 mb-1">議事録 / メモURL</label>
-        <input type="url" id="salesNotesUrl" class="w-full px-3 py-2 border rounded-lg text-sm">
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">議事録 / メモURL</label>
+        <input type="url" id="salesNotesUrl" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm">
       </div>
       <div class="flex justify-end space-x-2 pt-2">
-        <button onclick="closeModal('newSalesModal')" class="px-4 py-2 border rounded-lg text-sm">キャンセル</button>
+        <button onclick="closeModal('newSalesModal')" class="px-4 py-2 border dark:border-slate-700 rounded-lg text-sm">キャンセル</button>
         <button onclick="createSalesLead()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">追加</button>
       </div>
     </div>
@@ -229,6 +247,25 @@
     let userProfile = null;
     let allProfiles = [];
     const collapsedProjects = new Set();
+
+    // ダークモード制御
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        document.documentElement.classList.add('dark');
+        document.getElementById('themeToggleIcon').innerText = '☀️';
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.getElementById('themeToggleIcon').innerText = '🌙';
+      }
+    }
+
+    function toggleDarkMode() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      document.getElementById('themeToggleIcon').innerText = isDark ? '☀️' : '🌙';
+    }
 
     // デフォルトの業務パイプライン定義
     let workflowMasters = [
@@ -249,7 +286,7 @@
 
       if (!email || !password) return alert('入力してください');
       msg.innerText = "ログイン確認中...";
-      msg.className = "mt-4 text-sm text-center text-blue-600 font-medium";
+      msg.className = "mt-4 text-sm text-center text-blue-500 font-medium";
 
       try {
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
@@ -268,6 +305,7 @@
     }
 
     async function init() {
+      initTheme();
       try {
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (session) {
@@ -304,11 +342,11 @@
         roleBadge.classList.remove('hidden');
         roleBadge.innerText = userProfile.role === 'admin' ? '管理者 (Admin)' : 'クリエイター (User)';
         roleBadge.className = userProfile.role === 'admin' 
-          ? 'text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700' 
-          : 'text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
+          ? 'text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300' 
+          : 'text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300';
 
-        authActions.innerHTML = '<span class="text-xs text-slate-500">' + (userProfile.name || userProfile.email) + '</span>'
-          + '<button onclick="logout()" class="text-xs text-slate-500 hover:text-slate-800 underline">ログアウト</button>';
+        authActions.innerHTML = '<span class="text-xs text-slate-500 dark:text-slate-400">' + (userProfile.name || userProfile.email) + '</span>'
+          + '<button onclick="logout()" class="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 underline">ログアウト</button>';
 
         if (userProfile.role === 'admin') {
           document.getElementById('adminTabs').classList.remove('hidden');
@@ -347,12 +385,10 @@
       }
     }
 
-    // Supabaseからマスター日数を読み込む（DBにデータがあれば上書き、無ければ初期作成）
     async function loadMasterFromDB() {
       try {
         const { data, error } = await supabaseClient.from('process_masters').select('*');
         if (data && data.length > 0) {
-          // DBの値をworkflowMastersに同期
           workflowMasters.forEach(w => {
             const found = data.find(d => d.name === w.name);
             if (found && typeof found.standard_days === 'number') {
@@ -361,7 +397,6 @@
             }
           });
         } else {
-          // DBが空なら初期シードを投入
           const inserts = workflowMasters.map((w, idx) => ({
             name: w.name,
             standard_days: w.days,
@@ -379,32 +414,32 @@
       allProfiles = data || [];
     }
 
-    // 工程マスター設定テーブルのレンダリング（入力フォーム化）
     function renderMasterTable() {
       const tbody = document.getElementById('masterTableBody');
       if (!tbody) return;
       tbody.innerHTML = workflowMasters.map(w => {
-        const trackBadge = w.track === 'music' ? '<span class="px-1.5 py-0.5 rounded text-[10px] bg-blue-100 text-blue-700">楽曲</span>' : '<span class="px-1.5 py-0.5 rounded text-[10px] bg-purple-100 text-purple-700">MV</span>';
+        const trackBadge = w.track === 'music' 
+          ? '<span class="px-1.5 py-0.5 rounded text-[10px] bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300">楽曲</span>' 
+          : '<span class="px-1.5 py-0.5 rounded text-[10px] bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300">MV</span>';
         const dependsText = w.depends.length > 0 ? w.depends.join(' ＋ ') : '着手日';
 
-        return '<tr class="border-b last:border-b-0 hover:bg-slate-50 transition">'
+        return '<tr class="border-b border-slate-100 dark:border-slate-800/60 last:border-b-0 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">'
           + '<td class="py-2.5 px-3">' + trackBadge + '</td>'
           + '<td class="py-2.5 px-3 font-medium">' + w.name + '</td>'
-          + '<td class="py-2.5 px-3 text-slate-500 text-xs">' + dependsText + '</td>'
+          + '<td class="py-2.5 px-3 text-slate-500 dark:text-slate-400 text-xs">' + dependsText + '</td>'
           + '<td class="py-2.5 px-3">'
           + '<div class="flex items-center space-x-1.5">'
-          + '<input type="number" min="1" max="90" id="input_days_' + w.key + '" value="' + w.days + '" class="w-16 px-2 py-1 border rounded text-xs font-bold text-slate-800 text-center focus:ring-2 focus:ring-blue-500 outline-none">'
-          + '<span class="text-xs text-slate-500">日間</span>'
+          + '<input type="number" min="1" max="90" id="input_days_' + w.key + '" value="' + w.days + '" class="w-16 px-2 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs font-bold text-slate-800 dark:text-slate-200 text-center focus:ring-2 focus:ring-blue-500 outline-none">'
+          + '<span class="text-xs text-slate-500 dark:text-slate-400">日間</span>'
           + '</div>'
           + '</td>'
           + '<td class="py-2.5 px-3 text-right">'
-          + '<button onclick="saveSingleMasterDay(\'' + w.key + '\')" class="px-2.5 py-1 text-xs bg-slate-100 hover:bg-blue-600 hover:text-white rounded font-medium transition text-slate-700">保存</button>'
+          + '<button onclick="saveSingleMasterDay(\'' + w.key + '\')" class="px-2.5 py-1 text-xs bg-slate-100 dark:bg-slate-800 hover:bg-blue-600 hover:text-white rounded font-medium transition text-slate-700 dark:text-slate-300">保存</button>'
           + '</td>'
           + '</tr>';
       }).join('');
     }
 
-    // 1工程のみ保存
     async function saveSingleMasterDay(key) {
       const input = document.getElementById('input_days_' + key);
       if (!input) return;
@@ -416,7 +451,6 @@
 
       target.days = newDays;
 
-      // DB更新
       const { error } = await supabaseClient
         .from('process_masters')
         .upsert({ name: target.name, standard_days: newDays }, { onConflict: 'name' });
@@ -429,7 +463,6 @@
       }
     }
 
-    // 全工程の一括保存
     async function saveAllMasterDays() {
       const updates = [];
       workflowMasters.forEach(w => {
@@ -464,7 +497,7 @@
         const tag = w.track === 'music' ? '[楽曲]' : '[MV]';
         return '<label class="flex items-center space-x-2 cursor-pointer">'
           + '<input type="checkbox" value="' + w.key + '" data-name="' + w.name + '" data-days="' + w.days + '" data-track="' + w.track + '" checked class="rounded text-blue-600">'
-          + '<span class="text-xs text-slate-700 font-medium">' + tag + ' ' + w.name + ' (' + w.days + '日)</span>'
+          + '<span class="text-xs text-slate-700 dark:text-slate-300 font-medium">' + tag + ' ' + w.name + ' (' + w.days + '日)</span>'
           + '</label>';
       }).join('');
 
@@ -476,11 +509,13 @@
       const tbody = document.getElementById('membersTableBody');
       if (!tbody) return;
       tbody.innerHTML = allProfiles.map(u => {
-        const badgeClass = u.role === 'admin' ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-100 text-emerald-700';
+        const badgeClass = u.role === 'admin' 
+          ? 'bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300' 
+          : 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300';
         const roleName = u.role === 'admin' ? '管理者' : 'クリエイター';
-        return '<tr class="border-b last:border-b-0">'
+        return '<tr class="border-b border-slate-100 dark:border-slate-800/60 last:border-b-0">'
           + '<td class="p-3 font-medium">' + (u.name || '未設定') + '</td>'
-          + '<td class="p-3 text-slate-500">' + (u.email || '-') + '</td>'
+          + '<td class="p-3 text-slate-500 dark:text-slate-400">' + (u.email || '-') + '</td>'
           + '<td class="p-3"><span class="px-2 py-0.5 rounded text-xs font-semibold ' + badgeClass + '">' + roleName + '</span></td>'
           + '</tr>';
       }).join('');
@@ -558,7 +593,7 @@
 
       const container = document.getElementById('projectList');
       if (!prjs || prjs.length === 0) {
-        container.innerHTML = '<div class="p-8 text-center text-slate-400 bg-white rounded-xl border">進行中の案件はありません</div>';
+        container.innerHTML = '<div class="p-8 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">進行中の案件はありません</div>';
         return;
       }
 
@@ -579,25 +614,27 @@
 
         let ballBadgeHtml = '';
         if (tasks.length > 0 && tasks.every(t => t.status === '完了')) {
-          ballBadgeHtml = '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">✓ 全工程完了</span>';
+          ballBadgeHtml = '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">✓ 全工程完了</span>';
         } else if (activeTasks.length === 0) {
-          ballBadgeHtml = '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-500">待機中</span>';
+          ballBadgeHtml = '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">待機中</span>';
         } else {
           ballBadgeHtml = activeTasks.map(t => {
             if (t.status === '提出・確認待ち') {
-              return '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">🟡 確認待ち: ' + t.title + '</span>';
+              return '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">🟡 確認待ち: ' + t.title + '</span>';
             }
             const assignee = allProfiles.find(u => u.id === t.assignee_id);
             const assigneeName = assignee ? (assignee.name || assignee.email) : '未アサイン';
             const isOverdue = t.deadline && t.deadline < todayStr;
-            const badgeClass = isOverdue ? 'bg-red-100 text-red-700 border border-red-300' : 'bg-blue-100 text-blue-800 border border-blue-200';
+            const badgeClass = isOverdue 
+              ? 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-800' 
+              : 'bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800';
             return '<div class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-bold ' + badgeClass + '">'
               + '<span>🔴 ボール: <strong>' + assigneeName + '</strong> (' + t.title + ')</span>'
               + '</div>';
           }).join(' ');
         }
 
-        const driveLinkHtml = p.drive_url ? '<a href="' + p.drive_url + '" target="_blank" onclick="event.stopPropagation();" class="text-xs px-2.5 py-1 bg-slate-100 hover:bg-slate-200 rounded text-slate-700 font-medium">Drive ↗</a>' : '';
+        const driveLinkHtml = p.drive_url ? '<a href="' + p.drive_url + '" target="_blank" onclick="event.stopPropagation();" class="text-xs px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-700 dark:text-slate-300 font-medium transition">Drive ↗</a>' : '';
 
         const musicTasks = tasks.filter(t => {
           const w = workflowMasters.find(def => def.name === t.title);
@@ -613,11 +650,11 @@
             const isOverdue = t.deadline && t.deadline < todayStr && t.status !== '完了';
             const isActive = activeTasks.some(at => at.id === t.id);
 
-            let cardClass = 'bg-white border-slate-200';
+            let cardClass = 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800';
             if (t.status === '完了') {
-              cardClass = 'bg-slate-50 border-slate-200 text-slate-400';
+              cardClass = 'bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600';
             } else if (isActive) {
-              cardClass = 'bg-blue-50/50 border-blue-400 ring-2 ring-blue-100 shadow-sm';
+              cardClass = 'bg-blue-50/50 dark:bg-blue-950/30 border-blue-400 dark:border-blue-700 ring-2 ring-blue-100 dark:ring-blue-900/40 shadow-sm';
             }
 
             const statusOptions = ['未着手', '作業中', '提出・確認待ち', 'リテイク', '完了'].map(st => {
@@ -630,28 +667,28 @@
               return '<option value="' + u.id + '" ' + selected + '>' + (u.name || u.email) + '</option>';
             }).join('');
 
-            const deadlineInputClass = isOverdue ? 'text-red-600 font-bold bg-red-50' : 'text-slate-700';
+            const deadlineInputClass = isOverdue ? 'text-red-600 dark:text-red-400 font-bold bg-red-50 dark:bg-red-950/50' : 'text-slate-700 dark:text-slate-300';
             const deliverableHtml = t.deliverable_url 
-              ? '<a href="' + t.deliverable_url + '" target="_blank" class="block text-center py-1 bg-blue-50 text-blue-600 rounded font-medium text-[11px] hover:bg-blue-100 truncate">提出物リンク ↗</a>'
+              ? '<a href="' + t.deliverable_url + '" target="_blank" class="block text-center py-1 bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 rounded font-medium text-[11px] hover:bg-blue-100 transition truncate">提出物リンク ↗</a>'
               : '';
 
             return '<div class="p-3 rounded-lg border text-xs space-y-2 transition-all ' + cardClass + '">'
               + '<div class="flex justify-between items-center font-bold">'
-              + '<span class="' + (isActive ? 'text-blue-700 font-extrabold' : '') + '">' + t.title + '</span>'
-              + '<select onchange="updateTaskStatus(\'' + t.id + '\', this.value)" class="text-[11px] px-1.5 py-0.5 border rounded bg-white font-medium">'
+              + '<span class="' + (isActive ? 'text-blue-600 dark:text-blue-400 font-extrabold' : '') + '">' + t.title + '</span>'
+              + '<select onchange="updateTaskStatus(\'' + t.id + '\', this.value)" class="text-[11px] px-1.5 py-0.5 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 font-medium">'
               + statusOptions
               + '</select>'
               + '</div>'
               + '<div class="flex items-center space-x-1">'
               + '<span class="text-[10px] text-slate-400">担当:</span>'
-              + '<select onchange="assignTask(\'' + t.id + '\', this.value)" class="text-[11px] w-full px-1 py-0.5 border rounded bg-white">'
+              + '<select onchange="assignTask(\'' + t.id + '\', this.value)" class="text-[11px] w-full px-1 py-0.5 border dark:border-slate-700 rounded bg-white dark:bg-slate-800">'
               + '<option value="">-- 未設定 --</option>'
               + profileOptions
               + '</select>'
               + '</div>'
-              + '<div class="flex items-center justify-between text-[11px] pt-1 border-t">'
+              + '<div class="flex items-center justify-between text-[11px] pt-1 border-t border-slate-100 dark:border-slate-800">'
               + '<span class="text-slate-400">期限:</span>'
-              + '<input type="date" value="' + (t.deadline || '') + '" onchange="updateTaskDeadline(\'' + t.id + '\', this.value)" class="border rounded px-1 text-[11px] ' + deadlineInputClass + '">'
+              + '<input type="date" value="' + (t.deadline || '') + '" onchange="updateTaskDeadline(\'' + t.id + '\', this.value)" class="border dark:border-slate-700 bg-white dark:bg-slate-800 rounded px-1 text-[11px] ' + deadlineInputClass + '">'
               + '</div>'
               + deliverableHtml
               + '</div>';
@@ -660,13 +697,13 @@
 
         const toggleBtnIcon = isCollapsed ? '▼ 展開' : '▲ 閉じる';
 
-        return '<div class="bg-white rounded-xl border border-slate-200 shadow-sm transition overflow-hidden">'
-          + '<div onclick="toggleProjectCollapse(\'' + p.id + '\')" class="p-4 flex flex-wrap items-center justify-between gap-2 cursor-pointer hover:bg-slate-50 transition ' + (isCollapsed ? '' : 'border-b') + '">'
+        return '<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition overflow-hidden">'
+          + '<div onclick="toggleProjectCollapse(\'' + p.id + '\')" class="p-4 flex flex-wrap items-center justify-between gap-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition ' + (isCollapsed ? '' : 'border-b border-slate-200 dark:border-slate-800') + '">'
           + '<div class="flex items-center space-x-3">'
-          + '<button type="button" class="text-xs font-semibold px-2 py-1 bg-slate-100 text-slate-600 rounded hover:bg-slate-200">' + toggleBtnIcon + '</button>'
+          + '<button type="button" class="text-xs font-semibold px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition">' + toggleBtnIcon + '</button>'
           + '<div>'
           + '<span class="text-xs text-slate-400 font-medium">' + (p.client_name || 'クライアント未設定') + '</span>'
-          + '<h3 class="text-base font-bold text-slate-800">' + p.title + '</h3>'
+          + '<h3 class="text-base font-bold text-slate-800 dark:text-slate-100">' + p.title + '</h3>'
           + '</div>'
           + '</div>'
           + '<div class="flex flex-wrap items-center gap-2">'
@@ -676,17 +713,17 @@
           + '</div>'
 
           + (!isCollapsed ? (
-            '<div class="p-5 space-y-4 bg-white">'
+            '<div class="p-5 space-y-4 bg-white dark:bg-slate-900">'
             + '<div class="space-y-1.5">'
-            + '<div class="flex items-center space-x-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span><span class="text-xs font-bold text-slate-700">楽曲トラック (作曲 ➔ 作詞 ➔ 編曲 ➔ Rec ➔ Mix ➔ Mas)</span></div>'
+            + '<div class="flex items-center space-x-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span><span class="text-xs font-bold text-slate-700 dark:text-slate-300">楽曲トラック (作曲 ➔ 作詞 ➔ 編曲 ➔ Rec ➔ Mix ➔ Mas)</span></div>'
             + '<div class="grid gap-2.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">'
             + renderTaskCards(musicTasks)
             + '</div>'
             + '</div>'
 
             + (mvTasks.length > 0 ? (
-              '<div class="space-y-1.5 pt-2 border-t border-dashed">'
-              + '<div class="flex items-center space-x-2"><span class="w-2 h-2 rounded-full bg-purple-500"></span><span class="text-xs font-bold text-slate-700">MVトラック (イラスト ➔ 映像)</span></div>'
+              '<div class="space-y-1.5 pt-2 border-t border-dashed border-slate-200 dark:border-slate-800">'
+              + '<div class="flex items-center space-x-2"><span class="w-2 h-2 rounded-full bg-purple-500"></span><span class="text-xs font-bold text-slate-700 dark:text-slate-300">MVトラック (イラスト ➔ 映像)</span></div>'
               + '<div class="grid gap-2.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">'
               + renderTaskCards(mvTasks)
               + '</div>'
@@ -741,7 +778,6 @@
       };
       const fmt = (d) => d.toISOString().split('T')[0];
 
-      // 最新のworkflowMastersから日数を取得
       const getD = (k) => {
         const found = workflowMasters.find(w => w.key === k);
         return found ? found.days : 0;
@@ -783,7 +819,7 @@
       const { data: sales } = await supabaseClient.from('projects').select('*').eq('type', 'sales').order('created_at', { ascending: false });
       const container = document.getElementById('salesList');
       if (!sales || sales.length === 0) {
-        container.innerHTML = '<div class="col-span-3 p-8 text-center text-slate-400 bg-white rounded-xl border">営業リードはありません</div>';
+        container.innerHTML = '<div class="col-span-3 p-8 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">営業リードはありません</div>';
         return;
       }
 
@@ -794,17 +830,17 @@
         }).join('');
 
         const meetingText = s.next_meeting_at ? new Date(s.next_meeting_at).toLocaleString('ja-JP') : '未定';
-        const notesHtml = s.meeting_notes_url ? '<a href="' + s.meeting_notes_url + '" target="_blank" class="text-xs text-blue-600 block hover:underline truncate">議事録リンク ↗</a>' : '';
-        const wonBadgeHtml = s.status === '成約' ? '<div class="p-2 bg-emerald-50 text-emerald-700 text-[11px] rounded font-medium">✓ 成約済</div>' : '';
+        const notesHtml = s.meeting_notes_url ? '<a href="' + s.meeting_notes_url + '" target="_blank" class="text-xs text-blue-600 dark:text-blue-400 block hover:underline truncate">議事録リンク ↗</a>' : '';
+        const wonBadgeHtml = s.status === '成約' ? '<div class="p-2 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[11px] rounded font-medium">✓ 成約済</div>' : '';
 
-        return '<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">'
+        return '<div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">'
           + '<div class="flex justify-between items-start">'
-          + '<h4 class="font-bold text-sm text-slate-800">${s.title}</h4>'
-          + '<select onchange="updateSalesStatus(\'' + s.id + '\', this.value)" class="text-xs px-2 py-1 border rounded bg-slate-50 font-medium">'
+          + '<h4 class="font-bold text-sm text-slate-800 dark:text-slate-100">' + s.title + '</h4>'
+          + '<select onchange="updateSalesStatus(\'' + s.id + '\', this.value)" class="text-xs px-2 py-1 border dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-800 font-medium">'
           + statusOptions
           + '</select>'
           + '</div>'
-          + '<div class="text-xs text-slate-500">次回MTG: ' + meetingText + '</div>'
+          + '<div class="text-xs text-slate-500 dark:text-slate-400">次回MTG: ' + meetingText + '</div>'
           + notesHtml
           + wonBadgeHtml
           + '</div>';
@@ -843,7 +879,7 @@
 
       const container = document.getElementById('userTaskList');
       if (!tasks || tasks.length === 0) {
-        container.innerHTML = '<div class="col-span-2 p-8 text-center text-slate-400 bg-white rounded-xl border">現在アサインされているタスクはありません</div>';
+        container.innerHTML = '<div class="col-span-2 p-8 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">現在アサインされているタスクはありません</div>';
         return;
       }
 
@@ -852,15 +888,15 @@
         const deadlineText = t.deadline || '未定';
         const deliverableVal = t.deliverable_url || '';
 
-        return '<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">'
+        return '<div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">'
           + '<div class="text-xs text-slate-400 font-medium">' + prjTitle + '</div>'
           + '<h4 class="text-base font-bold">' + t.title + '</h4>'
-          + '<div class="text-xs text-slate-500">締切期日: <span class="font-bold text-slate-800">' + deadlineText + '</span></div>'
-          + '<div class="pt-2 border-t space-y-2">'
-          + '<label class="block text-xs text-slate-600 font-medium">提出物URL:</label>'
-          + '<input type="url" id="deliv_' + t.id + '" value="' + deliverableVal + '" class="w-full px-3 py-1.5 border rounded text-xs" placeholder="https://...">'
+          + '<div class="text-xs text-slate-500 dark:text-slate-400">締切期日: <span class="font-bold text-slate-800 dark:text-slate-200">' + deadlineText + '</span></div>'
+          + '<div class="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">'
+          + '<label class="block text-xs text-slate-600 dark:text-slate-400 font-medium">提出物URL:</label>'
+          + '<input type="url" id="deliv_' + t.id + '" value="' + deliverableVal + '" class="w-full px-3 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs" placeholder="https://...">'
           + '<div class="flex justify-between items-center pt-1">'
-          + '<span class="text-xs font-semibold text-blue-600">ステータス: ' + t.status + '</span>'
+          + '<span class="text-xs font-semibold text-blue-600 dark:text-blue-400">ステータス: ' + t.status + '</span>'
           + '<button onclick="submitTask(\'' + t.id + '\')" class="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 transition">'
           + '提出・確認待ちにする'
           + '</button>'
@@ -892,7 +928,7 @@
           if (t === tab) {
             btn.className = "pb-3 px-2 font-medium text-sm border-b-2 border-blue-600 text-blue-600";
           } else {
-            btn.className = "pb-3 px-2 font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700";
+            btn.className = "pb-3 px-2 font-medium text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200";
           }
         }
       });
