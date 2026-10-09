@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Project Flow - 進行管理</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -22,112 +22,64 @@
     }
   </script>
 </head>
-<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen transition-colors duration-200 antialiased selection:bg-blue-500 selection:text-white pb-20 md:pb-8">
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen transition-colors duration-200 antialiased selection:bg-blue-500 selection:text-white">
 
-  <!-- ==================== ヘッダー ==================== -->
-  <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 transition-colors shadow-sm">
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
-      
-      <!-- ロゴ & アプリ名 -->
-      <div class="flex items-center space-x-2 sm:space-x-2.5 min-w-0 flex-shrink-0">
-        <img src="./ARTGATHER_w_rgb_1.png" alt="ARTGATHER Logo" class="h-6 sm:h-7 w-auto object-contain flex-shrink-0" onerror="this.style.display='none'">
-        <span class="text-base sm:text-lg font-bold bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-transparent truncate tracking-tight">ProjectFlow</span>
-        <span id="roleBadge" class="hidden sm:inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">Guest</span>
+  <!-- ヘッダー -->
+  <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50 transition-colors">
+    <div class="max-w-7xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between gap-2">
+      <div class="flex items-center space-x-2 min-w-0">
+        <img src="./ARTGATHER_w_rgb_1.png" alt="ARTGATHER Logo" class="h-6 sm:h-8 w-auto object-contain flex-shrink-0" onerror="this.style.display='none'">
+        <span class="text-base sm:text-xl font-bold bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-transparent truncate">ProjectFlow</span>
+        <span id="roleBadge" class="hidden sm:inline-block text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">Guest</span>
       </div>
-
-      <!-- 【PC表示専用】ダッシュボード風ヘッダーナビ（スマホでは絶対に非表示） -->
-      <nav id="pcAdminNav" class="hidden md:flex items-center space-x-1 lg:space-x-2 flex-1 justify-center max-w-2xl">
-        <button onclick="switchTab('creative')" id="pcTabCreative" class="px-3 py-1.5 rounded-lg text-xs font-bold transition text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60">制作進行</button>
-        <button onclick="switchTab('sales')" id="pcTabSales" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">営業・商談</button>
-        <button onclick="switchTab('updates')" id="pcTabUpdates" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">更新ログ</button>
-        <button onclick="switchTab('master')" id="pcTabMaster" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">マスター設定</button>
-        <button onclick="switchTab('members')" id="pcTabMembers" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">メンバー</button>
-      </nav>
-
-      <!-- 【PC表示専用】ツールバー & ユーザー設定（スマホでは絶対に非表示） -->
-      <div id="pcUserActions" class="hidden md:flex items-center space-x-2.5 flex-shrink-0">
-        <button id="viewToggleBtn" onclick="toggleAdminViewMode()" type="button" class="hidden px-2.5 py-1 text-xs font-semibold rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 transition whitespace-nowrap">
+      
+      <div class="flex items-center space-x-1.5 sm:space-x-3 flex-shrink-0">
+        <button id="viewToggleBtn" onclick="toggleAdminViewMode()" type="button" class="hidden px-2 py-1 text-[11px] sm:text-xs font-semibold rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 transition whitespace-nowrap">
           視点切替
         </button>
-        <button onclick="toggleDarkMode()" type="button" class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" title="テーマ切り替え">
-          <span class="themeIcon text-sm">🌙</span>
-        </button>
-        <button onclick="openMyAccountModal()" id="pcUserNameBtn" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 transition">
-          <span class="userInitialAvatar w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px]">U</span>
-          <span id="pcUserDisplayName" class="max-w-[120px] truncate">ユーザー</span>
-        </button>
-        <button onclick="logout()" class="text-xs text-slate-400 hover:text-red-500 transition px-1">ログアウト</button>
-      </div>
 
-      <!-- 【スマホ表示専用】右端アバターメニューボタン（PCでは非表示） -->
-      <div id="mobileHeaderActions" class="flex md:hidden items-center space-x-2 flex-shrink-0">
-        <button onclick="toggleMobileUserMenu()" type="button" class="relative p-1 rounded-full border border-slate-200 dark:border-slate-700 focus:outline-none">
-          <div class="userInitialAvatar w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">U</div>
-          <span id="mobileUnreadDot" class="hidden absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 border-2 border-white dark:border-slate-900 rounded-full"></span>
+        <button onclick="toggleDarkMode()" id="themeToggleBtn" type="button" class="p-1.5 sm:p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" title="テーマ切り替え">
+          <span id="themeToggleIcon" class="text-xs sm:text-sm">🌙</span>
         </button>
-      </div>
-
-    </div>
-
-    <!-- スマホ専用: アバタータップ時のスライドポップアップメニュー -->
-    <div id="mobileUserMenu" class="hidden md:hidden fixed inset-x-0 top-14 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-xl z-50 p-4 transition-all">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-        <div>
-          <h4 id="mobileUserMenuName" class="font-bold text-sm text-slate-800 dark:text-slate-100"></h4>
-          <span id="mobileUserMenuRole" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"></span>
-        </div>
-        <button onclick="toggleDarkMode()" type="button" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center space-x-1.5 text-xs font-semibold">
-          <span class="themeIcon">🌙</span>
-          <span>外観</span>
-        </button>
-      </div>
-      <div class="py-2 space-y-1 text-sm font-medium">
-        <button id="mobileViewToggleBtn" onclick="toggleAdminViewMode(); toggleMobileUserMenu();" class="hidden w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-between">
-          <span>🔄 視点切替 (管理者/User)</span>
-        </button>
-        <button onclick="openMyAccountModal(); toggleMobileUserMenu();" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-between">
-          <span>⚙️ マイアカウント設定</span>
-        </button>
-        <button onclick="logout()" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 font-bold flex items-center justify-between">
-          <span>🚪 ログアウト</span>
-        </button>
+        <div id="authActions" class="flex items-center space-x-2 text-xs"></div>
       </div>
     </div>
   </header>
 
-  <!-- ==================== メインコンテンツ ==================== -->
-  <main class="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-8">
-    
+  <main class="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
     <!-- 1. ログイン画面 -->
-    <div id="loginView" class="max-w-md mx-auto mt-8 sm:mt-16 p-6 sm:p-8 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
-      <div class="text-center mb-6">
-        <img src="./ARTGATHER_w_rgb_1.png" alt="Logo" class="h-8 mx-auto mb-2 object-contain" onerror="this.style.display='none'">
-        <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100">ログイン</h2>
-        <p class="text-xs text-slate-400 mt-1">ProjectFlow 進行管理システム</p>
-      </div>
+    <div id="loginView" class="max-w-md mx-auto mt-6 sm:mt-12 p-5 sm:p-6 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
+      <h2 class="text-lg sm:text-xl font-bold mb-4 text-center">ログイン</h2>
       <form onsubmit="event.preventDefault(); handleSmartLogin();" class="space-y-4">
         <div>
-          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">ユーザーID または メールアドレス</label>
-          <input type="text" id="loginIdentifier" required class="w-full px-3.5 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="ユーザーID または user@example.com">
+          <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">ユーザーID または メールアドレス</label>
+          <input type="text" id="loginIdentifier" required class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="ユーザーID または user@example.com">
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">パスワード</label>
-          <input type="password" id="loginPassword" required class="w-full px-3.5 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="••••••••">
+          <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">パスワード</label>
+          <input type="password" id="loginPassword" required class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="••••••••">
         </div>
-        <button type="submit" id="btnPwLogin" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition shadow-sm">
+        <button type="submit" id="btnPwLogin" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm transition shadow-sm">
           ログイン
         </button>
       </form>
-      <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 text-center">
-        <p class="text-xs text-slate-400 leading-relaxed">
-          ID・パスワードをお忘れの場合は、<strong>システム管理者</strong>までお問い合わせください。
+      <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 text-center">
+        <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
+          ID・パスワードをお忘れの場合は、<strong>システム管理者</strong>まで直接お問い合わせください。
         </p>
       </div>
-      <p id="loginMsg" class="mt-4 text-xs text-center font-medium"></p>
+      <p id="loginMsg" class="mt-4 text-xs sm:text-sm text-center font-medium"></p>
     </div>
 
     <!-- 2. ダッシュボード画面 -->
     <div id="appView" class="hidden space-y-4 sm:space-y-6">
+      <div id="adminTabs" class="flex border-b border-slate-200 dark:border-slate-800 space-x-2 sm:space-x-4 overflow-x-auto no-scrollbar whitespace-nowrap pb-1">
+        <button onclick="switchTab('creative')" id="tabCreative" class="pb-2.5 px-2 font-medium text-xs sm:text-sm border-b-2 border-blue-600 text-blue-600 flex-shrink-0">制作進行ボード</button>
+        <button onclick="switchTab('sales')" id="tabSales" class="pb-2.5 px-2 font-medium text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 flex-shrink-0">営業・商談ボード</button>
+        <button onclick="switchTab('updates')" id="tabUpdates" class="pb-2.5 px-2 font-medium text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 flex-shrink-0">更新ログ</button>
+        <button onclick="switchTab('master')" id="tabMaster" class="pb-2.5 px-2 font-medium text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 flex-shrink-0">工程マスター設定</button>
+        <button onclick="switchTab('members')" id="tabMembers" class="pb-2.5 px-2 font-medium text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 flex-shrink-0">メンバー管理</button>
+      </div>
 
       <!-- クリエイター用タスク表示 -->
       <div id="userTaskSection" class="hidden space-y-6">
@@ -152,19 +104,12 @@
       <!-- Admin: 制作進行ボード -->
       <div id="creativeSection" class="space-y-4 sm:space-y-6">
         <div class="flex flex-wrap justify-between items-center gap-2">
-          <div>
-            <h2 class="text-base sm:text-lg font-bold">制作案件パイプライン</h2>
-            <div class="flex items-center space-x-1.5 mt-1.5">
-              <button onclick="filterCreativeProjects('active')" id="prjFilterActive" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-600 text-white transition">進行中</button>
-              <button onclick="filterCreativeProjects('completed')" id="prjFilterCompleted" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 border dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition">完了済み</button>
-              <button onclick="filterCreativeProjects('all')" id="prjFilterAll" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 border dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition">すべて</button>
-            </div>
-          </div>
+          <h2 class="text-base sm:text-lg font-bold">制作案件パイプライン</h2>
           <div class="flex items-center space-x-2">
             <button onclick="toggleAllProjectsCollapse()" class="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold transition border border-slate-200 dark:border-slate-700">
               一括展開 / 折りたたみ
             </button>
-            <button onclick="openModal('newProjectModal')" class="px-3.5 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-semibold transition shadow-sm whitespace-nowrap">
+            <button onclick="openModal('newProjectModal')" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-medium transition shadow-sm whitespace-nowrap">
               + 新規起票
             </button>
           </div>
@@ -179,19 +124,19 @@
             <h2 class="text-base sm:text-lg font-bold">営業・商談チケットプール</h2>
             <p class="text-[11px] text-slate-500 dark:text-slate-400">タップして詳細・記録を確認</p>
           </div>
-          <button onclick="openModal('newLeadModal')" class="px-3.5 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-semibold transition shadow-sm whitespace-nowrap">
+          <button onclick="openModal('newLeadModal')" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-medium transition shadow-sm whitespace-nowrap">
             + チケット起票
           </button>
         </div>
 
         <div class="flex overflow-x-auto no-scrollbar gap-1.5 pb-1 text-xs whitespace-nowrap">
-          <button onclick="filterLeads('all')" class="lead-filter-btn px-2.5 py-1 rounded-lg border dark:border-slate-700 bg-blue-600 text-white font-medium" data-status="all">すべて</button>
-          <button onclick="filterLeads('未対応（HOT）')" class="lead-filter-btn px-2.5 py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300" data-status="未対応（HOT）">未対応HOT</button>
-          <button onclick="filterLeads('再送付')" class="lead-filter-btn px-2.5 py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300" data-status="再送付">再送付</button>
-          <button onclick="filterLeads('対応待ち')" class="lead-filter-btn px-2.5 py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300" data-status="対応待ち">対応待ち</button>
-          <button onclick="filterLeads('先方返信あり（要対応）')" class="lead-filter-btn px-2.5 py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300" data-status="先方返信あり（要対応）">返信あり</button>
-          <button onclick="filterLeads('相談決定')" class="lead-filter-btn px-2.5 py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300" data-status="相談決定">相談決定</button>
-          <button onclick="filterLeads('対応停止')" class="lead-filter-btn px-2.5 py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300" data-status="対応停止">対応停止</button>
+          <button onclick="filterLeads('all')" class="lead-filter-btn px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg border dark:border-slate-700 bg-blue-600 text-white font-medium" data-status="all">すべて</button>
+          <button onclick="filterLeads('未対応（HOT）')" class="lead-filter-btn px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300" data-status="未対応（HOT）">未対応HOT</button>
+          <button onclick="filterLeads('再送付')" class="lead-filter-btn px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300" data-status="再送付">再送付</button>
+          <button onclick="filterLeads('対応待ち')" class="lead-filter-btn px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300" data-status="対応待ち">対応待ち</button>
+          <button onclick="filterLeads('先方返信あり（要対応）')" class="lead-filter-btn px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300" data-status="先方返信あり（要対応）">返信あり</button>
+          <button onclick="filterLeads('相談決定')" class="lead-filter-btn px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300" data-status="相談決定">相談決定</button>
+          <button onclick="filterLeads('対応停止')" class="lead-filter-btn px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300" data-status="対応停止">対応停止</button>
         </div>
 
         <div id="leadsList" class="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div>
@@ -204,7 +149,7 @@
             <h2 class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100">更新ログ（制作アクティビティ）</h2>
             <p class="text-xs text-slate-500 dark:text-slate-400">各案件・タスクで提出されたURLやフィードバック・指示を時系列で網羅</p>
           </div>
-          <button onclick="renderAllUpdatesLogs()" class="text-xs px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded-lg font-medium text-slate-600 dark:text-slate-300">
+          <button onclick="renderAllUpdatesLogs()" class="text-xs px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded font-medium text-slate-600 dark:text-slate-300">
             最新に更新 🔄
           </button>
         </div>
@@ -218,19 +163,19 @@
             <h2 class="text-base sm:text-lg font-bold">標準工程・仕掛日数設定</h2>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">新規案件起票時の自動納期順算に連動します</p>
           </div>
-          <button onclick="saveAllMasterDays()" class="px-3.5 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-semibold transition shadow-sm whitespace-nowrap">
+          <button onclick="saveAllMasterDays()" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-medium transition shadow-sm whitespace-nowrap">
             一括保存
           </button>
         </div>
-        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-x-auto">
+        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-x-auto">
           <table class="w-full text-xs sm:text-sm min-w-[500px]">
             <thead>
               <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 text-left">
-                <th class="py-3 px-4">ライン</th>
-                <th class="py-3 px-4">工程名</th>
-                <th class="py-3 px-4">先行条件</th>
-                <th class="py-3 px-4">標準所要日数</th>
-                <th class="py-3 px-4 text-right">操作</th>
+                <th class="py-2.5 px-3">ライン</th>
+                <th class="py-2.5 px-3">工程名</th>
+                <th class="py-2.5 px-3">先行条件</th>
+                <th class="py-2.5 px-3">標準所要日数</th>
+                <th class="py-2.5 px-3 text-right">操作</th>
               </tr>
             </thead>
             <tbody id="masterTableBody"></tbody>
@@ -242,18 +187,18 @@
       <div id="membersSection" class="hidden space-y-4 max-w-3xl">
         <div class="flex justify-between items-center gap-2">
           <h2 class="text-base sm:text-lg font-bold">所属メンバー一覧</h2>
-          <button onclick="openModal('newMemberModal')" class="px-3.5 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-semibold transition shadow-sm whitespace-nowrap">
+          <button onclick="openModal('newMemberModal')" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-medium transition shadow-sm whitespace-nowrap">
             + メンバー追加
           </button>
         </div>
-        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-x-auto shadow-sm">
+        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-x-auto shadow-sm">
           <table class="w-full text-xs sm:text-sm min-w-[450px]">
             <thead class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-left">
               <tr>
-                <th class="p-3.5">ID</th>
-                <th class="p-3.5">表示名</th>
-                <th class="p-3.5">メールアドレス</th>
-                <th class="p-3.5">権限</th>
+                <th class="p-3">ID</th>
+                <th class="p-3">表示名</th>
+                <th class="p-3">メールアドレス</th>
+                <th class="p-3">権限</th>
               </tr>
             </thead>
             <tbody id="membersTableBody"></tbody>
@@ -263,87 +208,50 @@
     </div>
   </main>
 
-  <!-- ==================== 【スマホ表示専用】下部ボトムナビゲーション ==================== -->
-  <nav id="mobileBottomNav" class="fixed md:hidden bottom-0 inset-x-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 z-40 px-2 py-1.5 flex items-center justify-around shadow-lg transition-colors">
-    <button onclick="switchTab('creative')" id="mobTabCreative" class="flex flex-col items-center justify-center flex-1 py-1 text-blue-600 dark:text-blue-400 font-bold transition">
-      <span class="text-lg">📁</span>
-      <span class="text-[10px] mt-0.5 tracking-tight">制作進行</span>
-    </button>
-    <button onclick="switchTab('sales')" id="mobTabSales" class="flex flex-col items-center justify-center flex-1 py-1 text-slate-400 dark:text-slate-500 font-medium transition">
-      <span class="text-lg">💼</span>
-      <span class="text-[10px] mt-0.5 tracking-tight">営業</span>
-    </button>
-    <button onclick="switchTab('updates')" id="mobTabUpdates" class="flex flex-col items-center justify-center flex-1 py-1 text-slate-400 dark:text-slate-500 font-medium transition">
-      <span class="text-lg">🔔</span>
-      <span class="text-[10px] mt-0.5 tracking-tight">ログ</span>
-    </button>
-    <button onclick="openMobileMoreSheet()" id="mobTabMore" class="flex flex-col items-center justify-center flex-1 py-1 text-slate-400 dark:text-slate-500 font-medium transition">
-      <span class="text-lg">⚙️</span>
-      <span class="text-[10px] mt-0.5 tracking-tight">設定など</span>
-    </button>
-  </nav>
-
-  <!-- スマホ専用:「設定など」をタップした時のボトムシート -->
-  <div id="mobileMoreSheet" class="hidden md:hidden fixed inset-0 bg-black/60 z-50 flex items-end justify-center backdrop-blur-sm" onclick="closeMobileMoreSheet()">
-    <div class="bg-white dark:bg-slate-900 w-full rounded-t-3xl p-5 space-y-3 border-t border-slate-200 dark:border-slate-800 animate-in slide-in-from-bottom" onclick="event.stopPropagation()">
-      <div class="w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-2"></div>
-      <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">管理メニュー</h3>
-      <div class="space-y-1.5 text-sm font-medium">
-        <button onclick="switchTab('master'); closeMobileMoreSheet();" class="w-full text-left p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-between">
-          <span>🛠️ 工程マスター設定（標準日数）</span>
-          <span>➔</span>
-        </button>
-        <button onclick="switchTab('members'); closeMobileMoreSheet();" class="w-full text-left p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-between">
-          <span>👥 所属メンバー管理</span>
-          <span>➔</span>
-        </button>
-      </div>
-      <button onclick="closeMobileMoreSheet()" class="w-full py-2.5 text-center text-xs font-bold text-slate-500 dark:text-slate-400 pt-2">閉じる</button>
-    </div>
-  </div>
-
   <!-- モーダル: 案件全体統合ログ -->
-  <div id="projectLogModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2.5 sm:p-4 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full p-4 sm:p-6 border border-slate-200 dark:border-slate-800 max-h-[90vh] flex flex-col shadow-2xl">
-      <div class="flex items-start justify-between border-b dark:border-slate-800 pb-3 flex-shrink-0">
-        <div class="min-w-0 pr-2">
-          <span class="text-xs text-slate-400 font-medium block truncate" id="prjLogModalClient"></span>
-          <h3 id="prjLogModalTitle" class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 truncate"></h3>
+  <div id="projectLogModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full p-4 sm:p-6 space-y-4 border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-start justify-between border-b dark:border-slate-800 pb-3">
+        <div>
+          <span class="text-xs text-slate-400 font-medium" id="prjLogModalClient"></span>
+          <h3 id="prjLogModalTitle" class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100"></h3>
         </div>
-        <button onclick="closeModal('projectLogModal')" class="text-slate-400 hover:text-slate-600 text-base p-1 flex-shrink-0">✕</button>
+        <button onclick="closeModal('projectLogModal')" class="text-slate-400 hover:text-slate-600 text-sm">✕</button>
       </div>
-      <div class="flex-1 overflow-y-auto space-y-2 py-3 pr-1">
-        <h4 class="text-xs font-bold text-slate-500 sticky top-0 bg-white dark:bg-slate-900 py-0.5">案件内の全工程タイムライン（最新順）</h4>
-        <div id="prjLogModalTimeline" class="space-y-2 text-xs"></div>
+
+      <div class="space-y-2">
+        <h4 class="text-xs font-bold text-slate-500">案件内の全工程タイムライン（最新順）</h4>
+        <div id="prjLogModalTimeline" class="space-y-2 max-h-80 overflow-y-auto text-xs pr-1"></div>
       </div>
-      <div class="flex justify-end pt-3 border-t dark:border-slate-800 flex-shrink-0">
-        <button onclick="closeModal('projectLogModal')" class="w-full sm:w-auto px-5 py-2 border dark:border-slate-700 rounded-lg text-xs font-medium">閉じる</button>
+
+      <div class="flex justify-end pt-2 border-t dark:border-slate-800">
+        <button onclick="closeModal('projectLogModal')" class="px-4 py-1.5 border dark:border-slate-700 rounded-lg text-xs">閉じる</button>
       </div>
     </div>
   </div>
 
   <!-- モーダル: タスク提出・フィードバックログ詳細 -->
-  <div id="taskLogModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2.5 sm:p-4 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-4 sm:p-6 border border-slate-200 dark:border-slate-800 max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
-      <div class="flex items-start justify-between border-b dark:border-slate-800 pb-3 flex-shrink-0 gap-2">
-        <div class="min-w-0 flex-1">
-          <span id="taskLogStatusBadge" class="px-2 py-0.5 rounded text-[10px] font-bold inline-block"></span>
-          <h3 id="taskLogModalTitle" class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 mt-1 truncate"></h3>
+  <div id="taskLogModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-4 sm:p-6 space-y-4 border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-start justify-between border-b dark:border-slate-800 pb-3">
+        <div>
+          <span id="taskLogStatusBadge" class="px-2 py-0.5 rounded text-[10px] font-bold"></span>
+          <h3 id="taskLogModalTitle" class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 mt-1"></h3>
         </div>
-        <div class="flex items-center space-x-1.5 flex-shrink-0">
-          <button id="btnUnreadToggleInModal" onclick="toggleTaskUnreadManual()" class="text-[11px] px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium transition whitespace-nowrap">
+        <div class="flex items-center space-x-2">
+          <button id="btnUnreadToggleInModal" onclick="toggleTaskUnreadManual()" class="text-[11px] px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium transition">
             未読に戻す
           </button>
-          <button onclick="closeModal('taskLogModal')" class="text-slate-400 hover:text-slate-600 text-base p-1">✕</button>
+          <button onclick="closeModal('taskLogModal')" class="text-slate-400 hover:text-slate-600 text-sm px-1">✕</button>
         </div>
       </div>
 
-      <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border dark:border-slate-700 space-y-2 mt-3 flex-shrink-0">
+      <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border dark:border-slate-700 space-y-2">
         <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">コメント・フィードバックの追記</label>
-        <textarea id="taskLogInputText" rows="2" class="w-full p-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500 break-words" placeholder="連絡事項やフィードバック、リテイク指示を入力..."></textarea>
+        <textarea id="taskLogInputText" rows="2" class="w-full p-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none focus:ring-2 focus:ring-blue-500" placeholder="連絡事項やフィードバック、リテイク指示を入力..."></textarea>
         <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
           <div class="flex items-center space-x-1.5 text-xs">
-            <span class="text-slate-500 whitespace-nowrap">ステータス変更:</span>
+            <span class="text-slate-500">ステータス変更:</span>
             <select id="taskLogStatusSelect" class="px-2 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs">
               <option value="">(変更なし)</option>
               <option value="作業中">作業中</option>
@@ -351,19 +259,19 @@
               <option value="完了">承認（完了）</option>
             </select>
           </div>
-          <button onclick="submitTaskLogComment()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition shadow-sm whitespace-nowrap">
+          <button onclick="submitTaskLogComment()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition shadow-sm">
             送信・更新
           </button>
         </div>
       </div>
 
-      <div class="flex-1 overflow-y-auto min-h-[140px] space-y-2 pt-3 pr-1">
-        <h4 class="text-xs font-bold text-slate-500 sticky top-0 bg-white dark:bg-slate-900 py-0.5 z-10">提出・やり取りタイムライン</h4>
-        <div id="taskLogTimeline" class="space-y-2 text-xs"></div>
+      <div class="space-y-2 pt-1">
+        <h4 class="text-xs font-bold text-slate-500">提出・やり取りタイムライン</h4>
+        <div id="taskLogTimeline" class="space-y-2 max-h-56 overflow-y-auto text-xs"></div>
       </div>
 
-      <div class="flex justify-end pt-3 border-t dark:border-slate-800 flex-shrink-0">
-        <button onclick="closeModal('taskLogModal')" class="w-full sm:w-auto px-5 py-1.5 border dark:border-slate-700 rounded-lg text-xs font-medium">閉じる</button>
+      <div class="flex justify-end pt-2 border-t dark:border-slate-800">
+        <button onclick="closeModal('taskLogModal')" class="px-4 py-1.5 border dark:border-slate-700 rounded-lg text-xs">閉じる</button>
       </div>
     </div>
   </div>
@@ -428,7 +336,7 @@
           </select>
         </div>
         <div class="relative">
-          <textarea id="templateMessageBox" rows="3" class="w-full p-2.5 pb-8 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs font-mono outline-none focus:ring-2 focus:ring-blue-500 break-words" placeholder="定型文を選択するとここに名前が反映されます。"></textarea>
+          <textarea id="templateMessageBox" rows="3" class="w-full p-2.5 pb-8 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs font-mono outline-none focus:ring-2 focus:ring-blue-500" placeholder="定型文を選択するとここに名前が反映されます。"></textarea>
           <button onclick="copyTemplateBox()" type="button" class="absolute bottom-2 right-2 px-2.5 py-1 bg-slate-800 dark:bg-slate-700 text-white rounded text-[11px] font-medium hover:bg-slate-700 transition shadow">
             📋 コピー
           </button>
@@ -441,7 +349,7 @@
           <span id="phaseGuideText" class="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400"></span>
         </div>
         <div>
-          <textarea id="logMessageInput" rows="2" class="w-full p-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none break-words" placeholder="送信内容のメモや先方からの返信..."></textarea>
+          <textarea id="logMessageInput" rows="2" class="w-full p-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none" placeholder="送信内容のメモや先方からの返信..."></textarea>
         </div>
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
           <div class="flex items-center space-x-1.5 text-xs">
@@ -579,13 +487,11 @@
     let currentUser = null;
     let userProfile = null;
     let allProfiles = [];
-    const openProjects = new Set();
+    const openProjects = new Set(); // 開いている案件ID（デフォルトは空＝全件折りたたみ）
     let adminViewMode = 'admin';
 
     let allLeads = [];
     let currentFilterStatus = 'all';
-    let currentPrjFilter = 'active';
-    let currentActiveTab = 'creative';
     let selectedLead = null;
     let salesTemplates = [];
     let selectedTaskForLog = null;
@@ -645,43 +551,6 @@
       return (project.tasks || []).some(t => getTaskUnreadStatus(t));
     }
 
-    function isProjectCompleted(project) {
-      const tasks = project.tasks || [];
-      if (tasks.length === 0) return false;
-      return tasks.every(t => t.status === '完了');
-    }
-
-    function filterCreativeProjects(type) {
-      currentPrjFilter = type;
-      ['active', 'completed', 'all'].forEach(t => {
-        const btn = document.getElementById('prjFilter' + t.charAt(0).toUpperCase() + t.slice(1));
-        if (btn) {
-          if (t === type) {
-            btn.className = "px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-600 text-white transition";
-          } else {
-            btn.className = "px-2.5 py-1 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 border dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition";
-          }
-        }
-      });
-      renderCreativeProjectsList();
-    }
-
-    async function deleteProject(projectId, projectTitle) {
-      if (!confirm('【警告】案件「' + projectTitle + '」を完全に削除しますか？\n※紐付く全工程タスク・ログ履歴もすべて削除されます。この操作は取り消せません。')) {
-        return;
-      }
-
-      const { error } = await supabaseClient.from('projects').delete().eq('id', projectId);
-      if (error) {
-        alert('削除エラー: ' + error.message);
-      } else {
-        alert('案件「' + projectTitle + '」を削除しました。');
-        openProjects.delete(projectId);
-        await loadCreativeProjects();
-        renderAllUpdatesLogs();
-      }
-    }
-
     async function autoMarkTaskAsRead(task) {
       const myId = getCurrentUserIdentifier();
       if (!myId || !task || !task.logs) return;
@@ -700,7 +569,7 @@
       if (hasChange) {
         task.logs = updatedLogs;
         await supabaseClient.from('tasks').update({ logs: updatedLogs }).eq('id', task.id);
-        renderCreativeProjectsList();
+        loadCreativeProjects();
         loadUserTasks();
       }
     }
@@ -722,7 +591,7 @@
 
       renderTaskLogTimeline(selectedTaskForLog.logs);
       closeModal('taskLogModal');
-      renderCreativeProjectsList();
+      loadCreativeProjects();
       loadUserTasks();
       alert('タスクを未読（NEW）に戻しました！');
     }
@@ -739,37 +608,22 @@
       }
     }
 
-    function toggleMobileUserMenu() {
-      const menu = document.getElementById('mobileUserMenu');
-      if (menu) menu.classList.toggle('hidden');
-    }
-
-    function openMobileMoreSheet() {
-      const sheet = document.getElementById('mobileMoreSheet');
-      if (sheet) sheet.classList.remove('hidden');
-    }
-
-    function closeMobileMoreSheet() {
-      const sheet = document.getElementById('mobileMoreSheet');
-      if (sheet) sheet.classList.add('hidden');
-    }
-
     function initTheme() {
       const savedTheme = localStorage.getItem('theme');
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const isDark = (savedTheme === 'dark' || (!savedTheme && prefersDark));
-      document.documentElement.classList.toggle('dark', isDark);
-      document.querySelectorAll('.themeIcon').forEach(el => {
-        el.innerText = isDark ? '☀️' : '🌙';
-      });
+      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        document.documentElement.classList.add('dark');
+        document.getElementById('themeToggleIcon').innerText = '☀️';
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.getElementById('themeToggleIcon').innerText = '🌙';
+      }
     }
 
     function toggleDarkMode() {
       const isDark = document.documentElement.classList.toggle('dark');
       localStorage.setItem('theme', isDark ? 'dark' : 'light');
-      document.querySelectorAll('.themeIcon').forEach(el => {
-        el.innerText = isDark ? '☀️' : '🌙';
-      });
+      document.getElementById('themeToggleIcon').innerText = isDark ? '☀️' : '🌙';
     }
 
     let workflowMasters = [
@@ -790,7 +644,7 @@
 
       if (!identifier || !password) return alert('入力してください');
       msg.innerText = "認証確認中...";
-      msg.className = "mt-4 text-xs text-center text-blue-500 font-medium";
+      msg.className = "mt-4 text-xs sm:text-sm text-center text-blue-500 font-medium";
 
       let loginEmail = identifier;
 
@@ -803,7 +657,7 @@
 
         if (searchErr || !profile || !profile.email) {
           msg.innerText = "エラー: 該当するユーザーIDが見つかりません";
-          msg.className = "mt-4 text-xs text-center text-red-500 font-medium";
+          msg.className = "mt-4 text-xs sm:text-sm text-center text-red-500 font-medium";
           return;
         }
         loginEmail = profile.email;
@@ -817,7 +671,7 @@
 
         if (error) {
           msg.innerText = "ログイン失敗: " + error.message;
-          msg.className = "mt-4 text-xs text-center text-red-500 font-medium";
+          msg.className = "mt-4 text-xs sm:text-sm text-center text-red-500 font-medium";
           alert("ログイン失敗: " + error.message);
         } else {
           msg.innerText = "";
@@ -863,47 +717,30 @@
     function renderAuthUI(isLoggedIn) {
       const loginView = document.getElementById('loginView');
       const appView = document.getElementById('appView');
+      const authActions = document.getElementById('authActions');
       const roleBadge = document.getElementById('roleBadge');
       const viewToggleBtn = document.getElementById('viewToggleBtn');
-      const mobileViewToggleBtn = document.getElementById('mobileViewToggleBtn');
-      const pcNav = document.getElementById('pcAdminNav');
-      const mobileBottomNav = document.getElementById('mobileBottomNav');
 
       if (isLoggedIn && userProfile) {
         loginView.classList.add('hidden');
         appView.classList.remove('hidden');
         roleBadge.classList.remove('hidden');
+        roleBadge.innerText = userProfile.role === 'admin' ? '管理者' : 'User';
+        roleBadge.className = userProfile.role === 'admin' 
+          ? 'text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300' 
+          : 'text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300';
 
-        const roleText = userProfile.role === 'admin' ? '管理者' : 'User';
-        const roleClass = userProfile.role === 'admin' 
-          ? 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300' 
-          : 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300';
-
-        roleBadge.innerText = roleText;
-        roleBadge.className = roleClass;
-
-        const displayName = getDisplayName(userProfile);
-        const initial = displayName.charAt(0).toUpperCase() || 'U';
-        document.querySelectorAll('.userInitialAvatar').forEach(el => el.innerText = initial);
-        document.getElementById('pcUserDisplayName').innerText = displayName;
-        document.getElementById('mobileUserMenuName').innerText = displayName;
-        document.getElementById('mobileUserMenuRole').innerText = roleText;
-        document.getElementById('mobileUserMenuRole').className = roleClass;
+        authActions.innerHTML = '<button onclick="openMyAccountModal()" class="font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600 underline truncate max-w-[100px] sm:max-w-[140px]" title="設定">'
+          + getDisplayName(userProfile) + ' ⚙️'
+          + '</button>'
+          + '<button onclick="logout()" class="text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 underline">ログアウト</button>';
 
         if (userProfile.role === 'admin') {
           viewToggleBtn.classList.remove('hidden');
-          mobileViewToggleBtn.classList.remove('hidden');
-          // PCナビはmd画面時のみ表示されるようmd:flexを適用
-          pcNav.classList.remove('md:hidden');
-          pcNav.classList.add('md:flex');
-          mobileBottomNav.classList.remove('hidden');
           applyAdminViewMode();
         } else {
           viewToggleBtn.classList.add('hidden');
-          mobileViewToggleBtn.classList.add('hidden');
-          pcNav.classList.add('md:hidden');
-          pcNav.classList.remove('md:flex');
-          mobileBottomNav.classList.add('hidden');
+          document.getElementById('adminTabs').classList.add('hidden');
           document.getElementById('creativeSection').classList.add('hidden');
           document.getElementById('salesSection').classList.add('hidden');
           document.getElementById('updatesSection').classList.add('hidden');
@@ -916,9 +753,8 @@
         loginView.classList.remove('hidden');
         appView.classList.add('hidden');
         roleBadge.classList.add('hidden');
-        pcNav.classList.add('md:hidden');
-        pcNav.classList.remove('md:flex');
-        mobileBottomNav.classList.add('hidden');
+        viewToggleBtn.classList.add('hidden');
+        authActions.innerHTML = '';
       }
     }
 
@@ -929,21 +765,10 @@
 
     function applyAdminViewMode() {
       const btn = document.getElementById('viewToggleBtn');
-      const mobBtn = document.getElementById('mobileViewToggleBtn');
-      const mobileBottomNav = document.getElementById('mobileBottomNav');
-      const pcNav = document.getElementById('pcAdminNav');
-
       if (adminViewMode === 'creator') {
-        const label = 'クリエイター視点中 (管理へ戻る)';
-        btn.innerText = label;
-        btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 hover:bg-amber-100 transition whitespace-nowrap";
-        mobBtn.innerHTML = '<span>🔄 視点切替 (現在: クリエイター)</span>';
-        
-        // クリエイター視点時はPCナビもボトムナビも隠す
-        pcNav.classList.add('md:hidden');
-        pcNav.classList.remove('md:flex');
-        mobileBottomNav.classList.add('hidden');
-
+        btn.innerText = '管理画面へ';
+        btn.className = "px-2 py-1 text-[11px] sm:text-xs font-semibold rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 hover:bg-amber-100 transition whitespace-nowrap";
+        document.getElementById('adminTabs').classList.add('hidden');
         document.getElementById('creativeSection').classList.add('hidden');
         document.getElementById('salesSection').classList.add('hidden');
         document.getElementById('updatesSection').classList.add('hidden');
@@ -953,16 +778,10 @@
         loadUserTasks();
       } else {
         btn.innerText = '視点切替';
-        btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 transition whitespace-nowrap";
-        mobBtn.innerHTML = '<span>🔄 視点切替 (現在: 管理者)</span>';
-
-        // 管理者視点時はPCナビ（PCのみ）とボトムナビ（スマホのみ）を表示
-        pcNav.classList.remove('md:hidden');
-        pcNav.classList.add('md:flex');
-        mobileBottomNav.classList.remove('hidden');
-
+        btn.className = "px-2 py-1 text-[11px] sm:text-xs font-semibold rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 transition whitespace-nowrap";
+        document.getElementById('adminTabs').classList.remove('hidden');
         document.getElementById('userTaskSection').classList.add('hidden');
-        switchTab(currentActiveTab || 'creative');
+        switchTab('creative');
       }
     }
 
@@ -1085,21 +904,21 @@
       document.querySelectorAll('.lead-filter-btn').forEach(btn => {
         const isMatch = btn.dataset.status === status;
         btn.className = isMatch 
-          ? 'lead-filter-btn px-2.5 py-1 rounded-lg border dark:border-slate-700 bg-blue-600 text-white font-medium'
-          : 'lead-filter-btn px-2.5 py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300';
+          ? 'lead-filter-btn px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg border dark:border-slate-700 bg-blue-600 text-white font-medium'
+          : 'lead-filter-btn px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300';
       });
       renderLeadsGrid();
     }
 
     function getLeadStatusBadge(lead) {
       const st = lead.status;
-      if (st === '未対応（HOT）') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200">🔥 未対応HOT</span>';
-      if (st === '再送付') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">再送付</span>';
-      if (st === '対応待ち') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200">対応待ち</span>';
-      if (st === '先方返信あり（要対応）') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">📬 返信あり</span>';
-      if (st === '相談決定') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-700 border border-indigo-200">🎉 相談決定</span>';
-      if (st === '対応停止') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">停止 (' + (lead.stop_reason || '') + ')</span>';
-      return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">' + st + '</span>';
+      if (st === '未対応（HOT）') return '<span class="px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold bg-red-100 text-red-700 border border-red-200">🔥 未対応HOT</span>';
+      if (st === '再送付') return '<span class="px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200">再送付</span>';
+      if (st === '対応待ち') return '<span class="px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold bg-blue-100 text-blue-700 border border-blue-200">対応待ち</span>';
+      if (st === '先方返信あり（要対応）') return '<span class="px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">📬 返信あり</span>';
+      if (st === '相談決定') return '<span class="px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold bg-indigo-100 text-indigo-700 border border-indigo-200">🎉 相談決定</span>';
+      if (st === '対応停止') return '<span class="px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold bg-slate-100 text-slate-500 border border-slate-200">停止 (' + (lead.stop_reason || '') + ')</span>';
+      return '<span class="px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold bg-slate-100 text-slate-600">' + st + '</span>';
     }
 
     function getLeadPhaseBadge(lead) {
@@ -1226,7 +1045,7 @@
             const dateStr = new Date(lg.at).toLocaleString('ja-JP');
             return '<div class="p-2 bg-slate-50 dark:bg-slate-800 rounded border dark:border-slate-700">'
               + '<div class="flex justify-between text-[10px] text-slate-400 mb-0.5 font-bold"><span>' + lg.type + '</span><span>' + dateStr + '</span></div>'
-              + '<div class="text-slate-700 dark:text-slate-300 font-mono text-[11px] whitespace-pre-wrap break-words">' + lg.text + '</div>'
+              + '<div class="text-slate-700 dark:text-slate-300 font-mono text-[11px] whitespace-pre-wrap">' + lg.text + '</div>'
               + '</div>';
           }).join('')
         : '<div class="text-slate-400 text-center py-2">ログはありません</div>';
@@ -1385,12 +1204,12 @@
         container.innerHTML = prjLogs.map(l => {
           const dateStr = new Date(l.at).toLocaleString('ja-JP');
           const badgeColor = l.type === '提出' ? 'bg-blue-100 text-blue-700' : l.type === 'リテイク指示' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700';
-          const urlHtml = l.url ? '<div class="mt-1"><a href="' + l.url + '" target="_blank" class="inline-flex items-center text-blue-600 dark:text-blue-400 font-bold hover:underline bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded text-[11px] break-all max-w-full">📦 成果物URL: ' + l.url + ' ↗</a></div>' : '';
+          const urlHtml = l.url ? '<div class="mt-1"><a href="' + l.url + '" target="_blank" class="inline-flex items-center text-blue-600 dark:text-blue-400 font-bold hover:underline bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded text-[11px]">📦 成果物URL: ' + l.url + ↗</a></div>' : '';
           const readMembers = (l.read_by || []).length > 0 ? ('<span class="text-[10px] text-slate-400 ml-2">既読: ' + l.read_by.join(', ') + '</span>') : '';
 
           return '<div class="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-lg border dark:border-slate-700 space-y-1">'
-            + '<div class="flex flex-wrap justify-between items-center text-[10px] gap-1">'
-            + '<div class="flex flex-wrap items-center space-x-1.5">'
+            + '<div class="flex justify-between items-center text-[10px]">'
+            + '<div class="flex items-center space-x-1.5">'
             + '<span class="font-bold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">[' + l.taskTitle + ']</span>'
             + '<span class="font-bold px-1.5 py-0.5 rounded ' + badgeColor + '">' + l.type + '</span>'
             + '<span class="text-slate-500">(' + (l.user || '不明') + ')</span>'
@@ -1398,7 +1217,7 @@
             + '</div>'
             + '<span class="text-slate-400">' + dateStr + '</span>'
             + '</div>'
-            + (l.comment ? '<div class="text-slate-700 dark:text-slate-300 font-mono text-[11px] whitespace-pre-wrap break-words break-all mt-0.5">' + l.comment + '</div>' : '')
+            + (l.comment ? '<div class="text-slate-700 dark:text-slate-300 font-mono text-[11px] whitespace-pre-wrap mt-0.5">' + l.comment + '</div>' : '')
             + urlHtml
             + '</div>';
         }).join('');
@@ -1408,7 +1227,7 @@
     }
 
     // ----------------------------------------------------
-    // 単体タスクのログモーダル
+    // 単体タスクのログモーダル（ユーザー画面・管理画面共通対応）
     // ----------------------------------------------------
     async function openTaskLogModal(taskId) {
       let targetTask = null;
@@ -1454,28 +1273,28 @@
       const container = document.getElementById('taskLogTimeline');
       if (!container) return;
       if (!logs || logs.length === 0) {
-        container.innerHTML = '<div class="text-slate-400 text-center py-6 bg-slate-50 dark:bg-slate-800/40 rounded-lg">提出物やコメントのログはまだありません</div>';
+        container.innerHTML = '<div class="text-slate-400 text-center py-4 bg-slate-50 dark:bg-slate-800/40 rounded-lg">提出物やコメントのログはまだありません</div>';
         return;
       }
 
       container.innerHTML = logs.map(l => {
         const isUnread = isLogItemUnread(l);
         const dateStr = new Date(l.at).toLocaleString('ja-JP');
-        const urlHtml = l.url ? '<div class="mt-1"><a href="' + l.url + '" target="_blank" class="inline-flex items-center text-blue-600 dark:text-blue-400 font-bold hover:underline bg-blue-50 dark:bg-blue-950/60 px-2 py-1 rounded text-[11px] break-all max-w-full">📦 提出URL: ' + l.url + ' ↗</a></div>' : '';
-        const badgeColor = l.type === '提出' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300' : l.type === 'リテイク指示' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
+        const urlHtml = l.url ? '<div class="mt-1"><a href="' + l.url + '" target="_blank" class="inline-flex items-center text-blue-600 dark:text-blue-400 font-bold hover:underline bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded text-[11px]">📦 提出URL: ' + l.url + ' ↗</a></div>' : '';
+        const badgeColor = l.type === '提出' ? 'bg-blue-100 text-blue-700' : l.type === 'リテイク指示' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700';
         const unreadTag = isUnread ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500 text-white animate-pulse">NEW</span>' : '';
         const readMembers = (l.read_by || []).length > 0 ? ('<span class="text-[10px] text-slate-400 ml-1">既読: ' + l.read_by.join(', ') + '</span>') : '';
 
-        return '<div class="p-3 rounded-lg border transition space-y-1.5 ' + (isUnread ? 'bg-amber-50/60 dark:bg-amber-950/30 border-amber-300 dark:border-amber-700' : 'bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700') + '">'
-          + '<div class="flex flex-wrap justify-between items-center text-[10px] gap-1">'
-          + '<div class="flex flex-wrap items-center space-x-1.5">'
+        return '<div class="p-2.5 rounded-lg border transition ' + (isUnread ? 'bg-amber-50/60 dark:bg-amber-950/30 border-amber-300 dark:border-amber-700' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700') + ' space-y-1">'
+          + '<div class="flex justify-between items-center text-[10px]">'
+          + '<div class="flex items-center space-x-1.5">'
           + '<span class="font-bold px-1.5 py-0.5 rounded ' + badgeColor + '">' + l.type + ' (' + (l.user || '不明') + ')</span>'
           + unreadTag
           + readMembers
           + '</div>'
           + '<span class="text-slate-400">' + dateStr + '</span>'
           + '</div>'
-          + (l.comment ? '<div class="text-slate-700 dark:text-slate-200 font-mono text-[11px] whitespace-pre-wrap break-words break-all leading-relaxed pl-1 border-l-2 border-slate-300 dark:border-slate-600 mt-1">' + l.comment + '</div>' : '')
+          + (l.comment ? '<div class="text-slate-700 dark:text-slate-300 font-mono text-[11px] whitespace-pre-wrap mt-0.5">' + l.comment + '</div>' : '')
           + urlHtml
           + '</div>';
       }).join('');
@@ -1548,7 +1367,7 @@
         const isUnread = isLogItemUnread(l);
         const dateStr = new Date(l.at).toLocaleString('ja-JP');
         const badgeColor = l.type === '提出' ? 'bg-blue-100 text-blue-700' : l.type === 'リテイク指示' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700';
-        const urlHtml = l.url ? '<div class="mt-1"><a href="' + l.url + '" target="_blank" class="inline-flex items-center text-blue-600 dark:text-blue-400 font-bold hover:underline bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded text-[11px] break-all max-w-full">📦 成果物URL: ' + l.url + ' ↗</a></div>' : '';
+        const urlHtml = l.url ? '<div class="mt-1"><a href="' + l.url + '" target="_blank" class="inline-flex items-center text-blue-600 dark:text-blue-400 font-bold hover:underline bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded text-[11px]">📦 成果物URL: ' + l.url + ' ↗</a></div>' : '';
         const readMembers = (l.read_by || []).length > 0 ? ('<span class="text-[10px] text-slate-400 ml-2">既読: ' + l.read_by.join(', ') + '</span>') : '';
         const unreadTag = isUnread ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500 text-white animate-pulse">NEW</span>' : '';
 
@@ -1567,7 +1386,7 @@
           + '<span class="text-slate-500 font-medium">投稿者: ' + (l.user || '不明') + '</span>'
           + readMembers
           + '</div>'
-          + (l.comment ? '<div class="text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-pre-wrap break-words break-all pl-1.5 border-l-2 border-slate-200 dark:border-slate-700">' + l.comment + '</div>' : '')
+          + (l.comment ? '<div class="text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-pre-wrap pl-1.5 border-l-2 border-slate-200 dark:border-slate-700">' + l.comment + '</div>' : '')
           + urlHtml
           + '<div class="text-right pt-1">'
           + '<button onclick="openTaskLogModal(\'' + l.taskId + '\')" class="text-[11px] text-blue-600 dark:text-blue-400 hover:underline">このタスクを開く ➔</button>'
@@ -1679,10 +1498,10 @@
           : 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300';
         const roleName = u.role === 'admin' ? '管理者' : 'クリエイター';
         return '<tr class="border-b border-slate-100 dark:border-slate-800/60 last:border-b-0">'
-          + '<td class="p-3.5 font-mono text-xs text-blue-600 dark:text-blue-400 font-semibold">' + (u.user_id || '-') + '</td>'
-          + '<td class="p-3.5 font-medium">' + (u.name || '未設定') + '</td>'
-          + '<td class="p-3.5 text-slate-500 dark:text-slate-400">' + (u.email || '-') + '</td>'
-          + '<td class="p-3.5"><span class="px-2 py-0.5 rounded text-xs font-semibold ' + badgeClass + '">' + roleName + '</span></td>'
+          + '<td class="p-3 font-mono text-xs text-blue-600 dark:text-blue-400 font-semibold">' + (u.user_id || '-') + '</td>'
+          + '<td class="p-3 font-medium">' + (u.name || '未設定') + '</td>'
+          + '<td class="p-3 text-slate-500 dark:text-slate-400">' + (u.email || '-') + '</td>'
+          + '<td class="p-3"><span class="px-2 py-0.5 rounded text-xs font-semibold ' + badgeClass + '">' + roleName + '</span></td>'
           + '</tr>';
       }).join('');
     }
@@ -1745,22 +1564,24 @@
       return activeTasks;
     }
 
+    // 単体案件の開閉トグル
     function toggleProjectCollapse(prjId) {
       if (openProjects.has(prjId)) {
         openProjects.delete(prjId);
       } else {
         openProjects.add(prjId);
       }
-      renderCreativeProjectsList();
+      loadCreativeProjects();
     }
 
+    // 全案件の一括開閉トグル
     function toggleAllProjectsCollapse() {
       if (openProjects.size > 0) {
-        openProjects.clear();
+        openProjects.clear(); // 全て閉じる
       } else {
-        cachedCreativeProjects.forEach(p => openProjects.add(p.id));
+        cachedCreativeProjects.forEach(p => openProjects.add(p.id)); // 全て開く
       }
-      renderCreativeProjectsList();
+      loadCreativeProjects();
     }
 
     async function addMissingTask(projectId, masterName, sortOrder) {
@@ -1794,44 +1615,18 @@
         .order('created_at', { ascending: false });
 
       cachedCreativeProjects = prjs || [];
-      renderCreativeProjectsList();
-    }
-
-    function renderCreativeProjectsList() {
       const container = document.getElementById('projectList');
-      if (!container) return;
-
-      const filtered = cachedCreativeProjects.filter(p => {
-        const completed = isProjectCompleted(p);
-        if (currentPrjFilter === 'active') return !completed;
-        if (currentPrjFilter === 'completed') return completed;
-        return true;
-      });
-
-      const activeCount = cachedCreativeProjects.filter(p => !isProjectCompleted(p)).length;
-      const completedCount = cachedCreativeProjects.filter(p => isProjectCompleted(p)).length;
-      const allCount = cachedCreativeProjects.length;
-
-      const btnActive = document.getElementById('prjFilterActive');
-      const btnCompleted = document.getElementById('prjFilterCompleted');
-      const btnAll = document.getElementById('prjFilterAll');
-      if (btnActive) btnActive.innerText = '進行中 (' + activeCount + ')';
-      if (btnCompleted) btnCompleted.innerText = '完了済み (' + completedCount + ')';
-      if (btnAll) btnAll.innerText = 'すべて (' + allCount + ')';
-
-      if (filtered.length === 0) {
-        const emptyMsg = currentPrjFilter === 'active' ? '進行中の案件はありません 🎉' :
-                         currentPrjFilter === 'completed' ? '完了済みの案件はまだありません' : '登録されている案件はありません';
-        container.innerHTML = '<div class="p-8 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs">' + emptyMsg + '</div>';
+      if (!prjs || prjs.length === 0) {
+        container.innerHTML = '<div class="p-8 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">進行中の案件はありません</div>';
         return;
       }
 
       const todayStr = new Date().toISOString().split('T')[0];
 
-      container.innerHTML = filtered.map(p => {
+      container.innerHTML = prjs.map(p => {
+        // 初期状態は折りたたまれている（openProjectsに入っている場合のみ開く）
         const isOpen = openProjects.has(p.id);
         const hasProjectUnread = getProjectUnreadStatus(p);
-        const completed = isProjectCompleted(p);
 
         const tasks = (p.tasks || []).sort((a,b) => {
           const defA = workflowMasters.find(w => w.name === a.title);
@@ -1844,7 +1639,7 @@
         const activeTasks = getActiveBallTasks(tasks);
 
         let ballBadgeHtml = '';
-        if (completed) {
+        if (tasks.length > 0 && tasks.every(t => t.status === '完了')) {
           ballBadgeHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">✓ 全工程完了</span>';
         } else if (activeTasks.length === 0) {
           ballBadgeHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">待機中</span>';
@@ -1901,10 +1696,6 @@
           + '<span>📋 案件ログ (' + prjTotalLogsCount + ')</span>'
           + (hasProjectUnread ? '<span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span>' : '')
           + '</button>';
-
-        const deleteBtnHtml = (userProfile && userProfile.role === 'admin') 
-          ? '<button onclick="event.stopPropagation(); deleteProject(\'' + p.id + '\', \'' + p.title.replace(/'/g, "\\'") + '\')" class="text-[11px] px-2 py-0.5 rounded text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/60 border border-transparent hover:border-red-200 dark:hover:border-red-800 transition" title="案件を削除">🗑️ 削除</button>'
-          : '';
 
         const musicTasks = tasks.filter(t => getTaskTrack(t.title) === 'music');
         const mvTasks = tasks.filter(t => getTaskTrack(t.title) === 'mv');
@@ -2001,9 +1792,9 @@
 
         const toggleBtnIcon = isOpen ? '▲ 閉じる' : '▼ 展開';
 
-        return '<div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition overflow-hidden ' + (hasProjectUnread ? 'ring-1 ring-red-400' : '') + '">'
-          + '<div onclick="toggleProjectCollapse(\'' + p.id + '\')" class="p-3.5 sm:p-4 flex flex-wrap items-center justify-between gap-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition ' + (isOpen ? 'border-b border-slate-200 dark:border-slate-800' : '') + '">'
-          + '<div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">'
+        return '<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition overflow-hidden ' + (hasProjectUnread ? 'ring-1 ring-red-400' : '') + '">'
+          + '<div onclick="toggleProjectCollapse(\'' + p.id + '\')" class="p-3 sm:p-4 flex flex-wrap items-center justify-between gap-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition ' + (isOpen ? 'border-b border-slate-200 dark:border-slate-800' : '') + '">'
+          + '<div class="flex items-center space-x-2 sm:space-x-3 min-w-0">'
           + '<button type="button" class="text-[11px] sm:text-xs font-semibold px-2 py-0.5 sm:py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded">' + toggleBtnIcon + '</button>'
           + '<div class="min-w-0">'
           + '<span class="text-[10px] sm:text-xs text-slate-400 font-medium block truncate">' + (p.client_name || 'クライアント未設定') + '</span>'
@@ -2015,12 +1806,11 @@
           + ballBadgeHtml
           + prjLogBtnHtml
           + driveLinkHtml
-          + deleteBtnHtml
           + '</div>'
           + '</div>'
 
           + (isOpen ? (
-            '<div class="p-3.5 sm:p-5 space-y-3 sm:space-y-4 bg-white dark:bg-slate-900">'
+            '<div class="p-3 sm:p-5 space-y-3 sm:space-y-4 bg-white dark:bg-slate-900">'
             + '<div class="space-y-1.5">'
             + '<div class="flex items-center space-x-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span><span class="text-xs font-bold text-slate-700 dark:text-slate-300">楽曲トラック (作曲 ➔ 作詞/編曲 ➔ Rec ➔ Mix ➔ Mas)</span></div>'
             + '<div class="grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">'
@@ -2137,7 +1927,7 @@
       if (!activeContainer || !completedContainer) return;
 
       if (!tasks || tasks.length === 0) {
-        activeContainer.innerHTML = '<div class="col-span-full p-8 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs">現在アサインされているタスクはありません</div>';
+        activeContainer.innerHTML = '<div class="col-span-full p-8 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">現在アサインされているタスクはありません</div>';
         completedContainer.innerHTML = '';
         accordionLabel.innerText = '完了したタスク (0件)';
         if (accordionBadge) accordionBadge.classList.add('hidden');
@@ -2156,7 +1946,7 @@
       }
 
       if (activeTasks.length === 0) {
-        activeContainer.innerHTML = '<div class="col-span-full p-6 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs">現在対応待ちの進行中タスクはありません 🎉</div>';
+        activeContainer.innerHTML = '<div class="col-span-full p-6 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">現在対応待ちの進行中タスクはありません 🎉</div>';
       } else {
         activeContainer.innerHTML = activeTasks.map(t => {
           const prjTitle = (t.projects && t.projects.title) ? t.projects.title : '案件名なし';
@@ -2195,9 +1985,9 @@
             + '<div class="text-xs text-slate-500 dark:text-slate-400">締切期日: <span class="font-bold ' + (isOverdue ? 'text-red-600' : 'text-slate-800 dark:text-slate-200') + '">' + deadlineText + (isOverdue ? ' [超過]' : '') + '</span></div>'
             + '<div class="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">'
             + '<div><label class="block text-[11px] font-medium mb-0.5">提出物URL *:</label>'
-            + '<input type="url" id="deliv_' + t.id + '" value="' + deliverableVal + '" class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs text-slate-800 dark:text-slate-100 break-all" placeholder="https://drive.google.com/..."></div>'
+            + '<input type="url" id="deliv_' + t.id + '" value="' + deliverableVal + '" class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs text-slate-800 dark:text-slate-100" placeholder="https://drive.google.com/..."></div>'
             + '<div><label class="block text-[11px] font-medium mb-0.5">提出コメント (任意):</label>'
-            + '<textarea id="deliv_comment_' + t.id + '" rows="2" class="w-full px-2.5 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs text-slate-800 dark:text-slate-100 break-words" placeholder="調整点や確認してほしいポイントを入力..."></textarea></div>'
+            + '<textarea id="deliv_comment_' + t.id + '" rows="2" class="w-full px-2.5 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs text-slate-800 dark:text-slate-100" placeholder="調整点や確認してほしいポイントを入力..."></textarea></div>'
             + '<div class="flex justify-between items-center pt-1">'
             + statusBadge
             + '<button onclick="submitTaskWithLog(\'' + t.id + '\')" class="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 transition shadow-sm">'
@@ -2212,7 +2002,7 @@
       completedContainer.innerHTML = completedTasks.map(t => {
         const prjTitle = (t.projects && t.projects.title) ? t.projects.title : '案件名なし';
         const logsCount = (t.logs || []).length;
-        const deliverableLink = t.deliverable_url ? '<a href="' + t.deliverable_url + '" target="_blank" class="text-blue-600 hover:underline text-[11px] break-all max-w-[150px] truncate">提出物 ↗</a>' : '';
+        const deliverableLink = t.deliverable_url ? '<a href="' + t.deliverable_url + '" target="_blank" class="text-blue-600 hover:underline text-[11px]">提出物 ↗</a>' : '';
         const hasUnread = getTaskUnreadStatus(t);
 
         return '<div class="p-3 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800 text-xs space-y-2 opacity-75 hover:opacity-100 transition ' + (hasUnread ? 'ring-1 ring-red-400 opacity-100' : '') + '">'
@@ -2225,7 +2015,7 @@
           + '<button onclick="openTaskLogModal(\'' + t.id + '\')" class="text-slate-500 hover:text-blue-600 flex items-center space-x-1">'
           + '<span>💬 ログ履歴 (' + logsCount + ')</span>'
           + (hasUnread ? '<span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>' : '')
-          + '</button>
+          + '</button>'
           + '</div>'
           + '</div>';
       }).join('');
@@ -2263,39 +2053,18 @@
     }
 
     function switchTab(tab) {
-      currentActiveTab = tab;
       ['creative', 'sales', 'updates', 'master', 'members'].forEach(t => {
         const el = document.getElementById(t + 'Section');
         if (el) el.classList.toggle('hidden', t !== tab);
-
-        const pcBtn = document.getElementById('pcTab' + t.charAt(0).toUpperCase() + t.slice(1));
-        if (pcBtn) {
+        const btn = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+        if (btn) {
           if (t === tab) {
-            pcBtn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60";
+            btn.className = "pb-2.5 px-2 font-medium text-xs sm:text-sm border-b-2 border-blue-600 text-blue-600 flex-shrink-0";
           } else {
-            pcBtn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition";
-          }
-        }
-
-        const mobBtn = document.getElementById('mobTab' + t.charAt(0).toUpperCase() + t.slice(1));
-        if (mobBtn) {
-          if (t === tab) {
-            mobBtn.className = "flex flex-col items-center justify-center flex-1 py-1 text-blue-600 dark:text-blue-400 font-bold transition";
-          } else {
-            mobBtn.className = "flex flex-col items-center justify-center flex-1 py-1 text-slate-400 dark:text-slate-500 font-medium transition";
+            btn.className = "pb-2.5 px-2 font-medium text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 flex-shrink-0";
           }
         }
       });
-
-      const mobMoreBtn = document.getElementById('mobTabMore');
-      if (mobMoreBtn) {
-        if (tab === 'master' || tab === 'members') {
-          mobMoreBtn.className = "flex flex-col items-center justify-center flex-1 py-1 text-blue-600 dark:text-blue-400 font-bold transition";
-        } else {
-          mobMoreBtn.className = "flex flex-col items-center justify-center flex-1 py-1 text-slate-400 dark:text-slate-500 font-medium transition";
-        }
-      }
-
       if (tab === 'updates') {
         renderAllUpdatesLogs();
       }
