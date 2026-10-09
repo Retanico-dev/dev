@@ -656,7 +656,7 @@
 
     let allLeads = [];
     let currentFilterStatus = 'all';
-    let currentPrjFilter = 'active';
+    let currentPrjFilter = 'all'; // 確実に全件見えるように初期値を'all'に設定
     let currentActiveTab = 'creative';
     let selectedLead = null;
     let salesTemplates = [];
@@ -677,11 +677,14 @@
     }
 
     function isMaster() {
-      return userProfile && userProfile.role === 'master';
+      if (!userProfile || !userProfile.role) return false;
+      return userProfile.role.toLowerCase() === 'master';
     }
 
     function isAdminOrMaster() {
-      return userProfile && (userProfile.role === 'admin' || userProfile.role === 'master');
+      if (!userProfile || !userProfile.role) return false;
+      const r = userProfile.role.toLowerCase();
+      return r === 'admin' || r === 'master';
     }
 
     function getTaskTrack(taskTitle) {
@@ -1066,13 +1069,14 @@
       try {
         const { data } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).single();
         userProfile = data || { 
-          role: 'admin', 
+          role: 'user', 
           email: currentUser.email, 
           name: '',
           user_id: ''
         };
+        // データを先に全てロードしてからUIを表示する順序に修正
+        await loadDashboard();
         renderAuthUI(true);
-        loadDashboard();
       } catch (err) {
         alert("ユーザープロファイル取得エラー: " + err.message);
       }
@@ -1096,7 +1100,7 @@
 
         let roleText = 'User';
         let roleClass = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300';
-        if (userProfile.role === 'master') {
+        if (isMaster()) {
           roleText = '👑 Master';
           roleClass = 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 ring-1 ring-purple-300 dark:ring-purple-700';
         } else if (userProfile.role === 'admin') {
@@ -1238,10 +1242,9 @@
       await Promise.all([loadMasterFromDB(), loadAllProfiles(), loadSalesTemplates()]);
       renderMasterTable();
       renderCheckboxes();
-      // 【修正箇所】MasterまたはAdminのときに案件や営業チケットを読み込む
       if (isAdminOrMaster()) {
         await loadCreativeProjects();
-        loadLeads();
+        await loadLeads();
         renderMembersTable();
         renderAllUpdatesLogs();
       }
@@ -2173,10 +2176,12 @@
           + (hasProjectUnread ? '<span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span>' : '')
           + '</button>';
 
+        // Master専用：財務ログボタン
         const financialBtnHtml = isMaster()
-          ? '<button onclick="event.stopPropagation(); openFinancialModal(\'' + p.id + '\')" class="text-[11px] px-2.5 py-0.5 rounded bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800 font-bold transition flex items-center space-x-1"><span>💰 財務</span></button>'
+          ? '<button onclick="event.stopPropagation(); openFinancialModal(\'' + p.id + '\')" class="text-[11px] px-2.5 py-1 rounded-lg bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800 font-bold transition flex items-center space-x-1 shadow-sm"><span>💰 財務</span></button>'
           : '';
 
+        // 削除ボタン
         const deleteBtnHtml = isAdminOrMaster() 
           ? '<button onclick="event.stopPropagation(); deleteProject(\'' + p.id + '\')" class="text-[11px] px-2 py-0.5 rounded text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/60 border border-transparent hover:border-red-200 dark:hover:border-red-800 transition" title="案件を削除">🗑️ 削除</button>'
           : '';
@@ -2572,7 +2577,9 @@
         }
       }
 
-      if (tab === 'members') {
+      if (tab === 'creative') {
+        renderCreativeProjectsList();
+      } else if (tab === 'members') {
         renderMembersTable();
       } else if (tab === 'updates') {
         renderAllUpdatesLogs();
