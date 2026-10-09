@@ -104,7 +104,15 @@
       <!-- Admin: 制作進行ボード -->
       <div id="creativeSection" class="space-y-4 sm:space-y-6">
         <div class="flex flex-wrap justify-between items-center gap-2">
-          <h2 class="text-base sm:text-lg font-bold">制作案件パイプライン</h2>
+          <div>
+            <h2 class="text-base sm:text-lg font-bold">制作案件パイプライン</h2>
+            <div class="flex items-center space-x-1.5 mt-1.5">
+              <!-- 案件フィルター（進行中 / 完了 / すべて） -->
+              <button onclick="filterCreativeProjects('active')" id="prjFilterActive" class="px-2.5 py-1 rounded text-xs font-bold bg-blue-600 text-white transition">進行中</button>
+              <button onclick="filterCreativeProjects('completed')" id="prjFilterCompleted" class="px-2.5 py-1 rounded text-xs font-semibold bg-white dark:bg-slate-800 border dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition">完了済み</button>
+              <button onclick="filterCreativeProjects('all')" id="prjFilterAll" class="px-2.5 py-1 rounded text-xs font-semibold bg-white dark:bg-slate-800 border dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition">すべて</button>
+            </div>
+          </div>
           <div class="flex items-center space-x-2">
             <button onclick="toggleAllProjectsCollapse()" class="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold transition border border-slate-200 dark:border-slate-700">
               一括展開 / 折りたたみ
@@ -208,7 +216,7 @@
     </div>
   </main>
 
-  <!-- モーダル: 案件全体統合ログ（レスポンシブ折返し対応） -->
+  <!-- モーダル: 案件全体統合ログ -->
   <div id="projectLogModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2.5 sm:p-4 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full p-4 sm:p-6 border border-slate-200 dark:border-slate-800 max-h-[90vh] flex flex-col shadow-2xl">
       <div class="flex items-start justify-between border-b dark:border-slate-800 pb-3 flex-shrink-0">
@@ -230,10 +238,9 @@
     </div>
   </div>
 
-  <!-- モーダル: タスク提出・フィードバックログ詳細（横揺れ完全防止・レスポンシブフィット） -->
+  <!-- モーダル: タスク提出・フィードバックログ詳細 -->
   <div id="taskLogModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2.5 sm:p-4 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-4 sm:p-6 border border-slate-200 dark:border-slate-800 max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
-      <!-- モーダルヘッダー -->
       <div class="flex items-start justify-between border-b dark:border-slate-800 pb-3 flex-shrink-0 gap-2">
         <div class="min-w-0 flex-1">
           <span id="taskLogStatusBadge" class="px-2 py-0.5 rounded text-[10px] font-bold inline-block"></span>
@@ -247,7 +254,6 @@
         </div>
       </div>
 
-      <!-- コメント・フィードバック投稿フォーム -->
       <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border dark:border-slate-700 space-y-2 mt-3 flex-shrink-0">
         <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">コメント・フィードバックの追記</label>
         <textarea id="taskLogInputText" rows="2" class="w-full p-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none focus:ring-2 focus:ring-blue-500 break-words" placeholder="連絡事項やフィードバック、リテイク指示を入力..."></textarea>
@@ -267,13 +273,11 @@
         </div>
       </div>
 
-      <!-- タイムライン部分（残りの高さを目一杯使ってスクロール） -->
       <div class="flex-1 overflow-y-auto min-h-[140px] space-y-2 pt-3 pr-1">
         <h4 class="text-xs font-bold text-slate-500 sticky top-0 bg-white dark:bg-slate-900 py-0.5 z-10">提出・やり取りタイムライン</h4>
         <div id="taskLogTimeline" class="space-y-2 text-xs"></div>
       </div>
 
-      <!-- フッター -->
       <div class="flex justify-end pt-3 border-t dark:border-slate-800 flex-shrink-0">
         <button onclick="closeModal('taskLogModal')" class="w-full sm:w-auto px-5 py-1.5 border dark:border-slate-700 rounded-lg text-xs font-medium">閉じる</button>
       </div>
@@ -496,6 +500,7 @@
 
     let allLeads = [];
     let currentFilterStatus = 'all';
+    let currentPrjFilter = 'active'; // 案件フィルター: 'active'(進行中), 'completed'(完了), 'all'(すべて)
     let selectedLead = null;
     let salesTemplates = [];
     let selectedTaskForLog = null;
@@ -555,6 +560,46 @@
       return (project.tasks || []).some(t => getTaskUnreadStatus(t));
     }
 
+    // 案件が全工程完了しているか判定
+    function isProjectCompleted(project) {
+      const tasks = project.tasks || [];
+      if (tasks.length === 0) return false;
+      return tasks.every(t => t.status === '完了');
+    }
+
+    // 案件フィルター切替
+    function filterCreativeProjects(type) {
+      currentPrjFilter = type;
+      ['active', 'completed', 'all'].forEach(t => {
+        const btn = document.getElementById('prjFilter' + t.charAt(0).toUpperCase() + t.slice(1));
+        if (btn) {
+          if (t === type) {
+            btn.className = "px-2.5 py-1 rounded text-xs font-bold bg-blue-600 text-white transition";
+          } else {
+            btn.className = "px-2.5 py-1 rounded text-xs font-semibold bg-white dark:bg-slate-800 border dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition";
+          }
+        }
+      });
+      renderCreativeProjectsList();
+    }
+
+    // 案件削除（管理者専用・連動タスクごと削除）
+    async function deleteProject(projectId, projectTitle) {
+      if (!confirm('【警告】案件「' + projectTitle + '」を完全に削除しますか？\n※紐付く全工程タスク・ログ履歴もすべて削除されます。この操作は取り消せません。')) {
+        return;
+      }
+
+      const { error } = await supabaseClient.from('projects').delete().eq('id', projectId);
+      if (error) {
+        alert('削除エラー: ' + error.message);
+      } else {
+        alert('案件「' + projectTitle + '」を削除しました。');
+        openProjects.delete(projectId);
+        await loadCreativeProjects();
+        renderAllUpdatesLogs();
+      }
+    }
+
     async function autoMarkTaskAsRead(task) {
       const myId = getCurrentUserIdentifier();
       if (!myId || !task || !task.logs) return;
@@ -573,7 +618,7 @@
       if (hasChange) {
         task.logs = updatedLogs;
         await supabaseClient.from('tasks').update({ logs: updatedLogs }).eq('id', task.id);
-        loadCreativeProjects();
+        renderCreativeProjectsList();
         loadUserTasks();
       }
     }
@@ -595,7 +640,7 @@
 
       renderTaskLogTimeline(selectedTaskForLog.logs);
       closeModal('taskLogModal');
-      loadCreativeProjects();
+      renderCreativeProjectsList();
       loadUserTasks();
       alert('タスクを未読（NEW）に戻しました！');
     }
@@ -1231,7 +1276,7 @@
     }
 
     // ----------------------------------------------------
-    // 単体タスクのログモーダル（ユーザー画面・管理画面共通対応）
+    // 単体タスクのログモーダル
     // ----------------------------------------------------
     async function openTaskLogModal(taskId) {
       let targetTask = null;
@@ -1574,7 +1619,7 @@
       } else {
         openProjects.add(prjId);
       }
-      loadCreativeProjects();
+      renderCreativeProjectsList();
     }
 
     function toggleAllProjectsCollapse() {
@@ -1583,7 +1628,7 @@
       } else {
         cachedCreativeProjects.forEach(p => openProjects.add(p.id));
       }
-      loadCreativeProjects();
+      renderCreativeProjectsList();
     }
 
     async function addMissingTask(projectId, masterName, sortOrder) {
@@ -1617,17 +1662,47 @@
         .order('created_at', { ascending: false });
 
       cachedCreativeProjects = prjs || [];
+      renderCreativeProjectsList();
+    }
+
+    // フィルターに応じて案件一覧を描画
+    function renderCreativeProjectsList() {
       const container = document.getElementById('projectList');
-      if (!prjs || prjs.length === 0) {
-        container.innerHTML = '<div class="p-8 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">進行中の案件はありません</div>';
+      if (!container) return;
+
+      // フィルター適用
+      const filtered = cachedCreativeProjects.filter(p => {
+        const completed = isProjectCompleted(p);
+        if (currentPrjFilter === 'active') return !completed;
+        if (currentPrjFilter === 'completed') return completed;
+        return true; // 'all'
+      });
+
+      // 各タブのカウントを更新
+      const activeCount = cachedCreativeProjects.filter(p => !isProjectCompleted(p)).length;
+      const completedCount = cachedCreativeProjects.filter(p => isProjectCompleted(p)).length;
+      const allCount = cachedCreativeProjects.length;
+
+      const btnActive = document.getElementById('prjFilterActive');
+      const btnCompleted = document.getElementById('prjFilterCompleted');
+      const btnAll = document.getElementById('prjFilterAll');
+      if (btnActive) btnActive.innerText = '進行中 (' + activeCount + ')';
+      if (btnCompleted) btnCompleted.innerText = '完了済み (' + completedCount + ')';
+      if (btnAll) btnAll.innerText = 'すべて (' + allCount + ')';
+
+      if (filtered.length === 0) {
+        const emptyMsg = currentPrjFilter === 'active' ? '進行中の案件はありません 🎉' :
+                         currentPrjFilter === 'completed' ? '完了済みの案件はまだありません' : '登録されている案件はありません';
+        container.innerHTML = '<div class="p-8 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">' + emptyMsg + '</div>';
         return;
       }
 
       const todayStr = new Date().toISOString().split('T')[0];
 
-      container.innerHTML = prjs.map(p => {
+      container.innerHTML = filtered.map(p => {
         const isOpen = openProjects.has(p.id);
         const hasProjectUnread = getProjectUnreadStatus(p);
+        const completed = isProjectCompleted(p);
 
         const tasks = (p.tasks || []).sort((a,b) => {
           const defA = workflowMasters.find(w => w.name === a.title);
@@ -1640,7 +1715,7 @@
         const activeTasks = getActiveBallTasks(tasks);
 
         let ballBadgeHtml = '';
-        if (tasks.length > 0 && tasks.every(t => t.status === '完了')) {
+        if (completed) {
           ballBadgeHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">✓ 全工程完了</span>';
         } else if (activeTasks.length === 0) {
           ballBadgeHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">待機中</span>';
@@ -1697,6 +1772,11 @@
           + '<span>📋 案件ログ (' + prjTotalLogsCount + ')</span>'
           + (hasProjectUnread ? '<span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span>' : '')
           + '</button>';
+
+        // 削除ボタン（管理者専用）
+        const deleteBtnHtml = (userProfile && userProfile.role === 'admin') 
+          ? '<button onclick="event.stopPropagation(); deleteProject(\'' + p.id + '\', \'' + p.title.replace(/'/g, "\\'") + '\')" class="text-[11px] px-2 py-0.5 rounded text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/60 border border-transparent hover:border-red-200 dark:hover:border-red-800 transition" title="案件を削除">🗑️ 削除</button>'
+          : '';
 
         const musicTasks = tasks.filter(t => getTaskTrack(t.title) === 'music');
         const mvTasks = tasks.filter(t => getTaskTrack(t.title) === 'mv');
@@ -1807,6 +1887,7 @@
           + ballBadgeHtml
           + prjLogBtnHtml
           + driveLinkHtml
+          + deleteBtnHtml
           + '</div>'
           + '</div>'
 
