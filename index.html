@@ -12,7 +12,6 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // エラーが起きた際に無反応にならずアラートを出すデバッグガード
     window.onerror = function(msg, url, line) {
       console.error("Script Error:", msg, line);
     };
@@ -88,7 +87,7 @@
       </div>
       <div class="py-2 space-y-1 text-sm font-medium">
         <button id="mobileViewToggleBtn" onclick="toggleAdminViewMode(); toggleMobileUserMenu();" class="hidden w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-between">
-          <span>🔄 視点切替 (管理者/User)</span>
+          <span>🔄 視点切替</span>
         </button>
         <button onclick="openMyAccountModal(); toggleMobileUserMenu();" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-between">
           <span>⚙️ マイアカウント設定</span>
@@ -154,7 +153,7 @@
         </div>
       </div>
 
-      <!-- Admin: 制作進行ボード -->
+      <!-- Admin / Master: 制作進行ボード -->
       <div id="creativeSection" class="space-y-4 sm:space-y-6">
         <div class="flex flex-wrap justify-between items-center gap-2">
           <div>
@@ -177,7 +176,7 @@
         <div id="projectList" class="space-y-3 sm:space-y-4"></div>
       </div>
 
-      <!-- Admin: 営業・商談ボード -->
+      <!-- Admin / Master: 営業・商談ボード -->
       <div id="salesSection" class="hidden space-y-4 sm:space-y-6">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div>
@@ -216,7 +215,7 @@
         <div id="allUpdatesLogsContainer" class="space-y-2.5 max-h-[600px] overflow-y-auto pr-1"></div>
       </div>
 
-      <!-- Admin: 工程マスター設定 -->
+      <!-- Admin / Master: 工程マスター設定 -->
       <div id="masterSection" class="hidden space-y-4 max-w-3xl">
         <div class="flex justify-between items-center gap-2">
           <div>
@@ -243,22 +242,26 @@
         </div>
       </div>
 
-      <!-- Admin: メンバー管理 -->
+      <!-- Admin / Master: メンバー管理 -->
       <div id="membersSection" class="hidden space-y-4 max-w-3xl">
         <div class="flex justify-between items-center gap-2">
-          <h2 class="text-base sm:text-lg font-bold">所属メンバー一覧</h2>
+          <div>
+            <h2 class="text-base sm:text-lg font-bold">所属メンバー一覧</h2>
+            <p id="masterMonitoringNotice" class="hidden text-xs text-purple-600 dark:text-purple-400 font-semibold mt-0.5">👑 Master権限: リアルタイム稼働・最終ログイン監視中</p>
+          </div>
           <button onclick="openModal('newMemberModal')" class="px-3.5 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-semibold transition shadow-sm whitespace-nowrap">
             + メンバー追加
           </button>
         </div>
         <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-x-auto shadow-sm">
-          <table class="w-full text-xs sm:text-sm min-w-[450px]">
+          <table class="w-full text-xs sm:text-sm min-w-[500px]">
             <thead class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-left">
               <tr>
-                <th class="p-3.5">ID</th>
-                <th class="p-3.5">表示名</th>
+                <th class="p-3.5">ステータス / 表示名</th>
+                <th class="p-3.5">ユーザーID</th>
                 <th class="p-3.5">メールアドレス</th>
                 <th class="p-3.5">権限</th>
+                <th id="thLastActive" class="hidden p-3.5">最終アクティブ</th>
               </tr>
             </thead>
             <tbody id="membersTableBody"></tbody>
@@ -304,6 +307,69 @@
         </button>
       </div>
       <button onclick="closeMobileMoreSheet()" class="w-full py-2.5 text-center text-xs font-bold text-slate-500 dark:text-slate-400 pt-2">閉じる</button>
+    </div>
+  </div>
+
+  <!-- ==================== 【Master限定】財務事項ログモーダル ==================== -->
+  <div id="financialModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2.5 sm:p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full p-4 sm:p-6 border border-purple-200 dark:border-purple-900/60 max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="flex items-start justify-between border-b dark:border-slate-800 pb-3 flex-shrink-0 gap-2">
+        <div>
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300">👑 Master限定・秘匿情報</span>
+          <h3 id="financialModalTitle" class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 mt-1">財務事項・請求書管理</h3>
+        </div>
+        <button onclick="closeModal('financialModal')" class="text-slate-400 hover:text-slate-600 text-base p-1">✕</button>
+      </div>
+
+      <!-- 財務ログ新規追記フォーム -->
+      <div class="bg-purple-50/50 dark:bg-purple-950/20 p-3 sm:p-4 rounded-xl border border-purple-100 dark:border-purple-900/40 space-y-2.5 mt-3 flex-shrink-0">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">項目・用途 *</label>
+            <input type="text" id="fnInputTitle" placeholder="例: クリエイター報酬、請求書発行" class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none focus:ring-2 focus:ring-purple-500">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">金額 (円)</label>
+            <input type="number" id="fnInputAmount" placeholder="例: 50000" class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none focus:ring-2 focus:ring-purple-500">
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">期日 (支払 / 入金)</label>
+            <input type="date" id="fnInputDueDate" class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none focus:ring-2 focus:ring-purple-500">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">ステータス</label>
+            <select id="fnInputStatus" class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none focus:ring-2 focus:ring-purple-500">
+              <option value="未対応">🔴 未対応</option>
+              <option value="対応済">🟢 対応済</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">請求書URL (Google Drive / クラウド等)</label>
+          <input type="url" id="fnInputInvoiceUrl" placeholder="https://drive.google.com/..." class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none focus:ring-2 focus:ring-purple-500">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">メモ (任意)</label>
+          <input type="text" id="fnInputMemo" placeholder="振込先や備考" class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none focus:ring-2 focus:ring-purple-500">
+        </div>
+        <div class="text-right pt-1">
+          <button onclick="submitFinancialLog()" class="px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded text-xs font-bold transition shadow-sm">
+            財務ログを記録
+          </button>
+        </div>
+      </div>
+
+      <!-- 財務ログ一覧 -->
+      <div class="flex-1 overflow-y-auto min-h-[140px] space-y-2 pt-3 pr-1">
+        <h4 class="text-xs font-bold text-slate-500 sticky top-0 bg-white dark:bg-slate-900 py-0.5 z-10">記録済み財務ログ</h4>
+        <div id="financialTimeline" class="space-y-2 text-xs"></div>
+      </div>
+
+      <div class="flex justify-end pt-3 border-t dark:border-slate-800 flex-shrink-0">
+        <button onclick="closeModal('financialModal')" class="w-full sm:w-auto px-5 py-1.5 border dark:border-slate-700 rounded-lg text-xs font-medium">閉じる</button>
+      </div>
     </div>
   </div>
 
@@ -513,7 +579,7 @@
     </div>
   </div>
 
-  <!-- モーダル: 新規メンバー追加 -->
+  <!-- モーダル: 新規メンバー追加（Master選択対応） -->
   <div id="newMemberModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-4 border border-slate-200 dark:border-slate-800">
       <h3 class="font-bold text-base sm:text-lg">新規メンバー追加</h3>
@@ -538,6 +604,7 @@
         <select id="newMemberRole" class="w-full px-3 py-2 border dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-800">
           <option value="user">クリエイター (User)</option>
           <option value="admin">管理者 (Admin)</option>
+          <option value="master">👑 統括・代表 (Master)</option>
         </select>
       </div>
       <div class="flex justify-end space-x-2 pt-2">
@@ -594,6 +661,7 @@
     let selectedLead = null;
     let salesTemplates = [];
     let selectedTaskForLog = null;
+    let selectedProjectForFinancial = null;
     let cachedCreativeProjects = [];
     let cachedUserTasks = [];
     let isCompletedAccordionOpen = false;
@@ -606,6 +674,14 @@
     function getDisplayName(profile) {
       if (!profile) return '未アサイン';
       return profile.name || profile.user_id || '未設定';
+    }
+
+    function isMaster() {
+      return userProfile && userProfile.role === 'master';
+    }
+
+    function isAdminOrMaster() {
+      return userProfile && (userProfile.role === 'admin' || userProfile.role === 'master');
     }
 
     function getTaskTrack(taskTitle) {
@@ -654,6 +730,132 @@
       const tasks = project.tasks || [];
       if (tasks.length === 0) return false;
       return tasks.every(t => t.status === '完了');
+    }
+
+    // 生存確認（ハートビート）: Masterによるオンライン監視用
+    async function updateHeartbeat() {
+      if (!currentUser) return;
+      try {
+        await supabaseClient.from('profiles').update({
+          last_active_at: new Date().toISOString()
+        }).eq('id', currentUser.id);
+      } catch (e) {
+        console.error("Heartbeat error:", e);
+      }
+    }
+
+    // ----------------------------------------------------
+    // Master限定：財務事項ログ機能
+    // ----------------------------------------------------
+    async function openFinancialModal(projectId) {
+      if (!isMaster()) return alert('この機能はMaster権限専用です');
+      const targetPrj = cachedCreativeProjects.find(p => p.id === projectId);
+      if (!targetPrj) return;
+      selectedProjectForFinancial = targetPrj;
+
+      document.getElementById('financialModalTitle').innerText = '💰 財務事項・請求管理: ' + targetPrj.title;
+      document.getElementById('fnInputTitle').value = '';
+      document.getElementById('fnInputAmount').value = '';
+      document.getElementById('fnInputDueDate').value = '';
+      document.getElementById('fnInputInvoiceUrl').value = '';
+      document.getElementById('fnInputStatus').value = '未対応';
+      document.getElementById('fnInputMemo').value = '';
+
+      await loadFinancialLogs(projectId);
+      openModal('financialModal');
+    }
+
+    async function loadFinancialLogs(projectId) {
+      const container = document.getElementById('financialTimeline');
+      if (!container) return;
+      container.innerHTML = '<div class="text-slate-400 text-center py-4">読み込み中...</div>';
+
+      const { data: logs, error } = await supabaseClient
+        .from('financial_logs')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: false });
+
+      if (error || !logs || logs.length === 0) {
+        container.innerHTML = '<div class="text-slate-400 text-center py-6 bg-slate-50 dark:bg-slate-800/40 rounded-lg">記録された財務ログはありません</div>';
+        return;
+      }
+
+      container.innerHTML = logs.map(l => {
+        const dateStr = l.due_date ? ('期日: ' + l.due_date) : '期日なし';
+        const isDone = l.status === '対応済';
+        const statusBadge = isDone 
+          ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">🟢 対応済</span>'
+          : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300">🔴 未対応</span>';
+
+        const amountStr = l.amount ? ('¥' + Number(l.amount).toLocaleString()) : '金額未定';
+        const invoiceLink = l.invoice_url ? '<div class="mt-1"><a href="' + l.invoice_url + '" target="_blank" class="text-blue-600 dark:text-blue-400 font-bold hover:underline inline-flex items-center text-[11px] break-all">📄 請求書ファイル ↗</a></div>' : '';
+
+        return '<div class="p-3 bg-white dark:bg-slate-800 rounded-xl border dark:border-slate-700 space-y-1.5 shadow-sm">'
+          + '<div class="flex justify-between items-start gap-2">'
+          + '<div>'
+          + '<span class="font-bold text-xs text-slate-800 dark:text-slate-100">' + l.title + '</span>'
+          + '<div class="text-[11px] text-purple-600 dark:text-purple-400 font-extrabold mt-0.5">' + amountStr + '</div>'
+          + '</div>'
+          + '<div class="flex items-center space-x-1.5 flex-shrink-0">'
+          + statusBadge
+          + '<button onclick="toggleFinancialStatus(\'' + l.id + '\', \'' + l.status + '\')" class="text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition">切替</button>'
+          + '<button onclick="deleteFinancialLog(\'' + l.id + '\')" class="text-[10px] text-red-500 hover:text-red-700 p-0.5" title="削除">🗑️</button>'
+          + '</div>'
+          + '</div>'
+          + '<div class="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-700">'
+          + '<span>' + dateStr + '</span>'
+          + (l.memo ? '<span class="text-slate-500 truncate max-w-[180px]">メモ: ' + l.memo + '</span>' : '')
+          + '</div>'
+          + invoiceLink
+          + '</div>';
+      }).join('');
+    }
+
+    async function submitFinancialLog() {
+      if (!selectedProjectForFinancial) return;
+      const title = document.getElementById('fnInputTitle').value.trim();
+      const amount = parseFloat(document.getElementById('fnInputAmount').value) || 0;
+      const dueDate = document.getElementById('fnInputDueDate').value || null;
+      const status = document.getElementById('fnInputStatus').value;
+      const invoiceUrl = document.getElementById('fnInputInvoiceUrl').value.trim() || null;
+      const memo = document.getElementById('fnInputMemo').value.trim() || null;
+
+      if (!title) return alert('項目・用途を入力してください');
+
+      const { error } = await supabaseClient.from('financial_logs').insert({
+        project_id: selectedProjectForFinancial.id,
+        title: title,
+        amount: amount,
+        due_date: dueDate,
+        status: status,
+        invoice_url: invoiceUrl,
+        memo: memo
+      });
+
+      if (error) return alert('保存エラー: ' + error.message);
+
+      document.getElementById('fnInputTitle').value = '';
+      document.getElementById('fnInputAmount').value = '';
+      document.getElementById('fnInputInvoiceUrl').value = '';
+      document.getElementById('fnInputMemo').value = '';
+      await loadFinancialLogs(selectedProjectForFinancial.id);
+    }
+
+    async function toggleFinancialStatus(logId, currentStatus) {
+      const next = (currentStatus === '対応済') ? '未対応' : '対応済';
+      await supabaseClient.from('financial_logs').update({ status: next }).eq('id', logId);
+      if (selectedProjectForFinancial) {
+        loadFinancialLogs(selectedProjectForFinancial.id);
+      }
+    }
+
+    async function deleteFinancialLog(logId) {
+      if (!confirm('この財務ログを削除しますか？')) return;
+      await supabaseClient.from('financial_logs').delete().eq('id', logId);
+      if (selectedProjectForFinancial) {
+        loadFinancialLogs(selectedProjectForFinancial.id);
+      }
     }
 
     function filterCreativeProjects(type) {
@@ -830,6 +1032,12 @@
         } else {
           msg.innerText = "";
           currentUser = data.user;
+          // 最終ログイン日時を記録
+          await supabaseClient.from('profiles').update({
+            last_sign_in_at: new Date().toISOString(),
+            last_active_at: new Date().toISOString()
+          }).eq('id', currentUser.id);
+
           await loadUserProfile();
         }
       } catch (err) {
@@ -846,6 +1054,9 @@
         if (session) {
           currentUser = session.user;
           await loadUserProfile();
+          // 生存確認ハートビート開始（2分ごと）
+          updateHeartbeat();
+          setInterval(updateHeartbeat, 120000);
         } else {
           renderAuthUI(false);
         }
@@ -886,10 +1097,16 @@
         appView.classList.remove('hidden');
         roleBadge.classList.remove('hidden');
 
-        const roleText = userProfile.role === 'admin' ? '管理者' : 'User';
-        const roleClass = userProfile.role === 'admin' 
-          ? 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300' 
-          : 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300';
+        // Masterバッジは紫色で強調
+        let roleText = 'User';
+        let roleClass = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300';
+        if (userProfile.role === 'master') {
+          roleText = '👑 Master';
+          roleClass = 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 ring-1 ring-purple-300 dark:ring-purple-700';
+        } else if (userProfile.role === 'admin') {
+          roleText = '管理者';
+          roleClass = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300';
+        }
 
         roleBadge.innerText = roleText;
         roleBadge.className = roleClass;
@@ -902,7 +1119,7 @@
         document.getElementById('mobileUserMenuRole').innerText = roleText;
         document.getElementById('mobileUserMenuRole').className = roleClass;
 
-        if (userProfile.role === 'admin') {
+        if (isAdminOrMaster()) {
           viewToggleBtn.classList.remove('hidden');
           mobileViewToggleBtn.classList.remove('hidden');
           pcNav.classList.remove('md:hidden');
@@ -1025,7 +1242,7 @@
       await Promise.all([loadMasterFromDB(), loadAllProfiles(), loadSalesTemplates()]);
       renderMasterTable();
       renderCheckboxes();
-      if (userProfile.role === 'admin') {
+      if (isAdminOrMaster()) {
         await loadCreativeProjects();
         loadLeads();
         renderMembersTable();
@@ -1690,17 +1907,57 @@
 
     function renderMembersTable() {
       const tbody = document.getElementById('membersTableBody');
+      const thActive = document.getElementById('thLastActive');
+      const notice = document.getElementById('masterMonitoringNotice');
       if (!tbody) return;
+
+      const masterUser = isMaster();
+      if (thActive) thActive.classList.toggle('hidden', !masterUser);
+      if (notice) notice.classList.toggle('hidden', !masterUser);
+
+      const now = new Date().getTime();
+      const fiveMinutes = 5 * 60 * 1000;
+
       tbody.innerHTML = allProfiles.map(u => {
-        const badgeClass = u.role === 'admin' 
-          ? 'bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300' 
-          : 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300';
-        const roleName = u.role === 'admin' ? '管理者' : 'クリエイター';
+        let badgeClass = 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300';
+        let roleName = 'クリエイター';
+        if (u.role === 'master') {
+          badgeClass = 'bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 font-bold';
+          roleName = '👑 Master';
+        } else if (u.role === 'admin') {
+          badgeClass = 'bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 font-bold';
+          roleName = '管理者';
+        }
+
+        // オンライン判定（最終アクティブが5分以内）
+        let onlineBadge = '';
+        let lastActiveText = '-';
+
+        if (masterUser) {
+          if (u.last_active_at) {
+            const activeTime = new Date(u.last_active_at).getTime();
+            const isOnline = (now - activeTime) <= fiveMinutes;
+            onlineBadge = isOnline 
+              ? '<span class="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span><span>ONLINE</span></span>'
+              : '<span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">OFFLINE</span>';
+
+            lastActiveText = new Date(u.last_active_at).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+          } else {
+            onlineBadge = '<span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">OFFLINE</span>';
+          }
+        }
+
         return '<tr class="border-b border-slate-100 dark:border-slate-800/60 last:border-b-0">'
+          + '<td class="p-3.5">'
+          + '<div class="flex items-center space-x-2">'
+          + (masterUser ? onlineBadge : '')
+          + '<span class="font-bold text-slate-800 dark:text-slate-100">' + (u.name || '未設定') + '</span>'
+          + '</div>'
+          + '</td>'
           + '<td class="p-3.5 font-mono text-xs text-blue-600 dark:text-blue-400 font-semibold">' + (u.user_id || '-') + '</td>'
-          + '<td class="p-3.5 font-medium">' + (u.name || '未設定') + '</td>'
           + '<td class="p-3.5 text-slate-500 dark:text-slate-400">' + (u.email || '-') + '</td>'
           + '<td class="p-3.5"><span class="px-2 py-0.5 rounded text-xs font-semibold ' + badgeClass + '">' + roleName + '</span></td>'
+          + (masterUser ? ('<td class="p-3.5 text-slate-400 text-xs">' + lastActiveText + '</td>') : '')
           + '</tr>';
       }).join('');
     }
@@ -1920,7 +2177,13 @@
           + (hasProjectUnread ? '<span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span>' : '')
           + '</button>';
 
-        const deleteBtnHtml = (userProfile && userProfile.role === 'admin') 
+        // Master専用：財務ログボタン
+        const financialBtnHtml = isMaster()
+          ? '<button onclick="event.stopPropagation(); openFinancialModal(\'' + p.id + '\')" class="text-[11px] px-2.5 py-0.5 rounded bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800 font-bold transition flex items-center space-x-1"><span>💰 財務</span></button>'
+          : '';
+
+        // 削除ボタン（管理者またはMaster）
+        const deleteBtnHtml = isAdminOrMaster() 
           ? '<button onclick="event.stopPropagation(); deleteProject(\'' + p.id + '\')" class="text-[11px] px-2 py-0.5 rounded text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/60 border border-transparent hover:border-red-200 dark:hover:border-red-800 transition" title="案件を削除">🗑️ 削除</button>'
           : '';
 
@@ -2032,6 +2295,7 @@
           + prjUnreadBadgeHtml
           + ballBadgeHtml
           + prjLogBtnHtml
+          + financialBtnHtml
           + driveLinkHtml
           + deleteBtnHtml
           + '</div>'
@@ -2314,7 +2578,9 @@
         }
       }
 
-      if (tab === 'updates') {
+      if (tab === 'members') {
+        renderMembersTable();
+      } else if (tab === 'updates') {
         renderAllUpdatesLogs();
       }
     }
