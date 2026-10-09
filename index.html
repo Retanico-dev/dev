@@ -1041,7 +1041,7 @@
           msg.className = "mt-4 text-xs text-center text-red-500 font-bold";
           alert("ログイン失敗: " + error.message);
         } else {
-          msg.innerText = "ログイン成功！データを読み込み中...";
+          msg.innerText = "ログイン成功！";
           msg.className = "mt-4 text-xs text-center text-emerald-500 font-bold";
           currentUser = data.user;
           
@@ -1088,10 +1088,8 @@
           user_id: ''
         };
 
-        // データを先に全て取得
-        await loadDashboard();
-        // データ取得完了後に画面を描画
         renderAuthUI(true);
+        await loadDashboard();
       } catch (err) {
         alert("ユーザープロファイル取得エラー: " + err.message);
       }
@@ -2018,19 +2016,69 @@
       renderMembersTable();
     }
 
+    // ----------------------------------------------------
+    // 【ハイブリッド判定】直前タスク自動探索 ＆ 手動オーバーライド最優先
+    // ----------------------------------------------------
     function getActiveBallTasks(tasks) {
-      const existingTaskTitles = new Set(tasks.map(t => t.title));
-      const completedSet = new Set(tasks.filter(t => t.status === '完了').map(t => t.title));
+      const taskMap = new Map();
+      tasks.forEach(t => taskMap.set(t.title, t));
       const activeTasks = [];
+
+      // 音楽制作パイプラインの上流探索パス
+      const upstreamPaths = {
+        'マスタリング': [['ミキシング', 'レコーディング', '編曲', '作曲']],
+        'ミキシング': [
+          ['レコーディング', '編曲', '作曲'],
+          ['レコーディング', '作詞', '作曲']
+        ],
+        'レコーディング': [
+          ['編曲', '作曲'],
+          ['作詞', '作曲']
+        ],
+        '編曲': [['作曲']],
+        '作詞': [['作曲']],
+        '作曲': [],
+        '映像': [['イラスト']],
+        'イラスト': []
+      };
 
       tasks.forEach(t => {
         if (t.status === '完了') return;
-        const def = workflowMasters.find(w => w.name === t.title);
-        const isReady = !def || def.depends.every(dep => !existingTaskTitles.has(dep) || completedSet.has(dep));
+
+        // 【アイデア3：手動オーバーライド最優先】
+        // すでに作業中・確認待ち・リテイクになっている場合は無条件でアクティブ（ボール保持）
+        if (t.status === '作業中' || t.status === '提出・確認待ち' || t.status === 'リテイク') {
+          activeTasks.push(t);
+          return;
+        }
+
+        // 【アイデア1：動的フォールバック解決】
+        // 未着手タスクの場合、実在する直前の上流タスクがすべて完了しているかチェック
+        const paths = upstreamPaths[t.title] || [];
+        let isReady = true;
+
+        for (const path of paths) {
+          // 直近に実在する親タスクを探索
+          let nearestParent = null;
+          for (const ancestorTitle of path) {
+            if (taskMap.has(ancestorTitle)) {
+              nearestParent = taskMap.get(ancestorTitle);
+              break;
+            }
+          }
+
+          // 親タスクが存在し、まだ完了していなければ着手不可
+          if (nearestParent && nearestParent.status !== '完了') {
+            isReady = false;
+            break;
+          }
+        }
+
         if (isReady) {
           activeTasks.push(t);
         }
       });
+
       return activeTasks;
     }
 
@@ -2605,7 +2653,6 @@
     function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
-    // 画面初期化の実行
     init();
   </script>
 </body>
