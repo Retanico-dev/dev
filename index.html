@@ -579,7 +579,7 @@
     </div>
   </div>
 
-  <!-- モーダル: 新規メンバー追加（Master選択対応） -->
+  <!-- モーダル: 新規メンバー追加 -->
   <div id="newMemberModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-4 border border-slate-200 dark:border-slate-800">
       <h3 class="font-bold text-base sm:text-lg">新規メンバー追加</h3>
@@ -732,7 +732,6 @@
       return tasks.every(t => t.status === '完了');
     }
 
-    // 生存確認（ハートビート）: Masterによるオンライン監視用
     async function updateHeartbeat() {
       if (!currentUser) return;
       try {
@@ -1032,7 +1031,6 @@
         } else {
           msg.innerText = "";
           currentUser = data.user;
-          // 最終ログイン日時を記録
           await supabaseClient.from('profiles').update({
             last_sign_in_at: new Date().toISOString(),
             last_active_at: new Date().toISOString()
@@ -1054,7 +1052,6 @@
         if (session) {
           currentUser = session.user;
           await loadUserProfile();
-          // 生存確認ハートビート開始（2分ごと）
           updateHeartbeat();
           setInterval(updateHeartbeat, 120000);
         } else {
@@ -1097,7 +1094,6 @@
         appView.classList.remove('hidden');
         roleBadge.classList.remove('hidden');
 
-        // Masterバッジは紫色で強調
         let roleText = 'User';
         let roleClass = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300';
         if (userProfile.role === 'master') {
@@ -1242,6 +1238,7 @@
       await Promise.all([loadMasterFromDB(), loadAllProfiles(), loadSalesTemplates()]);
       renderMasterTable();
       renderCheckboxes();
+      // 【修正箇所】MasterまたはAdminのときに案件や営業チケットを読み込む
       if (isAdminOrMaster()) {
         await loadCreativeProjects();
         loadLeads();
@@ -1929,7 +1926,6 @@
           roleName = '管理者';
         }
 
-        // オンライン判定（最終アクティブが5分以内）
         let onlineBadge = '';
         let lastActiveText = '-';
 
@@ -2177,12 +2173,10 @@
           + (hasProjectUnread ? '<span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span>' : '')
           + '</button>';
 
-        // Master専用：財務ログボタン
         const financialBtnHtml = isMaster()
           ? '<button onclick="event.stopPropagation(); openFinancialModal(\'' + p.id + '\')" class="text-[11px] px-2.5 py-0.5 rounded bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800 font-bold transition flex items-center space-x-1"><span>💰 財務</span></button>'
           : '';
 
-        // 削除ボタン（管理者またはMaster）
         const deleteBtnHtml = isAdminOrMaster() 
           ? '<button onclick="event.stopPropagation(); deleteProject(\'' + p.id + '\')" class="text-[11px] px-2 py-0.5 rounded text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/60 border border-transparent hover:border-red-200 dark:hover:border-red-800 transition" title="案件を削除">🗑️ 削除</button>'
           : '';
