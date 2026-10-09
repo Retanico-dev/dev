@@ -285,4 +285,2375 @@
       <span class="text-lg">🔔</span>
       <span class="text-[10px] mt-0.5 tracking-tight">ログ</span>
     </button>
-    <button onclick="openMobileMoreSheet()" id="mobTabMore" class="flex flex-col items-center justify-center flex-1 py-1 text-slate-400 dark:text-slate-500 font-medium transitio
+    <button onclick="openMobileMoreSheet()" id="mobTabMore" class="flex flex-col items-center justify-center flex-1 py-1 text-slate-400 dark:text-slate-500 font-medium transition">
+      <span class="text-lg">⚙️</span>
+      <span class="text-[10px] mt-0.5 tracking-tight">設定など</span>
+    </button>
+  </nav>
+
+  <!-- スマホ専用:「設定など」をタップした時のボトムシート -->
+  <div id="mobileMoreSheet" class="hidden md:hidden fixed inset-0 bg-black/60 z-50 flex items-end justify-center backdrop-blur-sm" onclick="closeMobileMoreSheet()">
+    <div class="bg-white dark:bg-slate-900 w-full rounded-t-3xl p-5 space-y-3 border-t border-slate-200 dark:border-slate-800 animate-in slide-in-from-bottom" onclick="event.stopPropagation()">
+      <div class="w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-2"></div>
+      <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">管理メニュー</h3>
+      <div class="space-y-1.5 text-sm font-medium">
+        <button onclick="switchTab('master'); closeMobileMoreSheet();" class="w-full text-left p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-between">
+          <span>🛠️ 工程マスター設定（標準日数）</span>
+          <span>➔</span>
+        </button>
+        <button onclick="switchTab('members'); closeMobileMoreSheet();" class="w-full text-left p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-between">
+          <span>👥 所属メンバー管理</span>
+          <span>➔</span>
+        </button>
+      </div>
+      <button onclick="closeMobileMoreSheet()" class="w-full py-2.5 text-center text-xs font-bold text-slate-500 dark:text-slate-400 pt-2">閉じる</button>
+    </div>
+  </div>
+
+  <!-- ==================== 【Master限定】財務事項ログモーダル ==================== -->
+  <div id="financialModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2.5 sm:p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full p-4 sm:p-6 border border-purple-200 dark:border-purple-900/60 max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="flex items-start justify-between border-b dark:border-slate-800 pb-3 flex-shrink-0 gap-2">
+        <div>
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300">👑 Master限定・秘匿情報</span>
+          <h3 id="financialModalTitle" class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 mt-1">財務事項・請求書管理</h3>
+        </div>
+        <button onclick="closeModal('financialModal')" class="text-slate-400 hover:text-slate-600 text-base p-1">✕</button>
+      </div>
+
+      <!-- 財務ログ新規追記フォーム -->
+      <div class="bg-purple-50/50 dark:bg-purple-950/20 p-3 sm:p-4 rounded-xl border border-purple-100 dark:border-purple-900/40 space-y-2.5 mt-3 flex-shrink-0">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">項目・用途 *</label>
+            <input type="text" id="fnInputTitle" placeholder="例: クリエイター報酬、請求書発行" class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none focus:ring-2 focus:ring-purple-500">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">金額 (円)</label>
+            <input type="number" id="fnInputAmount" placeholder="例: 50000" class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none focus:ring-2 focus:ring-purple-500">
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">期日 (支払 / 入金)</label>
+            <input type="date" id="fnInputDueDate" class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none focus:ring-2 focus:ring-purple-500">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">ステータス</label>
+            <select id="fnInputStatus" class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none focus:ring-2 focus:ring-purple-500">
+              <option value="未対応">🔴 未対応</option>
+              <option value="対応済">🟢 対応済</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">請求書URL (Google Drive / クラウド等)</label>
+          <input type="url" id="fnInputInvoiceUrl" placeholder="https://drive.google.com/..." class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none focus:ring-2 focus:ring-purple-500">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">メモ (任意)</label>
+          <input type="text" id="fnInputMemo" placeholder="振込先や備考" class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none focus:ring-2 focus:ring-purple-500">
+        </div>
+        <div class="text-right pt-1">
+          <button onclick="submitFinancialLog()" class="px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded text-xs font-bold transition shadow-sm">
+            財務ログを記録
+          </button>
+        </div>
+      </div>
+
+      <!-- 財務ログ一覧 -->
+      <div class="flex-1 overflow-y-auto min-h-[140px] space-y-2 pt-3 pr-1">
+        <h4 class="text-xs font-bold text-slate-500 sticky top-0 bg-white dark:bg-slate-900 py-0.5 z-10">記録済み財務ログ</h4>
+        <div id="financialTimeline" class="space-y-2 text-xs"></div>
+      </div>
+
+      <div class="flex justify-end pt-3 border-t dark:border-slate-800 flex-shrink-0">
+        <button onclick="closeModal('financialModal')" class="w-full sm:w-auto px-5 py-1.5 border dark:border-slate-700 rounded-lg text-xs font-medium">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル: 案件全体統合ログ -->
+  <div id="projectLogModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2.5 sm:p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full p-4 sm:p-6 border border-slate-200 dark:border-slate-800 max-h-[90vh] flex flex-col shadow-2xl">
+      <div class="flex items-start justify-between border-b dark:border-slate-800 pb-3 flex-shrink-0">
+        <div class="min-w-0 pr-2">
+          <span class="text-xs text-slate-400 font-medium block truncate" id="prjLogModalClient"></span>
+          <h3 id="prjLogModalTitle" class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 truncate"></h3>
+        </div>
+        <button onclick="closeModal('projectLogModal')" class="text-slate-400 hover:text-slate-600 text-base p-1 flex-shrink-0">✕</button>
+      </div>
+      <div class="flex-1 overflow-y-auto space-y-2 py-3 pr-1">
+        <h4 class="text-xs font-bold text-slate-500 sticky top-0 bg-white dark:bg-slate-900 py-0.5">案件内の全工程タイムライン（最新順）</h4>
+        <div id="prjLogModalTimeline" class="space-y-2 text-xs"></div>
+      </div>
+      <div class="flex justify-end pt-3 border-t dark:border-slate-800 flex-shrink-0">
+        <button onclick="closeModal('projectLogModal')" class="w-full sm:w-auto px-5 py-2 border dark:border-slate-700 rounded-lg text-xs font-medium">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル: タスク提出・フィードバックログ詳細 -->
+  <div id="taskLogModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2.5 sm:p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-4 sm:p-6 border border-slate-200 dark:border-slate-800 max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="flex items-start justify-between border-b dark:border-slate-800 pb-3 flex-shrink-0 gap-2">
+        <div class="min-w-0 flex-1">
+          <span id="taskLogStatusBadge" class="px-2 py-0.5 rounded text-[10px] font-bold inline-block"></span>
+          <h3 id="taskLogModalTitle" class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 mt-1 truncate"></h3>
+        </div>
+        <div class="flex items-center space-x-1.5 flex-shrink-0">
+          <button id="btnUnreadToggleInModal" onclick="toggleTaskUnreadManual()" class="text-[11px] px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium transition whitespace-nowrap">
+            未読に戻す
+          </button>
+          <button onclick="closeModal('taskLogModal')" class="text-slate-400 hover:text-slate-600 text-base p-1">✕</button>
+        </div>
+      </div>
+
+      <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border dark:border-slate-700 space-y-2 mt-3 flex-shrink-0">
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">コメント・フィードバックの追記</label>
+        <textarea id="taskLogInputText" rows="2" class="w-full p-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500 break-words" placeholder="連絡事項やフィードバック、リテイク指示を入力..."></textarea>
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+          <div class="flex items-center space-x-1.5 text-xs">
+            <span class="text-slate-500 whitespace-nowrap">ステータス変更:</span>
+            <select id="taskLogStatusSelect" class="px-2 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs">
+              <option value="">(変更なし)</option>
+              <option value="作業中">作業中</option>
+              <option value="リテイク">リテイク指示</option>
+              <option value="完了">承認（完了）</option>
+            </select>
+          </div>
+          <button onclick="submitTaskLogComment()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition shadow-sm whitespace-nowrap">
+            送信・更新
+          </button>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto min-h-[140px] space-y-2 pt-3 pr-1">
+        <h4 class="text-xs font-bold text-slate-500 sticky top-0 bg-white dark:bg-slate-900 py-0.5 z-10">提出・やり取りタイムライン</h4>
+        <div id="taskLogTimeline" class="space-y-2 text-xs"></div>
+      </div>
+
+      <div class="flex justify-end pt-3 border-t dark:border-slate-800 flex-shrink-0">
+        <button onclick="closeModal('taskLogModal')" class="w-full sm:w-auto px-5 py-1.5 border dark:border-slate-700 rounded-lg text-xs font-medium">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル: 営業チケット起票 -->
+  <div id="newLeadModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-4 border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
+      <h3 class="font-bold text-base sm:text-lg">新規営業チケット起票</h3>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">相手の名前 *</label>
+        <input type="text" id="leadClientName" required class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="例: 星野 アリス">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">X (Twitter) ID</label>
+        <div class="flex items-center">
+          <span class="px-3 py-2 border border-r-0 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-400 text-sm rounded-l-lg">@</span>
+          <input type="text" id="leadTwitterId" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-r-lg text-sm" placeholder="username">
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">YouTube チャンネルURL</label>
+        <input type="url" id="leadYoutubeUrl" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="https://youtube.com/@...">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">連絡先メールアドレス（任意）</label>
+        <input type="email" id="leadContactEmail" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="contact@example.com">
+      </div>
+      <div class="flex justify-end space-x-2 pt-2">
+        <button onclick="closeModal('newLeadModal')" class="px-3 py-2 border dark:border-slate-700 rounded-lg text-xs sm:text-sm">キャンセル</button>
+        <button onclick="createLeadTicket()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs sm:text-sm font-medium">起票</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル: 営業チケット詳細・追客操作 -->
+  <div id="leadDetailModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full p-4 sm:p-6 space-y-4 border border-slate-200 dark:border-slate-800 max-h-[92vh] overflow-y-auto">
+      <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2 border-b dark:border-slate-800 pb-3">
+        <div>
+          <span id="detailStatusBadge" class="px-2 py-0.5 rounded-full text-[11px] font-bold"></span>
+          <h3 id="detailClientName" class="text-lg sm:text-xl font-bold mt-1 text-slate-800 dark:text-slate-100"></h3>
+        </div>
+        <div class="flex flex-wrap items-center gap-1.5" id="detailLinks"></div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl text-xs">
+        <div>
+          <span class="text-slate-400">進行:</span>
+          <div id="detailSendCount" class="font-bold text-slate-700 dark:text-slate-200 mt-0.5"></div>
+        </div>
+        <div>
+          <span class="text-slate-400">次回送付日:</span>
+          <div id="detailNextFollowup" class="font-bold text-slate-700 dark:text-slate-200 mt-0.5"></div>
+        </div>
+      </div>
+
+      <div class="space-y-2 border-t dark:border-slate-800 pt-3">
+        <div class="flex items-center justify-between gap-2">
+          <label class="text-xs font-bold text-slate-700 dark:text-slate-300">定型文（名前自動反映）</label>
+          <select id="templateSelector" onchange="applyTemplateToBox()" class="text-xs px-2 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 max-w-[160px] sm:max-w-xs truncate">
+            <option value="">-- 定型文を選択 --</option>
+          </select>
+        </div>
+        <div class="relative">
+          <textarea id="templateMessageBox" rows="3" class="w-full p-2.5 pb-8 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs font-mono outline-none focus:ring-2 focus:ring-blue-500 break-words" placeholder="定型文を選択するとここに名前が反映されます。"></textarea>
+          <button onclick="copyTemplateBox()" type="button" class="absolute bottom-2 right-2 px-2.5 py-1 bg-slate-800 dark:bg-slate-700 text-white rounded text-[11px] font-medium hover:bg-slate-700 transition shadow">
+            📋 コピー
+          </button>
+        </div>
+      </div>
+
+      <div class="space-y-3 border-t dark:border-slate-800 pt-3 bg-blue-50/50 dark:bg-blue-950/20 p-3 rounded-xl border border-blue-100 dark:border-blue-900/40">
+        <div class="flex items-center justify-between">
+          <label class="block text-xs font-bold text-blue-900 dark:text-blue-300">送受信の記録</label>
+          <span id="phaseGuideText" class="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400"></span>
+        </div>
+        <div>
+          <textarea id="logMessageInput" rows="2" class="w-full p-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none break-words" placeholder="送信内容のメモや先方からの返信..."></textarea>
+        </div>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
+          <div class="flex items-center space-x-1.5 text-xs">
+            <span class="text-slate-500">次回予定:</span>
+            <input type="date" id="actionNextDate" class="px-2 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs">
+          </div>
+          <div class="flex items-center space-x-2">
+            <button id="btnRecordSend" onclick="recordLeadAction('send')" class="flex-1 sm:flex-none px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition shadow-sm whitespace-nowrap">
+              送信記録
+            </button>
+            <button onclick="recordLeadAction('reply')" class="flex-1 sm:flex-none px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-medium transition shadow-sm whitespace-nowrap">
+              返信あり
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-t dark:border-slate-800 pt-3">
+        <div class="flex items-center space-x-2">
+          <select id="stopReasonSelect" class="text-xs px-2 py-1.5 border dark:border-slate-700 rounded bg-white dark:bg-slate-800">
+            <option value="直近の相談予定なし">直近の相談予定なし</option>
+            <option value="追客上限">追客上限</option>
+          </select>
+          <button onclick="markLeadStopped()" class="px-2.5 py-1.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded text-xs font-medium hover:bg-slate-300 transition whitespace-nowrap">
+            対応停止
+          </button>
+        </div>
+        <button onclick="markLeadConsultation()" class="w-full sm:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-bold transition shadow-sm text-center">
+          🎉 相談決定 ➔ 制作起票
+        </button>
+      </div>
+
+      <div class="space-y-2 border-t dark:border-slate-800 pt-3">
+        <h4 class="text-xs font-bold text-slate-500">送受信ログ履歴</h4>
+        <div id="detailLogsTimeline" class="space-y-1.5 max-h-36 overflow-y-auto text-xs"></div>
+      </div>
+
+      <div class="flex justify-end pt-2 border-t dark:border-slate-800">
+        <button onclick="closeModal('leadDetailModal')" class="w-full sm:w-auto px-4 py-1.5 border dark:border-slate-700 rounded-lg text-xs">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル: マイアカウント設定 -->
+  <div id="myAccountModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-4 border border-slate-200 dark:border-slate-800">
+      <h3 class="font-bold text-base sm:text-lg">マイアカウント設定</h3>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">表示名</label>
+        <input type="text" id="myAccountName" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">ログイン用ID（半角英数字）</label>
+        <input type="text" id="myAccountUserId" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm">
+      </div>
+      <div class="border-t border-slate-100 dark:border-slate-800 pt-3">
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">新しいパスワード</label>
+        <input type="password" id="myAccountNewPassword" placeholder="6文字以上で入力" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm">
+      </div>
+      <div class="flex justify-end space-x-2 pt-2">
+        <button onclick="closeModal('myAccountModal')" class="px-3 py-2 border dark:border-slate-700 rounded-lg text-xs sm:text-sm">キャンセル</button>
+        <button onclick="saveMyAccount()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs sm:text-sm font-medium">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル: 新規メンバー追加 -->
+  <div id="newMemberModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-4 border border-slate-200 dark:border-slate-800">
+      <h3 class="font-bold text-base sm:text-lg">新規メンバー追加</h3>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">ユーザーID（半角英数） *</label>
+        <input type="text" id="newMemberUserId" required class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="yamada_t">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">表示名 *</label>
+        <input type="text" id="newMemberName" required class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="山田 太郎">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">メールアドレス *</label>
+        <input type="email" id="newMemberEmail" required class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="creator@example.com">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">初期パスワード *</label>
+        <input type="password" id="newMemberPassword" required class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="6文字以上">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">権限ロール</label>
+        <select id="newMemberRole" class="w-full px-3 py-2 border dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-800">
+          <option value="user">クリエイター (User)</option>
+          <option value="admin">管理者 (Admin)</option>
+          <option value="master">👑 統括・代表 (Master)</option>
+        </select>
+      </div>
+      <div class="flex justify-end space-x-2 pt-2">
+        <button onclick="closeModal('newMemberModal')" class="px-3 py-2 border dark:border-slate-700 rounded-lg text-xs sm:text-sm">キャンセル</button>
+        <button onclick="createNewMember()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs sm:text-sm font-medium">作成</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- モーダル: 新規案件起票 -->
+  <div id="newProjectModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-5 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto border border-slate-200 dark:border-slate-800">
+      <h3 class="font-bold text-base sm:text-lg">新規制作案件起票</h3>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">案件・曲名 *</label>
+        <input type="text" id="newPrjTitle" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="例: 2nd Single 制作">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">クライアント名</label>
+        <input type="text" id="newPrjClient" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">共有ドライブURL</label>
+        <input type="url" id="newPrjDrive" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="https://drive.google.com/...">
+      </div>
+
+      <div class="border-t dark:border-slate-800 pt-3">
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">自動納期計算・工程組み込み</label>
+        <div class="flex items-center space-x-2 mb-2">
+          <label class="text-xs text-slate-500">着手予定日:</label>
+          <input type="date" id="autoCalcStartDate" class="px-2 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs sm:text-sm">
+        </div>
+        <div id="processCheckboxes" class="space-y-1.5 max-h-40 overflow-y-auto p-2 bg-slate-50 dark:bg-slate-800 rounded-lg border dark:border-slate-700 text-xs sm:text-sm"></div>
+      </div>
+
+      <div class="flex justify-end space-x-2 pt-2">
+        <button onclick="closeModal('newProjectModal')" class="px-3 py-2 border dark:border-slate-700 rounded-lg text-xs sm:text-sm">キャンセル</button>
+        <button onclick="createCreativeProject()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs sm:text-sm font-medium">起票</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = null;
+    let userProfile = null;
+    let allProfiles = [];
+    const openProjects = new Set();
+    let adminViewMode = 'admin';
+
+    let allLeads = [];
+    let currentFilterStatus = 'all';
+    let currentPrjFilter = 'all';
+    let currentActiveTab = 'creative';
+    let selectedLead = null;
+    let salesTemplates = [];
+    let selectedTaskForLog = null;
+    let selectedProjectForFinancial = null;
+    let cachedCreativeProjects = [];
+    let cachedUserTasks = [];
+    let isCompletedAccordionOpen = false;
+
+    function getCurrentUserIdentifier() {
+      if (!userProfile) return '';
+      return userProfile.name || userProfile.user_id || userProfile.email || '';
+    }
+
+    function getDisplayName(profile) {
+      if (!profile) return '未アサイン';
+      return profile.name || profile.user_id || '未設定';
+    }
+
+    function isMaster() {
+      if (!userProfile || !userProfile.role) return false;
+      return userProfile.role.toLowerCase() === 'master';
+    }
+
+    function isAdminOrMaster() {
+      if (!userProfile || !userProfile.role) return false;
+      const r = userProfile.role.toLowerCase();
+      return r === 'admin' || r === 'master';
+    }
+
+    function getTaskTrack(taskTitle) {
+      const t = taskTitle.trim();
+      if (t === 'イラスト' || t === '映像') {
+        return 'mv';
+      }
+      return 'music';
+    }
+
+    function formatDeadlineStr(dateStr) {
+      if (!dateStr) return '未定';
+      const parts = dateStr.split('-');
+      if (parts.length !== 3) return dateStr;
+      const y = parseInt(parts[0], 10);
+      const m = parts[1];
+      const d = parts[2];
+      const curYear = new Date().getFullYear();
+      if (y > curYear) {
+        return y + '/' + m + '/' + d;
+      }
+      return m + '/' + d;
+    }
+
+    function isLogItemUnread(logItem) {
+      if (!logItem) return false;
+      const myId = getCurrentUserIdentifier();
+      if (!myId) return false;
+      if (logItem.user === myId) return false;
+
+      const readByList = logItem.read_by || [];
+      return !readByList.includes(myId);
+    }
+
+    function getTaskUnreadStatus(task) {
+      const logs = task.logs || [];
+      if (logs.length === 0) return false;
+      return logs.some(l => isLogItemUnread(l));
+    }
+
+    function getProjectUnreadStatus(project) {
+      return (project.tasks || []).some(t => getTaskUnreadStatus(t));
+    }
+
+    function isProjectCompleted(project) {
+      const tasks = project.tasks || [];
+      if (tasks.length === 0) return false;
+      return tasks.every(t => t.status === '完了');
+    }
+
+    async function updateHeartbeat() {
+      if (!currentUser) return;
+      try {
+        await supabaseClient.from('profiles').update({
+          last_active_at: new Date().toISOString()
+        }).eq('id', currentUser.id);
+      } catch (e) {
+        console.error("Heartbeat error:", e);
+      }
+    }
+
+    // ----------------------------------------------------
+    // Master限定：財務事項ログ機能
+    // ----------------------------------------------------
+    async function openFinancialModal(projectId) {
+      if (!isMaster()) return alert('この機能はMaster権限専用です');
+      const targetPrj = cachedCreativeProjects.find(p => p.id === projectId);
+      if (!targetPrj) return;
+      selectedProjectForFinancial = targetPrj;
+
+      document.getElementById('financialModalTitle').innerText = '💰 財務事項・請求管理: ' + targetPrj.title;
+      document.getElementById('fnInputTitle').value = '';
+      document.getElementById('fnInputAmount').value = '';
+      document.getElementById('fnInputDueDate').value = '';
+      document.getElementById('fnInputInvoiceUrl').value = '';
+      document.getElementById('fnInputStatus').value = '未対応';
+      document.getElementById('fnInputMemo').value = '';
+
+      await loadFinancialLogs(projectId);
+      openModal('financialModal');
+    }
+
+    async function loadFinancialLogs(projectId) {
+      const container = document.getElementById('financialTimeline');
+      if (!container) return;
+      container.innerHTML = '<div class="text-slate-400 text-center py-4">読み込み中...</div>';
+
+      const { data: logs, error } = await supabaseClient
+        .from('financial_logs')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: false });
+
+      if (error || !logs || logs.length === 0) {
+        container.innerHTML = '<div class="text-slate-400 text-center py-6 bg-slate-50 dark:bg-slate-800/40 rounded-lg">記録された財務ログはありません</div>';
+        return;
+      }
+
+      container.innerHTML = logs.map(l => {
+        const dateStr = l.due_date ? ('期日: ' + l.due_date) : '期日なし';
+        const isDone = l.status === '対応済';
+        const statusBadge = isDone 
+          ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">🟢 対応済</span>'
+          : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300">🔴 未対応</span>';
+
+        const amountStr = l.amount ? ('¥' + Number(l.amount).toLocaleString()) : '金額未定';
+        const invoiceLink = l.invoice_url ? '<div class="mt-1"><a href="' + l.invoice_url + '" target="_blank" class="text-blue-600 dark:text-blue-400 font-bold hover:underline inline-flex items-center text-[11px] break-all">📄 請求書ファイル ↗</a></div>' : '';
+
+        return '<div class="p-3 bg-white dark:bg-slate-800 rounded-xl border dark:border-slate-700 space-y-1.5 shadow-sm">'
+          + '<div class="flex justify-between items-start gap-2">'
+          + '<div>'
+          + '<span class="font-bold text-xs text-slate-800 dark:text-slate-100">' + l.title + '</span>'
+          + '<div class="text-[11px] text-purple-600 dark:text-purple-400 font-extrabold mt-0.5">' + amountStr + '</div>'
+          + '</div>'
+          + '<div class="flex items-center space-x-1.5 flex-shrink-0">'
+          + statusBadge
+          + '<button onclick="toggleFinancialStatus(\'' + l.id + '\', \'' + l.status + '\')" class="text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition">切替</button>'
+          + '<button onclick="deleteFinancialLog(\'' + l.id + '\')" class="text-[10px] text-red-500 hover:text-red-700 p-0.5" title="削除">🗑️</button>'
+          + '</div>'
+          + '</div>'
+          + '<div class="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-700">'
+          + '<span>' + dateStr + '</span>'
+          + (l.memo ? '<span class="text-slate-500 truncate max-w-[180px]">メモ: ' + l.memo + '</span>' : '')
+          + '</div>'
+          + invoiceLink
+          + '</div>';
+      }).join('');
+    }
+
+    async function submitFinancialLog() {
+      if (!selectedProjectForFinancial) return;
+      const title = document.getElementById('fnInputTitle').value.trim();
+      const amount = parseFloat(document.getElementById('fnInputAmount').value) || 0;
+      const dueDate = document.getElementById('fnInputDueDate').value || null;
+      const status = document.getElementById('fnInputStatus').value;
+      const invoiceUrl = document.getElementById('fnInputInvoiceUrl').value.trim() || null;
+      const memo = document.getElementById('fnInputMemo').value.trim() || null;
+
+      if (!title) return alert('項目・用途を入力してください');
+
+      const { error } = await supabaseClient.from('financial_logs').insert({
+        project_id: selectedProjectForFinancial.id,
+        title: title,
+        amount: amount,
+        due_date: dueDate,
+        status: status,
+        invoice_url: invoiceUrl,
+        memo: memo
+      });
+
+      if (error) return alert('保存エラー: ' + error.message);
+
+      document.getElementById('fnInputTitle').value = '';
+      document.getElementById('fnInputAmount').value = '';
+      document.getElementById('fnInputInvoiceUrl').value = '';
+      document.getElementById('fnInputMemo').value = '';
+      await loadFinancialLogs(selectedProjectForFinancial.id);
+    }
+
+    async function toggleFinancialStatus(logId, currentStatus) {
+      const next = (currentStatus === '対応済') ? '未対応' : '対応済';
+      await supabaseClient.from('financial_logs').update({ status: next }).eq('id', logId);
+      if (selectedProjectForFinancial) {
+        loadFinancialLogs(selectedProjectForFinancial.id);
+      }
+    }
+
+    async function deleteFinancialLog(logId) {
+      if (!confirm('この財務ログを削除しますか？')) return;
+      await supabaseClient.from('financial_logs').delete().eq('id', logId);
+      if (selectedProjectForFinancial) {
+        loadFinancialLogs(selectedProjectForFinancial.id);
+      }
+    }
+
+    function filterCreativeProjects(type) {
+      currentPrjFilter = type;
+      ['active', 'completed', 'all'].forEach(t => {
+        const btn = document.getElementById('prjFilter' + t.charAt(0).toUpperCase() + t.slice(1));
+        if (btn) {
+          if (t === type) {
+            btn.className = "px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-600 text-white transition";
+          } else {
+            btn.className = "px-2.5 py-1 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 border dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition";
+          }
+        }
+      });
+      renderCreativeProjectsList();
+    }
+
+    async function deleteProject(projectId) {
+      const targetPrj = cachedCreativeProjects.find(p => p.id === projectId);
+      const title = targetPrj ? targetPrj.title : '';
+      if (!confirm('【警告】案件「' + title + '」を完全に削除しますか？\n※紐付く全工程タスク・ログ履歴もすべて削除されます。この操作は取り消せません。')) {
+        return;
+      }
+
+      const { error } = await supabaseClient.from('projects').delete().eq('id', projectId);
+      if (error) {
+        alert('削除エラー: ' + error.message);
+      } else {
+        alert('案件「' + title + '」を削除しました。');
+        openProjects.delete(projectId);
+        await loadCreativeProjects();
+        renderAllUpdatesLogs();
+      }
+    }
+
+    async function autoMarkTaskAsRead(task) {
+      const myId = getCurrentUserIdentifier();
+      if (!myId || !task || !task.logs) return;
+
+      let hasChange = false;
+      const updatedLogs = task.logs.map(l => {
+        const readBy = Array.isArray(l.read_by) ? [...l.read_by] : [];
+        if (l.user !== myId && !readBy.includes(myId)) {
+          readBy.push(myId);
+          hasChange = true;
+          return { ...l, read_by: readBy };
+        }
+        return l;
+      });
+
+      if (hasChange) {
+        task.logs = updatedLogs;
+        await supabaseClient.from('tasks').update({ logs: updatedLogs }).eq('id', task.id);
+        renderCreativeProjectsList();
+        loadUserTasks();
+      }
+    }
+
+    async function toggleTaskUnreadManual() {
+      if (!selectedTaskForLog || !selectedTaskForLog.logs) return;
+      const myId = getCurrentUserIdentifier();
+      if (!myId) return;
+
+      const updatedLogs = selectedTaskForLog.logs.map(l => {
+        if (l.user !== myId && Array.isArray(l.read_by)) {
+          return { ...l, read_by: l.read_by.filter(id => id !== myId) };
+        }
+        return l;
+      });
+
+      selectedTaskForLog.logs = updatedLogs;
+      await supabaseClient.from('tasks').update({ logs: updatedLogs }).eq('id', selectedTaskForLog.id);
+
+      renderTaskLogTimeline(selectedTaskForLog.logs);
+      closeModal('taskLogModal');
+      renderCreativeProjectsList();
+      loadUserTasks();
+      alert('タスクを未読（NEW）に戻しました！');
+    }
+
+    function toggleCompletedTasksAccordion() {
+      isCompletedAccordionOpen = !isCompletedAccordionOpen;
+      const listEl = document.getElementById('userCompletedTaskList');
+      const arrowEl = document.getElementById('completedAccordionArrow');
+      if (listEl) {
+        listEl.classList.toggle('hidden', !isCompletedAccordionOpen);
+      }
+      if (arrowEl) {
+        arrowEl.innerText = isCompletedAccordionOpen ? '▼' : '▶';
+      }
+    }
+
+    function toggleMobileUserMenu() {
+      const menu = document.getElementById('mobileUserMenu');
+      if (menu) menu.classList.toggle('hidden');
+    }
+
+    function openMobileMoreSheet() {
+      const sheet = document.getElementById('mobileMoreSheet');
+      if (sheet) sheet.classList.remove('hidden');
+    }
+
+    function closeMobileMoreSheet() {
+      const sheet = document.getElementById('mobileMoreSheet');
+      if (sheet) sheet.classList.add('hidden');
+    }
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const isDark = (savedTheme === 'dark' || (!savedTheme && prefersDark));
+      document.documentElement.classList.toggle('dark', isDark);
+      document.querySelectorAll('.themeIcon').forEach(el => {
+        el.innerText = isDark ? '☀️' : '🌙';
+      });
+    }
+
+    function toggleDarkMode() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      document.querySelectorAll('.themeIcon').forEach(el => {
+        el.innerText = isDark ? '☀️' : '🌙';
+      });
+    }
+
+    let workflowMasters = [
+      { key: 'compose', name: '作曲', days: 7, track: 'music', order: 1, depends: [] },
+      { key: 'lyrics', name: '作詞', days: 5, track: 'music', order: 2, depends: ['作曲'] },
+      { key: 'arrange', name: '編曲', days: 7, track: 'music', order: 3, depends: ['作曲'] },
+      { key: 'rec', name: 'レコーディング', days: 3, track: 'music', order: 4, depends: ['作詞', '編曲'] },
+      { key: 'mix', name: 'ミキシング', days: 5, track: 'music', order: 5, depends: ['レコーディング'] },
+      { key: 'mastering', name: 'マスタリング', days: 2, track: 'music', order: 6, depends: ['ミキシング'] },
+      { key: 'illust', name: 'イラスト', days: 14, track: 'mv', order: 1, depends: [] },
+      { key: 'movie', name: '映像', days: 10, track: 'mv', order: 2, depends: ['イラスト'] }
+    ];
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      handleSmartLogin();
+    }
+
+    async function handleSmartLogin() {
+      const identifier = document.getElementById('loginIdentifier').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
+      const msg = document.getElementById('loginMsg');
+
+      if (!identifier || !password) {
+        alert('ユーザーIDまたはメールアドレスとパスワードを入力してください');
+        return;
+      }
+
+      msg.innerText = "認証確認中...";
+      msg.className = "mt-4 text-xs text-center text-blue-500 font-bold";
+
+      let loginEmail = identifier;
+
+      try {
+        if (!identifier.includes('@')) {
+          const { data: profile, error: searchErr } = await supabaseClient
+            .from('profiles')
+            .select('email')
+            .eq('user_id', identifier)
+            .maybeSingle();
+
+          if (searchErr || !profile || !profile.email) {
+            msg.innerText = "エラー: 該当するユーザーIDが見つかりません";
+            msg.className = "mt-4 text-xs text-center text-red-500 font-bold";
+            alert("エラー: 該当するユーザーIDが見つかりません");
+            return;
+          }
+          loginEmail = profile.email;
+        }
+
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ 
+          email: loginEmail, 
+          password: password 
+        });
+
+        if (error) {
+          msg.innerText = "ログイン失敗: " + error.message;
+          msg.className = "mt-4 text-xs text-center text-red-500 font-bold";
+          alert("ログイン失敗: " + error.message);
+        } else {
+          msg.innerText = "ログイン成功！";
+          msg.className = "mt-4 text-xs text-center text-emerald-500 font-bold";
+          currentUser = data.user;
+          
+          await supabaseClient.from('profiles').update({
+            last_sign_in_at: new Date().toISOString(),
+            last_active_at: new Date().toISOString()
+          }).eq('id', currentUser.id);
+
+          await loadUserProfile();
+        }
+      } catch (err) {
+        msg.innerText = "通信エラー: " + err.message;
+        msg.className = "mt-4 text-xs text-center text-red-500 font-bold";
+        alert("通信エラー: " + err.message);
+      }
+    }
+
+    async function init() {
+      initTheme();
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session) {
+          currentUser = session.user;
+          await loadUserProfile();
+          updateHeartbeat();
+          setInterval(updateHeartbeat, 120000);
+        } else {
+          renderAuthUI(false);
+        }
+      } catch (e) {
+        console.error("Init Error:", e);
+      }
+    }
+
+    async function loadUserProfile() {
+      try {
+        const { data, error } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).single();
+        if (error) console.error("Profile load err:", error);
+        
+        userProfile = data || { 
+          role: 'user', 
+          email: currentUser.email, 
+          name: '',
+          user_id: ''
+        };
+
+        renderAuthUI(true);
+        await loadDashboard();
+      } catch (err) {
+        alert("ユーザープロファイル取得エラー: " + err.message);
+      }
+    }
+
+    function renderAuthUI(isLoggedIn) {
+      const loginView = document.getElementById('loginView');
+      const appView = document.getElementById('appView');
+      const roleBadge = document.getElementById('roleBadge');
+      const viewToggleBtn = document.getElementById('viewToggleBtn');
+      const mobileViewToggleBtn = document.getElementById('mobileViewToggleBtn');
+      const pcNav = document.getElementById('pcAdminNav');
+      const pcUserActions = document.getElementById('pcUserActions');
+      const mobileHeaderActions = document.getElementById('mobileHeaderActions');
+      const mobileBottomNav = document.getElementById('mobileBottomNav');
+
+      if (isLoggedIn && userProfile) {
+        loginView.classList.add('hidden');
+        appView.classList.remove('hidden');
+        roleBadge.classList.remove('hidden');
+
+        let roleText = 'User';
+        let roleClass = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300';
+        if (isMaster()) {
+          roleText = '👑 Master';
+          roleClass = 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 ring-1 ring-purple-300 dark:ring-purple-700';
+        } else if (userProfile.role === 'admin') {
+          roleText = '管理者';
+          roleClass = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300';
+        }
+
+        roleBadge.innerText = roleText;
+        roleBadge.className = roleClass;
+
+        const displayName = getDisplayName(userProfile);
+        const initial = displayName.charAt(0).toUpperCase() || 'U';
+        document.querySelectorAll('.userInitialAvatar').forEach(el => el.innerText = initial);
+        document.getElementById('pcUserDisplayName').innerText = displayName;
+        document.getElementById('mobileUserMenuName').innerText = displayName;
+        document.getElementById('mobileUserMenuRole').innerText = roleText;
+        document.getElementById('mobileUserMenuRole').className = roleClass;
+
+        if (isAdminOrMaster()) {
+          viewToggleBtn.classList.remove('hidden');
+          mobileViewToggleBtn.classList.remove('hidden');
+          pcNav.classList.remove('md:hidden');
+          pcNav.classList.add('md:flex');
+          pcUserActions.classList.remove('md:hidden');
+          pcUserActions.classList.add('md:flex');
+          mobileHeaderActions.classList.remove('hidden');
+          mobileBottomNav.classList.remove('hidden');
+          applyAdminViewMode();
+        } else {
+          viewToggleBtn.classList.add('hidden');
+          mobileViewToggleBtn.classList.add('hidden');
+          pcNav.classList.add('md:hidden');
+          pcNav.classList.remove('md:flex');
+          pcUserActions.classList.remove('md:hidden');
+          pcUserActions.classList.add('md:flex');
+          mobileHeaderActions.classList.remove('hidden');
+          mobileBottomNav.classList.add('hidden');
+          document.getElementById('creativeSection').classList.add('hidden');
+          document.getElementById('salesSection').classList.add('hidden');
+          document.getElementById('updatesSection').classList.add('hidden');
+          document.getElementById('masterSection').classList.add('hidden');
+          document.getElementById('membersSection').classList.add('hidden');
+          document.getElementById('userTaskSection').classList.remove('hidden');
+          loadUserTasks();
+        }
+      } else {
+        loginView.classList.remove('hidden');
+        appView.classList.add('hidden');
+        roleBadge.classList.add('hidden');
+        pcNav.classList.add('md:hidden');
+        pcNav.classList.remove('md:flex');
+        pcUserActions.classList.add('md:hidden');
+        pcUserActions.classList.remove('md:flex');
+        mobileHeaderActions.classList.add('hidden');
+        mobileBottomNav.classList.add('hidden');
+      }
+    }
+
+    function toggleAdminViewMode() {
+      adminViewMode = (adminViewMode === 'admin') ? 'creator' : 'admin';
+      applyAdminViewMode();
+    }
+
+    function applyAdminViewMode() {
+      const btn = document.getElementById('viewToggleBtn');
+      const mobBtn = document.getElementById('mobileViewToggleBtn');
+      const mobileBottomNav = document.getElementById('mobileBottomNav');
+      const pcNav = document.getElementById('pcAdminNav');
+
+      if (adminViewMode === 'creator') {
+        const label = 'クリエイター視点中 (管理へ戻る)';
+        btn.innerText = label;
+        btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 hover:bg-amber-100 transition whitespace-nowrap";
+        mobBtn.innerHTML = '<span>🔄 視点切替 (現在: クリエイター)</span>';
+        
+        pcNav.classList.add('md:hidden');
+        pcNav.classList.remove('md:flex');
+        mobileBottomNav.classList.add('hidden');
+
+        document.getElementById('creativeSection').classList.add('hidden');
+        document.getElementById('salesSection').classList.add('hidden');
+        document.getElementById('updatesSection').classList.add('hidden');
+        document.getElementById('masterSection').classList.add('hidden');
+        document.getElementById('membersSection').classList.add('hidden');
+        document.getElementById('userTaskSection').classList.remove('hidden');
+        loadUserTasks();
+      } else {
+        btn.innerText = '視点切替';
+        btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 transition whitespace-nowrap";
+        mobBtn.innerHTML = '<span>🔄 視点切替 (現在: 管理者)</span>';
+
+        pcNav.classList.remove('md:hidden');
+        pcNav.classList.add('md:flex');
+        mobileBottomNav.classList.remove('hidden');
+
+        document.getElementById('userTaskSection').classList.add('hidden');
+        switchTab(currentActiveTab || 'creative');
+      }
+    }
+
+    function openMyAccountModal() {
+      document.getElementById('myAccountName').value = userProfile.name || '';
+      document.getElementById('myAccountUserId').value = userProfile.user_id || '';
+      document.getElementById('myAccountNewPassword').value = '';
+      openModal('myAccountModal');
+    }
+
+    async function saveMyAccount() {
+      const newName = document.getElementById('myAccountName').value.trim();
+      const newUserId = document.getElementById('myAccountUserId').value.trim();
+      const newPassword = document.getElementById('myAccountNewPassword').value.trim();
+
+      if (!newName || !newUserId) return alert('表示名とユーザーIDは必須です');
+
+      const { error: profileErr } = await supabaseClient
+        .from('profiles')
+        .update({ name: newName, user_id: newUserId })
+        .eq('id', currentUser.id);
+
+      if (profileErr) return alert('更新エラー: ' + profileErr.message);
+
+      if (newPassword) {
+        if (newPassword.length < 6) return alert('パスワードは6文字以上で設定してください');
+        const { error: pwErr } = await supabaseClient.auth.updateUser({ password: newPassword });
+        if (pwErr) return alert('パスワード変更エラー: ' + pwErr.message);
+      }
+
+      alert('アカウント設定を保存しました！');
+      closeModal('myAccountModal');
+      await loadUserProfile();
+    }
+
+    async function logout() {
+      await supabaseClient.auth.signOut();
+      window.location.reload();
+    }
+
+    async function loadDashboard() {
+      await Promise.all([loadMasterFromDB(), loadAllProfiles(), loadSalesTemplates()]);
+      renderMasterTable();
+      renderCheckboxes();
+      if (isAdminOrMaster()) {
+        await loadCreativeProjects();
+        await loadLeads();
+        renderMembersTable();
+        renderAllUpdatesLogs();
+      }
+    }
+
+    async function loadMasterFromDB() {
+      try {
+        const { data } = await supabaseClient.from('process_masters').select('*');
+        if (data && data.length > 0) {
+          workflowMasters.forEach(w => {
+            const found = data.find(d => d.name === w.name);
+            if (found && typeof found.standard_days === 'number') {
+              w.days = found.standard_days;
+              w.db_id = found.id;
+            }
+          });
+        }
+      } catch (err) {
+        console.error("Master load error:", err);
+      }
+    }
+
+    async function loadAllProfiles() {
+      const { data } = await supabaseClient.from('profiles').select('*').order('created_at', { ascending: false });
+      allProfiles = data || [];
+    }
+
+    async function loadSalesTemplates() {
+      const { data } = await supabaseClient.from('sales_templates').select('*').order('sort_order');
+      salesTemplates = data || [];
+
+      const selector = document.getElementById('templateSelector');
+      if (!selector) return;
+      selector.innerHTML = '<option value="">-- 定型文を選択 --</option>' + salesTemplates.map(t => {
+        return '<option value="' + t.id + '">' + t.title + '</option>';
+      }).join('');
+    }
+
+    // ----------------------------------------------------
+    // 営業・商談チケット CRM ロジック
+    // ----------------------------------------------------
+    async function loadLeads() {
+      const { data } = await supabaseClient.from('leads').select('*').order('created_at', { ascending: false });
+      allLeads = data || [];
+
+      const now = new Date();
+      const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+      const updates = [];
+
+      allLeads.forEach(lead => {
+        if (lead.status === '対応待ち' && lead.send_count >= 3 && lead.last_sent_at) {
+          const sentDate = new Date(lead.last_sent_at);
+          if (sentDate <= sevenDaysAgo) {
+            lead.status = '対応停止';
+            lead.stop_reason = '追客上限';
+            updates.push(supabaseClient.from('leads').update({
+              status: '対応停止',
+              stop_reason: '追客上限'
+            }).eq('id', lead.id));
+          }
+        }
+      });
+
+      if (updates.length > 0) {
+        await Promise.all(updates);
+      }
+
+      renderLeadsGrid();
+    }
+
+    function filterLeads(status) {
+      currentFilterStatus = status;
+      document.querySelectorAll('.lead-filter-btn').forEach(btn => {
+        const isMatch = btn.dataset.status === status;
+        btn.className = isMatch 
+          ? 'lead-filter-btn px-2.5 py-1 rounded-lg border dark:border-slate-700 bg-blue-600 text-white font-medium'
+          : 'lead-filter-btn px-2.5 py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300';
+      });
+      renderLeadsGrid();
+    }
+
+    function getLeadStatusBadge(lead) {
+      const st = lead.status;
+      if (st === '未対応（HOT）') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200">🔥 未対応HOT</span>';
+      if (st === '再送付') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">再送付</span>';
+      if (st === '対応待ち') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200">対応待ち</span>';
+      if (st === '先方返信あり（要対応）') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">📬 返信あり</span>';
+      if (st === '相談決定') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-700 border border-indigo-200">🎉 相談決定</span>';
+      if (st === '対応停止') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">停止 (' + (lead.stop_reason || '') + ')</span>';
+      return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">' + st + '</span>';
+    }
+
+    function getLeadPhaseBadge(lead) {
+      if (lead.status === '先方返信あり（要対応）') {
+        return '<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">💬 ラリー中</span>';
+      }
+      if (lead.status === '相談決定') {
+        return '<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">相談中</span>';
+      }
+      return '<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">追客: ' + (lead.send_count || 0) + '/3</span>';
+    }
+
+    function renderLeadsGrid() {
+      const container = document.getElementById('leadsList');
+      if (!container) return;
+
+      const filtered = allLeads.filter(l => {
+        if (currentFilterStatus === 'all') return true;
+        if (currentFilterStatus === '対応停止') return l.status === '対応停止';
+        return l.status === currentFilterStatus;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="col-span-full p-6 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">該当するチケットはありません</div>';
+        return;
+      }
+
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      container.innerHTML = filtered.map(l => {
+        const isFollowupDue = l.next_followup_at && l.next_followup_at <= todayStr && l.status !== '対応停止' && l.status !== '相談決定';
+        const phaseBadge = getLeadPhaseBadge(l);
+
+        return '<div onclick="openLeadDetail(\'' + l.id + '\')" class="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-blue-500 cursor-pointer transition space-y-2.5 relative">'
+          + '<div class="flex justify-between items-start gap-2">'
+          + '<div class="min-w-0">'
+          + '<h4 class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100 truncate">' + l.client_name + '</h4>'
+          + (l.twitter_id ? '<span class="text-xs text-blue-500 dark:text-blue-400 truncate block">@' + l.twitter_id + '</span>' : '')
+          + '</div>'
+          + '<div class="text-right space-y-1 flex-shrink-0">'
+          + getLeadStatusBadge(l)
+          + '<div>' + phaseBadge + '</div>'
+          + '</div>'
+          + '</div>'
+
+          + '<div class="flex items-center justify-between text-xs pt-2 border-t border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400">'
+          + '<div class="text-[11px]">'
+          + (l.next_followup_at ? ('次回: <span class="' + (isFollowupDue ? 'text-red-500 font-bold' : '') + '">' + l.next_followup_at + (isFollowupDue ? ' ⚠' : '') + '</span>') : '次回: 未定')
+          + '</div>'
+          + '<div class="text-[11px] text-blue-600 dark:text-blue-400 font-medium">詳細 ➔</div>'
+          + '</div>'
+          + '</div>';
+      }).join('');
+    }
+
+    async function createLeadTicket() {
+      const name = document.getElementById('leadClientName').value.trim();
+      const twitter = document.getElementById('leadTwitterId').value.trim().replace(/^@/, '');
+      const yt = document.getElementById('leadYoutubeUrl').value.trim();
+      const email = document.getElementById('leadContactEmail').value.trim();
+
+      if (!name) return alert('相手の名前を入力してください');
+
+      const { error } = await supabaseClient.from('leads').insert({
+        client_name: name,
+        twitter_id: twitter || null,
+        youtube_url: yt || null,
+        contact_email: email || null,
+        status: '未対応（HOT）',
+        send_count: 0,
+        logs: [{
+          type: 'created',
+          text: 'チケット起票',
+          at: new Date().toISOString()
+        }]
+      });
+
+      if (error) return alert('起票失敗: ' + error.message);
+
+      closeModal('newLeadModal');
+      document.getElementById('leadClientName').value = '';
+      document.getElementById('leadTwitterId').value = '';
+      document.getElementById('leadYoutubeUrl').value = '';
+      document.getElementById('leadContactEmail').value = '';
+      loadLeads();
+    }
+
+    function openLeadDetail(leadId) {
+      selectedLead = allLeads.find(l => l.id === leadId);
+      if (!selectedLead) return;
+
+      const isReplied = selectedLead.status === '先方返信あり（要対応）';
+
+      document.getElementById('detailClientName').innerText = selectedLead.client_name;
+      document.getElementById('detailStatusBadge').innerHTML = getLeadStatusBadge(selectedLead);
+      
+      if (isReplied) {
+        document.getElementById('detailSendCount').innerHTML = '<span class="text-emerald-600 font-bold">💬 商談ラリー中</span>';
+        document.getElementById('phaseGuideText').innerText = '※返信後のラリー中';
+        document.getElementById('btnRecordSend').innerText = 'メッセージ送信';
+      } else {
+        document.getElementById('detailSendCount').innerText = (selectedLead.send_count || 0) + ' / 3回';
+        document.getElementById('phaseGuideText').innerText = '※未返信のアプローチ中';
+        document.getElementById('btnRecordSend').innerText = '送信記録(+1)';
+      }
+
+      document.getElementById('detailNextFollowup').innerText = selectedLead.next_followup_at || '未設定';
+
+      let linksHtml = '';
+      if (selectedLead.twitter_id) {
+        linksHtml += '<a href="https://twitter.com/' + selectedLead.twitter_id + '" target="_blank" class="px-2 py-0.5 bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300 rounded text-xs font-semibold hover:underline">X ↗</a>';
+      }
+      if (selectedLead.youtube_url) {
+        linksHtml += '<a href="' + selectedLead.youtube_url + '" target="_blank" class="px-2 py-0.5 bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-300 rounded text-xs font-semibold hover:underline">YouTube ↗</a>';
+      }
+      if (selectedLead.contact_email) {
+        linksHtml += '<a href="mailto:' + selectedLead.contact_email + '" class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded text-xs font-semibold hover:underline">Mail ↗</a>';
+      }
+      document.getElementById('detailLinks').innerHTML = linksHtml;
+
+      const logs = selectedLead.logs || [];
+      document.getElementById('detailLogsTimeline').innerHTML = logs.length > 0 
+        ? logs.map(lg => {
+            const dateStr = new Date(lg.at).toLocaleString('ja-JP');
+            return '<div class="p-2 bg-slate-50 dark:bg-slate-800 rounded border dark:border-slate-700">'
+              + '<div class="flex justify-between text-[10px] text-slate-400 mb-0.5 font-bold"><span>' + lg.type + '</span><span>' + dateStr + '</span></div>'
+              + '<div class="text-slate-700 dark:text-slate-300 font-mono text-[11px] whitespace-pre-wrap break-words">' + lg.text + '</div>'
+              + '</div>';
+          }).join('')
+        : '<div class="text-slate-400 text-center py-2">ログはありません</div>';
+
+      document.getElementById('templateSelector').value = '';
+      document.getElementById('templateMessageBox').value = '';
+      document.getElementById('logMessageInput').value = '';
+      
+      const defaultNext = new Date();
+      defaultNext.setDate(defaultNext.getDate() + 3);
+      document.getElementById('actionNextDate').value = defaultNext.toISOString().split('T')[0];
+
+      openModal('leadDetailModal');
+    }
+
+    function applyTemplateToBox() {
+      const templateId = document.getElementById('templateSelector').value;
+      if (!templateId || !selectedLead) return;
+      const t = salesTemplates.find(item => item.id === templateId);
+      if (t) {
+        const replaced = t.body.replace(/\{name\}/g, selectedLead.client_name);
+        document.getElementById('templateMessageBox').value = replaced;
+        document.getElementById('logMessageInput').value = replaced;
+      }
+    }
+
+    function copyTemplateBox() {
+      const text = document.getElementById('templateMessageBox').value;
+      if (!text) return alert('コピーする文章がありません');
+      navigator.clipboard.writeText(text);
+      alert('クリップボードにコピーしました！');
+    }
+
+    async function recordLeadAction(actionType) {
+      if (!selectedLead) return;
+      const logText = document.getElementById('logMessageInput').value.trim();
+      const nextDate = document.getElementById('actionNextDate').value;
+
+      if (!logText) return alert('内容を入力してください');
+
+      let newStatus = selectedLead.status;
+      let newCount = selectedLead.send_count || 0;
+      let logType = '';
+
+      if (actionType === 'send') {
+        if (selectedLead.status === '先方返信あり（要対応）') {
+          logType = 'メッセージ送信 (ラリー中)';
+        } else {
+          newCount += 1;
+          logType = '送信 (' + newCount + '回目)';
+          if (newCount >= 3) {
+            newStatus = '対応待ち';
+          } else {
+            newStatus = '再送付';
+          }
+        }
+      } else if (actionType === 'reply') {
+        newStatus = '先方返信あり（要対応）';
+        logType = '返信受信';
+      }
+
+      const logs = selectedLead.logs || [];
+      logs.unshift({
+        type: logType,
+        text: logText,
+        at: new Date().toISOString()
+      });
+
+      const { error } = await supabaseClient.from('leads').update({
+        status: newStatus,
+        send_count: newCount,
+        next_followup_at: nextDate || null,
+        last_sent_at: (actionType === 'send') ? new Date().toISOString() : selectedLead.last_sent_at,
+        logs: logs
+      }).eq('id', selectedLead.id);
+
+      if (error) return alert('更新エラー: ' + error.message);
+
+      alert('記録を保存しました！');
+      closeModal('leadDetailModal');
+      loadLeads();
+    }
+
+    async function markLeadStopped() {
+      if (!selectedLead) return;
+      const reason = document.getElementById('stopReasonSelect').value;
+
+      const logs = selectedLead.logs || [];
+      logs.unshift({
+        type: '対応停止',
+        text: '停止理由: ' + reason,
+        at: new Date().toISOString()
+      });
+
+      await supabaseClient.from('leads').update({
+        status: '対応停止',
+        stop_reason: reason,
+        logs: logs
+      }).eq('id', selectedLead.id);
+
+      alert('対応停止に更新しました');
+      closeModal('leadDetailModal');
+      loadLeads();
+    }
+
+    async function markLeadConsultation() {
+      if (!selectedLead) return;
+
+      const logs = selectedLead.logs || [];
+      logs.unshift({
+        type: '相談決定',
+        text: 'MTG・案件相談へ移行',
+        at: new Date().toISOString()
+      });
+
+      await supabaseClient.from('leads').update({
+        status: '相談決定',
+        logs: logs
+      }).eq('id', selectedLead.id);
+
+      closeModal('leadDetailModal');
+      loadLeads();
+
+      document.getElementById('newPrjTitle').value = selectedLead.client_name + ' 様 制作案件';
+      document.getElementById('newPrjClient').value = selectedLead.client_name;
+      openModal('newProjectModal');
+    }
+
+    // ----------------------------------------------------
+    // 各案件専用の統合ログモーダル
+    // ----------------------------------------------------
+    function openProjectLogModal(projectId) {
+      const prj = cachedCreativeProjects.find(p => p.id === projectId);
+      if (!prj) return;
+
+      document.getElementById('prjLogModalClient').innerText = prj.client_name || 'クライアント未設定';
+      document.getElementById('prjLogModalTitle').innerText = prj.title;
+
+      const prjLogs = [];
+      (prj.tasks || []).forEach(t => {
+        (t.logs || []).forEach(l => {
+          prjLogs.push({
+            ...l,
+            taskTitle: t.title,
+            taskId: t.id
+          });
+        });
+      });
+
+      prjLogs.sort((a,b) => new Date(b.at) - new Date(a.at));
+
+      const container = document.getElementById('prjLogModalTimeline');
+      if (prjLogs.length === 0) {
+        container.innerHTML = '<div class="text-slate-400 text-center py-6 bg-slate-50 dark:bg-slate-800/40 rounded-lg">この案件にはまだ提出物やコメントのログがありません</div>';
+      } else {
+        container.innerHTML = prjLogs.map(l => {
+          const dateStr = new Date(l.at).toLocaleString('ja-JP');
+          const badgeColor = l.type === '提出' ? 'bg-blue-100 text-blue-700' : l.type === 'リテイク指示' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700';
+          const urlHtml = l.url ? '<div class="mt-1"><a href="' + l.url + '" target="_blank" class="inline-flex items-center text-blue-600 dark:text-blue-400 font-bold hover:underline bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded text-[11px] break-all max-w-full">📦 成果物URL: ' + l.url + ' ↗</a></div>' : '';
+          const readMembers = (l.read_by || []).length > 0 ? ('<span class="text-[10px] text-slate-400 ml-2">既読: ' + l.read_by.join(', ') + '</span>') : '';
+
+          return '<div class="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-lg border dark:border-slate-700 space-y-1">'
+            + '<div class="flex flex-wrap justify-between items-center text-[10px] gap-1">'
+            + '<div class="flex flex-wrap items-center space-x-1.5">'
+            + '<span class="font-bold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">[' + l.taskTitle + ']</span>'
+            + '<span class="font-bold px-1.5 py-0.5 rounded ' + badgeColor + '">' + l.type + '</span>'
+            + '<span class="text-slate-500">(' + (l.user || '不明') + ')</span>'
+            + readMembers
+            + '</div>'
+            + '<span class="text-slate-400">' + dateStr + '</span>'
+            + '</div>'
+            + (l.comment ? '<div class="text-slate-700 dark:text-slate-300 font-mono text-[11px] whitespace-pre-wrap break-words break-all mt-0.5">' + l.comment + '</div>' : '')
+            + urlHtml
+            + '</div>';
+        }).join('');
+      }
+
+      openModal('projectLogModal');
+    }
+
+    // ----------------------------------------------------
+    // 単体タスクのログモーダル
+    // ----------------------------------------------------
+    async function openTaskLogModal(taskId) {
+      let targetTask = null;
+      let targetPrj = null;
+
+      for (const p of cachedCreativeProjects) {
+        const found = (p.tasks || []).find(t => t.id === taskId);
+        if (found) {
+          targetTask = found;
+          targetPrj = p;
+          break;
+        }
+      }
+
+      if (!targetTask) {
+        const foundUserTask = cachedUserTasks.find(t => t.id === taskId);
+        if (foundUserTask) {
+          targetTask = foundUserTask;
+          targetPrj = foundUserTask.projects || { title: '' };
+        }
+      }
+
+      if (!targetTask) return;
+      selectedTaskForLog = targetTask;
+
+      document.getElementById('taskLogModalTitle').innerText = (targetPrj && targetPrj.title ? targetPrj.title + ' / ' : '') + targetTask.title;
+      document.getElementById('taskLogStatusBadge').innerText = targetTask.status;
+      document.getElementById('taskLogStatusBadge').className = 'px-2 py-0.5 rounded text-[10px] font-bold ' + 
+        (targetTask.status === '完了' ? 'bg-slate-200 text-slate-700' : 
+         targetTask.status === 'リテイク' ? 'bg-amber-100 text-amber-800' : 
+         targetTask.status === '提出・確認待ち' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800');
+
+      document.getElementById('taskLogInputText').value = '';
+      document.getElementById('taskLogStatusSelect').value = '';
+
+      renderTaskLogTimeline(targetTask.logs || []);
+      openModal('taskLogModal');
+
+      await autoMarkTaskAsRead(targetTask);
+    }
+
+    function renderTaskLogTimeline(logs) {
+      const container = document.getElementById('taskLogTimeline');
+      if (!container) return;
+      if (!logs || logs.length === 0) {
+        container.innerHTML = '<div class="text-slate-400 text-center py-6 bg-slate-50 dark:bg-slate-800/40 rounded-lg">提出物やコメントのログはまだありません</div>';
+        return;
+      }
+
+      container.innerHTML = logs.map(l => {
+        const isUnread = isLogItemUnread(l);
+        const dateStr = new Date(l.at).toLocaleString('ja-JP');
+        const urlHtml = l.url ? '<div class="mt-1"><a href="' + l.url + '" target="_blank" class="inline-flex items-center text-blue-600 dark:text-blue-400 font-bold hover:underline bg-blue-50 dark:bg-blue-950/60 px-2 py-1 rounded text-[11px] break-all max-w-full">📦 提出URL: ' + l.url + ' ↗</a></div>' : '';
+        const badgeColor = l.type === '提出' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300' : l.type === 'リテイク指示' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
+        const unreadTag = isUnread ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500 text-white animate-pulse">NEW</span>' : '';
+        const readMembers = (l.read_by || []).length > 0 ? ('<span class="text-[10px] text-slate-400 ml-1">既読: ' + l.read_by.join(', ') + '</span>') : '';
+
+        return '<div class="p-3 rounded-lg border transition space-y-1.5 ' + (isUnread ? 'bg-amber-50/60 dark:bg-amber-950/30 border-amber-300 dark:border-amber-700' : 'bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700') + '">'
+          + '<div class="flex flex-wrap justify-between items-center text-[10px] gap-1">'
+          + '<div class="flex flex-wrap items-center space-x-1.5">'
+          + '<span class="font-bold px-1.5 py-0.5 rounded ' + badgeColor + '">' + l.type + ' (' + (l.user || '不明') + ')</span>'
+          + unreadTag
+          + readMembers
+          + '</div>'
+          + '<span class="text-slate-400">' + dateStr + '</span>'
+          + '</div>'
+          + (l.comment ? '<div class="text-slate-700 dark:text-slate-200 font-mono text-[11px] whitespace-pre-wrap break-words break-all leading-relaxed pl-1 border-l-2 border-slate-300 dark:border-slate-600 mt-1">' + l.comment + '</div>' : '')
+          + urlHtml
+          + '</div>';
+      }).join('');
+    }
+
+    async function submitTaskLogComment() {
+      if (!selectedTaskForLog) return;
+      const comment = document.getElementById('taskLogInputText').value.trim();
+      const newStatus = document.getElementById('taskLogStatusSelect').value;
+
+      if (!comment && !newStatus) return alert('コメントを入力するか、ステータスを選択してください');
+
+      const logs = selectedTaskForLog.logs || [];
+      const currentUserName = getCurrentUserIdentifier() || '管理者';
+
+      let logType = 'コメント';
+      if (newStatus === 'リテイク') logType = 'リテイク指示';
+      else if (newStatus === '完了') logType = '承認・完了';
+
+      logs.unshift({
+        type: logType,
+        user: currentUserName,
+        comment: comment,
+        read_by: [currentUserName],
+        at: new Date().toISOString()
+      });
+
+      const updateData = { logs: logs };
+      if (newStatus) {
+        updateData.status = newStatus;
+      }
+
+      const { error } = await supabaseClient.from('tasks').update(updateData).eq('id', selectedTaskForLog.id);
+      if (error) return alert('保存失敗: ' + error.message);
+
+      alert('ログを更新しました！');
+      closeModal('taskLogModal');
+      await loadCreativeProjects();
+      loadUserTasks();
+      renderAllUpdatesLogs();
+    }
+
+    function renderAllUpdatesLogs() {
+      const container = document.getElementById('allUpdatesLogsContainer');
+      if (!container) return;
+
+      const allTaskLogs = [];
+      cachedCreativeProjects.forEach(p => {
+        (p.tasks || []).forEach(t => {
+          (t.logs || []).forEach(l => {
+            allTaskLogs.push({
+              ...l,
+              projectTitle: p.title,
+              clientName: p.client_name,
+              taskTitle: t.title,
+              taskId: t.id
+            });
+          });
+        });
+      });
+
+      allTaskLogs.sort((a,b) => new Date(b.at) - new Date(a.at));
+
+      if (allTaskLogs.length === 0) {
+        container.innerHTML = '<div class="text-center py-10 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs text-slate-400">現在、制作更新ログはありません</div>';
+        return;
+      }
+
+      container.innerHTML = allTaskLogs.map(l => {
+        const isUnread = isLogItemUnread(l);
+        const dateStr = new Date(l.at).toLocaleString('ja-JP');
+        const badgeColor = l.type === '提出' ? 'bg-blue-100 text-blue-700' : l.type === 'リテイク指示' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700';
+        const urlHtml = l.url ? '<div class="mt-1"><a href="' + l.url + '" target="_blank" class="inline-flex items-center text-blue-600 dark:text-blue-400 font-bold hover:underline bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded text-[11px] break-all max-w-full">📦 成果物URL: ' + l.url + ' ↗</a></div>' : '';
+        const readMembers = (l.read_by || []).length > 0 ? ('<span class="text-[10px] text-slate-400 ml-2">既読: ' + l.read_by.join(', ') + '</span>') : '';
+        const unreadTag = isUnread ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500 text-white animate-pulse">NEW</span>' : '';
+
+        return '<div class="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-1.5 hover:border-slate-300 dark:hover:border-slate-700 transition ' + (isUnread ? 'ring-1 ring-red-400' : '') + '">'
+          + '<div class="flex flex-wrap items-center justify-between gap-1 text-[11px]">'
+          + '<div class="flex items-center space-x-1.5 min-w-0">'
+          + '<span class="font-bold text-slate-800 dark:text-slate-200 truncate">' + l.projectTitle + '</span>'
+          + '<span class="text-slate-400">/</span>'
+          + '<span class="text-blue-600 dark:text-blue-400 font-semibold truncate">[' + l.taskTitle + ']</span>'
+          + unreadTag
+          + '</div>'
+          + '<span class="text-slate-400 text-[10px] flex-shrink-0">' + dateStr + '</span>'
+          + '</div>'
+          + '<div class="flex items-center space-x-2 text-xs">'
+          + '<span class="font-bold px-1.5 py-0.5 rounded text-[10px] ' + badgeColor + '">' + l.type + '</span>'
+          + '<span class="text-slate-500 font-medium">投稿者: ' + (l.user || '不明') + '</span>'
+          + readMembers
+          + '</div>'
+          + (l.comment ? '<div class="text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-pre-wrap break-words break-all pl-1.5 border-l-2 border-slate-200 dark:border-slate-700">' + l.comment + '</div>' : '')
+          + urlHtml
+          + '<div class="text-right pt-1">'
+          + '<button onclick="openTaskLogModal(\'' + l.taskId + '\')" class="text-[11px] text-blue-600 dark:text-blue-400 hover:underline">このタスクを開く ➔</button>'
+          + '</div>'
+          + '</div>';
+      }).join('');
+    }
+
+    // ----------------------------------------------------
+    // 制作進行ボード ロジック
+    // ----------------------------------------------------
+    function renderMasterTable() {
+      const tbody = document.getElementById('masterTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = workflowMasters.map(w => {
+        const trackBadge = w.track === 'music' 
+          ? '<span class="px-1.5 py-0.5 rounded text-[10px] bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300">楽曲</span>' 
+          : '<span class="px-1.5 py-0.5 rounded text-[10px] bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300">MV</span>';
+        const dependsText = w.depends.length > 0 ? w.depends.join(' ＋ ') : '着手日';
+
+        return '<tr class="border-b border-slate-100 dark:border-slate-800/60 last:border-b-0 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">'
+          + '<td class="py-2.5 px-3">' + trackBadge + '</td>'
+          + '<td class="py-2.5 px-3 font-medium">' + w.name + '</td>'
+          + '<td class="py-2.5 px-3 text-slate-500 dark:text-slate-400 text-xs">' + dependsText + '</td>'
+          + '<td class="py-2.5 px-3">'
+          + '<div class="flex items-center space-x-1">'
+          + '<input type="number" min="1" max="90" id="input_days_' + w.key + '" value="' + w.days + '" class="w-14 px-2 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs font-bold text-center focus:ring-2 focus:ring-blue-500 outline-none">'
+          + '<span class="text-xs text-slate-500">日</span>'
+          + '</div>'
+          + '</td>'
+          + '<td class="py-2.5 px-3 text-right">'
+          + '<button onclick="saveSingleMasterDay(\'' + w.key + '\')" class="px-2 py-1 text-xs bg-slate-100 dark:bg-slate-800 hover:bg-blue-600 hover:text-white rounded font-medium transition text-slate-700 dark:text-slate-300">保存</button>'
+          + '</td>'
+          + '</tr>';
+      }).join('');
+    }
+
+    async function saveSingleMasterDay(key) {
+      const input = document.getElementById('input_days_' + key);
+      if (!input) return;
+      const newDays = parseInt(input.value, 10);
+      if (isNaN(newDays) || newDays < 1) return alert('1日以上で入力してください');
+
+      const target = workflowMasters.find(w => w.key === key);
+      if (!target) return;
+
+      target.days = newDays;
+
+      const { error } = await supabaseClient
+        .from('process_masters')
+        .upsert({ name: target.name, standard_days: newDays }, { onConflict: 'name' });
+
+      if (error) {
+        alert('保存エラー: ' + error.message);
+      } else {
+        renderCheckboxes();
+        alert('「' + target.name + '」の標準日数を ' + newDays + ' 日に更新しました！');
+      }
+    }
+
+    async function saveAllMasterDays() {
+      const updates = [];
+      workflowMasters.forEach(w => {
+        const input = document.getElementById('input_days_' + w.key);
+        if (input) {
+          const val = parseInt(input.value, 10);
+          if (!isNaN(val) && val > 0) {
+            w.days = val;
+            updates.push({ name: w.name, standard_days: val });
+          }
+        }
+      });
+
+      if (updates.length === 0) return;
+
+      const { error } = await supabaseClient
+        .from('process_masters')
+        .upsert(updates, { onConflict: 'name' });
+
+      if (error) {
+        alert('一括保存エラー: ' + error.message);
+      } else {
+        renderCheckboxes();
+        alert('すべての標準工程日数を保存しました！');
+      }
+    }
+
+    function renderCheckboxes() {
+      const checkContainer = document.getElementById('processCheckboxes');
+      if (!checkContainer) return;
+      checkContainer.innerHTML = workflowMasters.map(w => {
+        const tag = w.track === 'music' ? '[楽曲]' : '[MV]';
+        return '<label class="flex items-center space-x-2 cursor-pointer">'
+          + '<input type="checkbox" value="' + w.key + '" data-name="' + w.name + '" data-days="' + w.days + '" data-track="' + w.track + '" checked class="rounded text-blue-600">'
+          + '<span class="text-xs text-slate-700 dark:text-slate-300 font-medium">' + tag + ' ' + w.name + ' (' + w.days + '日)</span>'
+          + '</label>';
+      }).join('');
+
+      const today = new Date();
+      document.getElementById('autoCalcStartDate').value = today.toISOString().split('T')[0];
+    }
+
+    function renderMembersTable() {
+      const tbody = document.getElementById('membersTableBody');
+      const thActive = document.getElementById('thLastActive');
+      const notice = document.getElementById('masterMonitoringNotice');
+      if (!tbody) return;
+
+      const masterUser = isMaster();
+      if (thActive) thActive.classList.toggle('hidden', !masterUser);
+      if (notice) notice.classList.toggle('hidden', !masterUser);
+
+      const now = new Date().getTime();
+      const fiveMinutes = 5 * 60 * 1000;
+
+      tbody.innerHTML = allProfiles.map(u => {
+        let badgeClass = 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300';
+        let roleName = 'クリエイター';
+        if (u.role === 'master') {
+          badgeClass = 'bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 font-bold';
+          roleName = '👑 Master';
+        } else if (u.role === 'admin') {
+          badgeClass = 'bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 font-bold';
+          roleName = '管理者';
+        }
+
+        let onlineBadge = '';
+        let lastActiveText = '-';
+
+        if (masterUser) {
+          if (u.last_active_at) {
+            const activeTime = new Date(u.last_active_at).getTime();
+            const isOnline = (now - activeTime) <= fiveMinutes;
+            onlineBadge = isOnline 
+              ? '<span class="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span><span>ONLINE</span></span>'
+              : '<span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">OFFLINE</span>';
+
+            lastActiveText = new Date(u.last_active_at).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+          } else {
+            onlineBadge = '<span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">OFFLINE</span>';
+          }
+        }
+
+        return '<tr class="border-b border-slate-100 dark:border-slate-800/60 last:border-b-0">'
+          + '<td class="p-3.5">'
+          + '<div class="flex items-center space-x-2">'
+          + (masterUser ? onlineBadge : '')
+          + '<span class="font-bold text-slate-800 dark:text-slate-100">' + (u.name || '未設定') + '</span>'
+          + '</div>'
+          + '</td>'
+          + '<td class="p-3.5 font-mono text-xs text-blue-600 dark:text-blue-400 font-semibold">' + (u.user_id || '-') + '</td>'
+          + '<td class="p-3.5 text-slate-500 dark:text-slate-400">' + (u.email || '-') + '</td>'
+          + '<td class="p-3.5"><span class="px-2 py-0.5 rounded text-xs font-semibold ' + badgeClass + '">' + roleName + '</span></td>'
+          + (masterUser ? ('<td class="p-3.5 text-slate-400 text-xs">' + lastActiveText + '</td>') : '')
+          + '</tr>';
+      }).join('');
+    }
+
+    async function createNewMember() {
+      const userId = document.getElementById('newMemberUserId').value.trim();
+      const name = document.getElementById('newMemberName').value.trim();
+      const email = document.getElementById('newMemberEmail').value.trim();
+      const password = document.getElementById('newMemberPassword').value.trim();
+      const role = document.getElementById('newMemberRole').value;
+
+      if (!userId || !name || !email || !password) return alert('全ての項目を入力してください');
+      if (password.length < 6) return alert('パスワードは6文字以上で指定してください');
+
+      const tempClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: { persistSession: false }
+      });
+
+      const { data, error } = await tempClient.auth.signUp({
+        email: email,
+        password: password,
+        options: { data: { name: name } }
+      });
+
+      if (error) return alert('メンバー作成失敗: ' + error.message);
+
+      if (data.user) {
+        await supabaseClient.from('profiles').upsert({
+          id: data.user.id,
+          user_id: userId,
+          email: email,
+          name: name,
+          role: role
+        });
+      }
+
+      alert('メンバー「' + name + '（ID: ' + userId + '）」を追加しました！');
+      closeModal('newMemberModal');
+      document.getElementById('newMemberUserId').value = '';
+      document.getElementById('newMemberName').value = '';
+      document.getElementById('newMemberEmail').value = '';
+      document.getElementById('newMemberPassword').value = '';
+      await loadAllProfiles();
+      renderMembersTable();
+    }
+
+    // ----------------------------------------------------
+    // 【ハイブリッド判定】直前タスク自動探索 ＆ 手動オーバーライド最優先
+    // ----------------------------------------------------
+    function getActiveBallTasks(tasks) {
+      const taskMap = new Map();
+      tasks.forEach(t => taskMap.set(t.title, t));
+      const activeTasks = [];
+
+      // 音楽制作パイプラインの上流探索パス
+      const upstreamPaths = {
+        'マスタリング': [['ミキシング', 'レコーディング', '編曲', '作曲']],
+        'ミキシング': [
+          ['レコーディング', '編曲', '作曲'],
+          ['レコーディング', '作詞', '作曲']
+        ],
+        'レコーディング': [
+          ['編曲', '作曲'],
+          ['作詞', '作曲']
+        ],
+        '編曲': [['作曲']],
+        '作詞': [['作曲']],
+        '作曲': [],
+        '映像': [['イラスト']],
+        'イラスト': []
+      };
+
+      tasks.forEach(t => {
+        if (t.status === '完了') return;
+
+        // 【アイデア3：手動オーバーライド最優先】
+        // すでに作業中・確認待ち・リテイクになっている場合は無条件でアクティブ（ボール保持）
+        if (t.status === '作業中' || t.status === '提出・確認待ち' || t.status === 'リテイク') {
+          activeTasks.push(t);
+          return;
+        }
+
+        // 【アイデア1：動的フォールバック解決】
+        // 未着手タスクの場合、実在する直前の上流タスクがすべて完了しているかチェック
+        const paths = upstreamPaths[t.title] || [];
+        let isReady = true;
+
+        for (const path of paths) {
+          // 直近に実在する親タスクを探索
+          let nearestParent = null;
+          for (const ancestorTitle of path) {
+            if (taskMap.has(ancestorTitle)) {
+              nearestParent = taskMap.get(ancestorTitle);
+              break;
+            }
+          }
+
+          // 親タスクが存在し、まだ完了していなければ着手不可
+          if (nearestParent && nearestParent.status !== '完了') {
+            isReady = false;
+            break;
+          }
+        }
+
+        if (isReady) {
+          activeTasks.push(t);
+        }
+      });
+
+      return activeTasks;
+    }
+
+    function toggleProjectCollapse(prjId) {
+      if (openProjects.has(prjId)) {
+        openProjects.delete(prjId);
+      } else {
+        openProjects.add(prjId);
+      }
+      renderCreativeProjectsList();
+    }
+
+    function toggleAllProjectsCollapse() {
+      if (openProjects.size > 0) {
+        openProjects.clear();
+      } else {
+        cachedCreativeProjects.forEach(p => openProjects.add(p.id));
+      }
+      renderCreativeProjectsList();
+    }
+
+    async function addMissingTask(projectId, masterName, sortOrder) {
+      const def = workflowMasters.find(w => w.name === masterName);
+      const days = def ? def.days : 7;
+      const today = new Date();
+      today.setDate(today.getDate() + days);
+      const deadlineStr = today.toISOString().split('T')[0];
+
+      const { error } = await supabaseClient.from('tasks').insert({
+        project_id: projectId,
+        title: masterName,
+        deadline: deadlineStr,
+        sort_order: sortOrder,
+        status: '未着手',
+        logs: []
+      });
+
+      if (error) {
+        alert('工程追加失敗: ' + error.message);
+      } else {
+        loadCreativeProjects();
+      }
+    }
+
+    async function loadCreativeProjects() {
+      const { data: prjs, error } = await supabaseClient
+        .from('projects')
+        .select('*, tasks(*)')
+        .eq('type', 'creative')
+        .order('created_at', { ascending: false });
+
+      if (error) console.error("Projects load error:", error);
+      cachedCreativeProjects = prjs || [];
+      renderCreativeProjectsList();
+    }
+
+    function renderCreativeProjectsList() {
+      const container = document.getElementById('projectList');
+      if (!container) return;
+
+      const filtered = cachedCreativeProjects.filter(p => {
+        const completed = isProjectCompleted(p);
+        if (currentPrjFilter === 'active') return !completed;
+        if (currentPrjFilter === 'completed') return completed;
+        return true;
+      });
+
+      const activeCount = cachedCreativeProjects.filter(p => !isProjectCompleted(p)).length;
+      const completedCount = cachedCreativeProjects.filter(p => isProjectCompleted(p)).length;
+      const allCount = cachedCreativeProjects.length;
+
+      const btnActive = document.getElementById('prjFilterActive');
+      const btnCompleted = document.getElementById('prjFilterCompleted');
+      const btnAll = document.getElementById('prjFilterAll');
+      if (btnActive) btnActive.innerText = '進行中 (' + activeCount + ')';
+      if (btnCompleted) btnCompleted.innerText = '完了済み (' + completedCount + ')';
+      if (btnAll) btnAll.innerText = 'すべて (' + allCount + ')';
+
+      if (filtered.length === 0) {
+        const emptyMsg = currentPrjFilter === 'active' ? '進行中の案件はありません 🎉' :
+                         currentPrjFilter === 'completed' ? '完了済みの案件はまだありません' : '登録されている案件はありません';
+        container.innerHTML = '<div class="p-8 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs">' + emptyMsg + '</div>';
+        return;
+      }
+
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      container.innerHTML = filtered.map(p => {
+        const isOpen = openProjects.has(p.id);
+        const hasProjectUnread = getProjectUnreadStatus(p);
+        const completed = isProjectCompleted(p);
+
+        const tasks = (p.tasks || []).sort((a,b) => {
+          const defA = workflowMasters.find(w => w.name === a.title);
+          const defB = workflowMasters.find(w => w.name === b.title);
+          const orderA = defA ? defA.order : (a.sort_order || 99);
+          const orderB = defB ? defB.order : (b.sort_order || 99);
+          return orderA - orderB;
+        });
+
+        const activeTasks = getActiveBallTasks(tasks);
+
+        let ballBadgeHtml = '';
+        if (completed) {
+          ballBadgeHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">✓ 全工程完了</span>';
+        } else if (activeTasks.length === 0) {
+          ballBadgeHtml = '<span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">待機中</span>';
+        } else {
+          ballBadgeHtml = activeTasks.map(t => {
+            const assignee = allProfiles.find(u => u.id === t.assignee_id);
+            const assigneeName = getDisplayName(assignee);
+            const deadlineText = formatDeadlineStr(t.deadline);
+            const isOverdue = t.deadline && t.deadline < todayStr;
+
+            const isPendingConfirm = t.status === '提出・確認待ち';
+            const isRetake = t.status === 'リテイク';
+            const isWorking = t.status === '作業中';
+
+            let ballIcon = '🔵';
+            let badgeClass = 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 font-medium';
+            let prefixLabel = isWorking ? '作業中' : '未着手';
+
+            if (isPendingConfirm) {
+              ballIcon = '🟡';
+              prefixLabel = '確認待ち';
+              badgeClass = 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 font-semibold';
+            } else if (isRetake) {
+              ballIcon = '🟡';
+              prefixLabel = 'リテイク';
+              badgeClass = 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 font-semibold';
+            }
+
+            if (isOverdue) {
+              ballIcon = '🔴';
+              badgeClass = 'bg-red-100 dark:bg-red-950/70 text-red-700 dark:text-red-300 border border-red-400 dark:border-red-700 font-bold';
+            }
+
+            return '<div class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs ' + badgeClass + '">'
+              + '<span>' + ballIcon + ' ' + prefixLabel + ' [' + t.title + '] ' + assigneeName + ' 期日: ' + deadlineText + (isOverdue ? ' ⚠超過' : '') + '</span>'
+              + '</div>';
+          }).join(' ');
+        }
+
+        const driveLinkHtml = p.drive_url ? '<a href="' + p.drive_url + '" target="_blank" onclick="event.stopPropagation();" class="text-[11px] px-2 py-0.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded text-slate-700 dark:text-slate-300 font-medium">Drive ↗</a>' : '';
+
+        let prjTotalLogsCount = 0;
+        (p.tasks || []).forEach(t => { prjTotalLogsCount += (t.logs || []).length; });
+
+        const prjUnreadBadgeHtml = hasProjectUnread 
+          ? '<span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-red-500 text-white animate-pulse flex items-center space-x-1"><span>🔴</span><span>更新あり NEW</span></span>' 
+          : '';
+
+        const prjLogBtnClass = hasProjectUnread
+          ? 'bg-red-50 dark:bg-red-950/60 hover:bg-red-100 text-red-700 dark:text-red-300 border-red-400 font-bold'
+          : 'bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800 font-semibold';
+
+        const prjLogBtnHtml = '<button onclick="event.stopPropagation(); openProjectLogModal(\'' + p.id + '\')" class="text-[11px] px-2 py-0.5 rounded transition border flex items-center space-x-1 ' + prjLogBtnClass + '">'
+          + '<span>📋 案件ログ (' + prjTotalLogsCount + ')</span>'
+          + (hasProjectUnread ? '<span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span>' : '')
+          + '</button>';
+
+        // Master専用：財務ログボタン
+        const financialBtnHtml = isMaster()
+          ? '<button onclick="event.stopPropagation(); openFinancialModal(\'' + p.id + '\')" class="text-[11px] px-2.5 py-1 rounded-lg bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800 font-bold transition flex items-center space-x-1 shadow-sm"><span>💰 財務</span></button>'
+          : '';
+
+        // 削除ボタン
+        const deleteBtnHtml = isAdminOrMaster() 
+          ? '<button onclick="event.stopPropagation(); deleteProject(\'' + p.id + '\')" class="text-[11px] px-2 py-0.5 rounded text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/60 border border-transparent hover:border-red-200 dark:hover:border-red-800 transition" title="案件を削除">🗑️ 削除</button>'
+          : '';
+
+        const musicTasks = tasks.filter(t => getTaskTrack(t.title) === 'music');
+        const mvTasks = tasks.filter(t => getTaskTrack(t.title) === 'mv');
+
+        const musicMasters = workflowMasters.filter(m => m.track === 'music');
+        const mvMasters = workflowMasters.filter(m => m.track === 'mv');
+
+        const renderTrackGrid = (masters, trackTasks) => {
+          return masters.map(m => {
+            const t = trackTasks.find(item => item.title === m.name);
+
+            if (!t) {
+              return '<div class="p-2.5 sm:p-3 rounded-lg border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/20 text-slate-400 dark:text-slate-600 flex flex-col justify-between space-y-2 opacity-60 hover:opacity-100 transition">'
+                + '<div class="flex justify-between items-center">'
+                + '<span class="font-bold text-xs">' + m.name + '</span>'
+                + '<span class="text-[10px] px-1 py-0.5 bg-slate-200 dark:bg-slate-800 rounded">未追加</span>'
+                + '</div>'
+                + '<p class="text-[11px] text-slate-400">起票時に未選択</p>'
+                + '<button onclick="addMissingTask(\'' + p.id + '\', \'' + m.name + '\', ' + m.order + ')" class="w-full py-1 text-[11px] font-semibold bg-slate-200 dark:bg-slate-800 hover:bg-blue-600 hover:text-white rounded transition">'
+                + '＋ 工程を有効化'
+                + '</button>'
+                + '</div>';
+            }
+
+            const isCompleted = t.status === '完了';
+            const isPendingConfirm = t.status === '提出・確認待ち';
+            const isRetake = t.status === 'リテイク';
+            const isOverdue = t.deadline && t.deadline < todayStr && !isCompleted;
+            const isActive = activeTasks.some(at => at.id === t.id);
+            const logsCount = (t.logs || []).length;
+            const hasUnread = getTaskUnreadStatus(t);
+
+            let cardClass = 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800';
+            if (isCompleted) {
+              cardClass = 'bg-slate-50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800/60 opacity-40 grayscale';
+            } else if (isOverdue) {
+              cardClass = 'bg-red-50/70 dark:bg-red-950/30 border-red-400 dark:border-red-700 ring-2 ring-red-200 dark:ring-red-900/50 shadow-sm text-red-700 dark:text-red-300';
+            } else if (isPendingConfirm || isRetake) {
+              cardClass = 'bg-amber-50/70 dark:bg-amber-950/30 border-amber-400 dark:border-amber-700 ring-2 ring-amber-200 dark:ring-amber-900/50 shadow-sm text-amber-800 dark:text-amber-300';
+            } else if (isActive) {
+              cardClass = 'bg-blue-50/50 dark:bg-blue-950/30 border-blue-400 dark:border-blue-700 ring-2 ring-blue-100 dark:ring-blue-900/40 shadow-sm text-slate-800 dark:text-slate-200';
+            }
+
+            const statusOptions = ['未着手', '作業中', '提出・確認待ち', 'リテイク', '完了'].map(st => {
+              const selected = t.status === st ? 'selected' : '';
+              return '<option value="' + st + '" ' + selected + '>' + st + '</option>';
+            }).join('');
+
+            const profileOptions = allProfiles.map(u => {
+              const selected = t.assignee_id === u.id ? 'selected' : '';
+              const label = getDisplayName(u);
+              return '<option value="' + u.id + '" ' + selected + '>' + label + '</option>';
+            }).join('');
+
+            let titleColorClass = '';
+            if (isOverdue) titleColorClass = 'text-red-600 dark:text-red-400 font-extrabold';
+            else if (isPendingConfirm || isRetake) titleColorClass = 'text-amber-700 dark:text-amber-400 font-bold';
+            else if (isActive) titleColorClass = 'text-blue-600 dark:text-blue-400 font-bold';
+
+            const deadlineInputClass = isOverdue ? 'text-red-600 dark:text-red-400 font-bold bg-red-100/60 dark:bg-red-950/70 border-red-300' : 'text-slate-700 dark:text-slate-300';
+            
+            const unreadBadge = hasUnread ? '<span class="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse ml-1" title="未読ログあり"></span>' : '';
+            const logButtonClass = hasUnread 
+              ? 'bg-red-50 dark:bg-red-950/70 text-red-700 dark:text-red-300 border border-red-400 font-bold' 
+              : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold';
+
+            const logButtonHtml = '<button onclick="openTaskLogModal(\'' + t.id + '\')" class="w-full py-1 text-center rounded text-[11px] transition flex items-center justify-center space-x-1 ' + logButtonClass + '">'
+              + '<span>💬 ログ (' + logsCount + ')</span>'
+              + unreadBadge
+              + '</button>';
+
+            return '<div class="p-2.5 sm:p-3 rounded-lg border text-xs space-y-2 transition-all ' + cardClass + '">'
+              + '<div class="flex justify-between items-center font-bold">'
+              + '<span class="' + titleColorClass + '">' + t.title + '</span>'
+              + '<select onchange="updateTaskStatus(\'' + t.id + '\', this.value)" class="text-[11px] px-1 py-0.5 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 font-medium text-slate-800 dark:text-slate-200">'
+              + statusOptions
+              + '</select>'
+              + '</div>'
+              + '<div class="flex items-center space-x-1">'
+              + '<span class="text-[10px] text-slate-400">担当:</span>'
+              + '<select onchange="assignTask(\'' + t.id + '\', this.value)" class="text-[11px] w-full px-1 py-0.5 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200">'
+              + '<option value="">-- 未設定 --</option>'
+              + profileOptions
+              + '</select>'
+              + '</div>'
+              + '<div class="flex items-center justify-between text-[11px] pt-1 border-t border-slate-100 dark:border-slate-800">'
+              + '<span class="' + (isOverdue ? 'text-red-500 font-bold' : 'text-slate-400') + '">期限:</span>'
+              + '<input type="date" value="' + (t.deadline || '') + '" onchange="updateTaskDeadline(\'' + t.id + '\', this.value)" class="border dark:border-slate-700 bg-white dark:bg-slate-800 rounded px-1 text-[11px] ' + deadlineInputClass + '">'
+              + '</div>'
+              + logButtonHtml
+              + '</div>';
+          }).join('');
+        };
+
+        const toggleBtnIcon = isOpen ? '▲ 閉じる' : '▼ 展開';
+
+        return '<div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition overflow-hidden ' + (hasProjectUnread ? 'ring-1 ring-red-400' : '') + '">'
+          + '<div onclick="toggleProjectCollapse(\'' + p.id + '\')" class="p-3.5 sm:p-4 flex flex-wrap items-center justify-between gap-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition ' + (isOpen ? 'border-b border-slate-200 dark:border-slate-800' : '') + '">'
+          + '<div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">'
+          + '<button type="button" class="text-[11px] sm:text-xs font-semibold px-2 py-0.5 sm:py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded">' + toggleBtnIcon + '</button>'
+          + '<div class="min-w-0">'
+          + '<span class="text-[10px] sm:text-xs text-slate-400 font-medium block truncate">' + (p.client_name || 'クライアント未設定') + '</span>'
+          + '<h3 class="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 truncate">' + p.title + '</h3>'
+          + '</div>'
+          + '</div>'
+          + '<div class="flex flex-wrap items-center gap-1.5">'
+          + prjUnreadBadgeHtml
+          + ballBadgeHtml
+          + prjLogBtnHtml
+          + financialBtnHtml
+          + driveLinkHtml
+          + deleteBtnHtml
+          + '</div>'
+          + '</div>'
+
+          + (isOpen ? (
+            '<div class="p-3.5 sm:p-5 space-y-3 sm:space-y-4 bg-white dark:bg-slate-900">'
+            + '<div class="space-y-1.5">'
+            + '<div class="flex items-center space-x-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span><span class="text-xs font-bold text-slate-700 dark:text-slate-300">楽曲トラック (作曲 ➔ 作詞/編曲 ➔ Rec ➔ Mix ➔ Mas)</span></div>'
+            + '<div class="grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">'
+            + renderTrackGrid(musicMasters, musicTasks)
+            + '</div>'
+            + '</div>'
+
+            + '<div class="space-y-1.5 pt-3 border-t border-dashed border-slate-200 dark:border-slate-800">'
+            + '<div class="flex items-center space-x-2"><span class="w-2 h-2 rounded-full bg-purple-500"></span><span class="text-xs font-bold text-slate-700 dark:text-slate-300">MVトラック (イラスト ➔ 映像)</span></div>'
+            + '<div class="grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">'
+            + renderTrackGrid(mvMasters, mvTasks)
+            + '</div>'
+            + '</div>'
+            + '</div>'
+          ) : '')
+
+          + '</div>';
+      }).join('');
+    }
+
+    async function assignTask(taskId, assigneeId) {
+      await supabaseClient.from('tasks').update({ assignee_id: assigneeId || null }).eq('id', taskId);
+      loadCreativeProjects();
+    }
+
+    async function updateTaskStatus(taskId, status) {
+      await supabaseClient.from('tasks').update({ status }).eq('id', taskId);
+      loadCreativeProjects();
+    }
+
+    async function updateTaskDeadline(taskId, deadline) {
+      await supabaseClient.from('tasks').update({ deadline: deadline || null }).eq('id', taskId);
+      loadCreativeProjects();
+    }
+
+    async function createCreativeProject() {
+      const title = document.getElementById('newPrjTitle').value;
+      const client = document.getElementById('newPrjClient').value;
+      const drive = document.getElementById('newPrjDrive').value;
+      const startDateStr = document.getElementById('autoCalcStartDate').value;
+
+      if (!title) return alert('案件名を入力してください');
+
+      const { data: prj, error: prjErr } = await supabaseClient.from('projects').insert({
+        type: 'creative',
+        title, client_name: client, drive_url: drive, status: '進行中'
+      }).select().single();
+
+      if (prjErr) return alert(prjErr.message);
+
+      const checkedKeys = new Set(
+        Array.from(document.querySelectorAll('#processCheckboxes input:checked')).map(cb => cb.value)
+      );
+
+      const baseDate = new Date(startDateStr || new Date());
+      const addDays = (d, n) => {
+        const res = new Date(d);
+        res.setDate(res.getDate() + n);
+        return res;
+      };
+      const fmt = (d) => d.toISOString().split('T')[0];
+
+      const getD = (k) => {
+        const found = workflowMasters.find(w => w.key === k);
+        return found ? found.days : 0;
+      };
+
+      const dates = {};
+      dates.compose = addDays(baseDate, getD('compose'));
+      dates.lyrics = addDays(dates.compose, getD('lyrics'));
+      dates.arrange = addDays(dates.compose, getD('arrange'));
+      const recStart = (dates.lyrics > dates.arrange) ? dates.lyrics : dates.arrange;
+      dates.rec = addDays(recStart, getD('rec'));
+      dates.mix = addDays(dates.rec, getD('mix'));
+      dates.mastering = addDays(dates.mix, getD('mastering'));
+      dates.illust = addDays(baseDate, getD('illust'));
+      dates.movie = addDays(dates.illust, getD('movie'));
+
+      const tasksToInsert = [];
+      workflowMasters.forEach(w => {
+        if (checkedKeys.has(w.key)) {
+          tasksToInsert.push({
+            project_id: prj.id,
+            title: w.name,
+            deadline: fmt(dates[w.key]),
+            sort_order: w.order,
+            status: '未着手',
+            logs: []
+          });
+        }
+      });
+
+      if (tasksToInsert.length > 0) {
+        await supabaseClient.from('tasks').insert(tasksToInsert);
+      }
+
+      closeModal('newProjectModal');
+      loadCreativeProjects();
+    }
+
+    async function loadUserTasks() {
+      const { data: tasks } = await supabaseClient
+        .from('tasks')
+        .select('*, projects(title, drive_url)')
+        .eq('assignee_id', currentUser.id)
+        .order('deadline', { ascending: true });
+
+      cachedUserTasks = tasks || [];
+      const activeContainer = document.getElementById('userActiveTaskList');
+      const completedContainer = document.getElementById('userCompletedTaskList');
+      const accordionLabel = document.getElementById('completedAccordionLabel');
+      const accordionBadge = document.getElementById('completedAccordionUnreadBadge');
+
+      if (!activeContainer || !completedContainer) return;
+
+      if (!tasks || tasks.length === 0) {
+        activeContainer.innerHTML = '<div class="col-span-full p-8 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs">現在アサインされているタスクはありません</div>';
+        completedContainer.innerHTML = '';
+        accordionLabel.innerText = '完了したタスク (0件)';
+        if (accordionBadge) accordionBadge.classList.add('hidden');
+        return;
+      }
+
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      const activeTasks = tasks.filter(t => t.status !== '完了');
+      const completedTasks = tasks.filter(t => t.status === '完了');
+      const hasCompletedUnread = completedTasks.some(t => getTaskUnreadStatus(t));
+
+      accordionLabel.innerText = '完了したタスク (' + completedTasks.length + '件)';
+      if (accordionBadge) {
+        accordionBadge.classList.toggle('hidden', !hasCompletedUnread);
+      }
+
+      if (activeTasks.length === 0) {
+        activeContainer.innerHTML = '<div class="col-span-full p-6 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs">現在対応待ちの進行中タスクはありません 🎉</div>';
+      } else {
+        activeContainer.innerHTML = activeTasks.map(t => {
+          const prjTitle = (t.projects && t.projects.title) ? t.projects.title : '案件名なし';
+          const deadlineText = t.deadline ? formatDeadlineStr(t.deadline) : '未定';
+          const deliverableVal = t.deliverable_url || '';
+          const logsCount = (t.logs || []).length;
+          const hasUnread = getTaskUnreadStatus(t);
+
+          const isRetake = t.status === 'リテイク';
+          const isPendingConfirm = t.status === '提出・確認待ち';
+          const isOverdue = t.deadline && t.deadline < todayStr;
+
+          let cardBg = 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800';
+          let statusBadge = '<span class="text-[11px] font-semibold text-blue-600 dark:text-blue-400">' + t.status + '</span>';
+
+          if (isOverdue) {
+            cardBg = 'bg-red-50/70 dark:bg-red-950/30 border-red-400 dark:border-red-700 ring-2 ring-red-200 dark:ring-red-900/50 text-red-700 dark:text-red-300';
+            statusBadge = '<span class="text-[11px] font-bold text-red-600 dark:text-red-400">⚠ 期日超過 (' + t.status + ')</span>';
+          } else if (isRetake) {
+            cardBg = 'bg-amber-50/70 dark:bg-amber-950/30 border-amber-400 dark:border-amber-700 ring-2 ring-amber-200 dark:ring-amber-900/50 text-amber-800 dark:text-amber-300';
+            statusBadge = '<span class="text-[11px] font-bold text-amber-700 dark:text-amber-400">🟡 リテイク対応中</span>';
+          } else if (isPendingConfirm) {
+            statusBadge = '<span class="text-[11px] font-semibold text-amber-600">🟡 提出・確認待ち</span>';
+          }
+
+          const unreadBadge = hasUnread ? '<span class="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse ml-1" title="未読ログあり"></span>' : '';
+          const logBtnClass = hasUnread 
+            ? 'bg-red-50 dark:bg-red-950/70 text-red-700 dark:text-red-300 border border-red-400 font-bold' 
+            : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300';
+
+          return '<div class="p-4 rounded-xl border shadow-sm space-y-3 transition ' + cardBg + '">'
+            + '<div class="flex justify-between items-start">'
+            + '<div><div class="text-xs text-slate-400 font-medium truncate">' + prjTitle + '</div><h4 class="text-sm sm:text-base font-bold">' + t.title + '</h4></div>'
+            + '<button onclick="openTaskLogModal(\'' + t.id + '\')" class="text-[11px] px-2.5 py-1 rounded font-medium flex items-center ' + logBtnClass + '">💬 ログ (' + logsCount + ')' + unreadBadge + '</button>'
+            + '</div>'
+            + '<div class="text-xs text-slate-500 dark:text-slate-400">締切期日: <span class="font-bold ' + (isOverdue ? 'text-red-600' : 'text-slate-800 dark:text-slate-200') + '">' + deadlineText + (isOverdue ? ' [超過]' : '') + '</span></div>'
+            + '<div class="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">'
+            + '<div><label class="block text-[11px] font-medium mb-0.5">提出物URL *:</label>'
+            + '<input type="url" id="deliv_' + t.id + '" value="' + deliverableVal + '" class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs text-slate-800 dark:text-slate-100 break-all" placeholder="https://drive.google.com/..."></div>'
+            + '<div><label class="block text-[11px] font-medium mb-0.5">提出コメント (任意):</label>'
+            + '<textarea id="deliv_comment_' + t.id + '" rows="2" class="w-full px-2.5 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs text-slate-800 dark:text-slate-100 break-words" placeholder="調整点や確認してほしいポイントを入力..."></textarea></div>'
+            + '<div class="flex justify-between items-center pt-1">'
+            + statusBadge
+            + '<button onclick="submitTaskWithLog(\'' + t.id + '\')" class="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 transition shadow-sm">'
+            + '提出して確認待ちにする'
+            + '</button>'
+            + '</div>'
+            + '</div>'
+            + '</div>';
+        }).join('');
+      }
+
+      completedContainer.innerHTML = completedTasks.map(t => {
+        const prjTitle = (t.projects && t.projects.title) ? t.projects.title : '案件名なし';
+        const logsCount = (t.logs || []).length;
+        const deliverableLink = t.deliverable_url ? '<a href="' + t.deliverable_url + '" target="_blank" class="text-blue-600 hover:underline text-[11px] break-all max-w-[150px] truncate">提出物 ↗</a>' : '';
+        const hasUnread = getTaskUnreadStatus(t);
+
+        return '<div class="p-3 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800 text-xs space-y-2 opacity-75 hover:opacity-100 transition ' + (hasUnread ? 'ring-1 ring-red-400 opacity-100' : '') + '">'
+          + '<div class="flex justify-between items-center">'
+          + '<div><span class="text-[10px] text-slate-400 block">' + prjTitle + '</span><span class="font-bold text-slate-700 dark:text-slate-300">' + t.title + '</span></div>'
+          + '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-600">✓ 完了</span>'
+          + '</div>'
+          + '<div class="flex justify-between items-center pt-1 border-t border-slate-200 dark:border-slate-800 text-[11px]">'
+          + deliverableLink
+          + '<button onclick="openTaskLogModal(\'' + t.id + '\')" class="text-slate-500 hover:text-blue-600 flex items-center space-x-1">'
+          + '<span>💬 ログ履歴 (' + logsCount + ')</span>'
+          + (hasUnread ? '<span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>' : '')
+          + '</button>'
+          + '</div>'
+          + '</div>';
+      }).join('');
+    }
+
+    async function submitTaskWithLog(taskId) {
+      const url = document.getElementById('deliv_' + taskId).value.trim();
+      const comment = document.getElementById('deliv_comment_' + taskId).value.trim();
+
+      if (!url) return alert('提出物URLを入力してください');
+
+      const { data: task } = await supabaseClient.from('tasks').select('*').eq('id', taskId).single();
+      const logs = (task && task.logs) ? task.logs : [];
+      const currentUserName = getCurrentUserIdentifier() || 'クリエイター';
+
+      logs.unshift({
+        type: '提出',
+        user: currentUserName,
+        url: url,
+        comment: comment || '成果物を提出しました。',
+        read_by: [currentUserName],
+        at: new Date().toISOString()
+      });
+
+      const { error } = await supabaseClient.from('tasks').update({
+        deliverable_url: url,
+        status: '提出・確認待ち',
+        logs: logs
+      }).eq('id', taskId);
+
+      if (error) return alert('提出エラー: ' + error.message);
+
+      alert('提出が完了し、ログに記録されました！');
+      loadUserTasks();
+    }
+
+    function switchTab(tab) {
+      currentActiveTab = tab;
+      ['creative', 'sales', 'updates', 'master', 'members'].forEach(t => {
+        const el = document.getElementById(t + 'Section');
+        if (el) el.classList.toggle('hidden', t !== tab);
+
+        const pcBtn = document.getElementById('pcTab' + t.charAt(0).toUpperCase() + t.slice(1));
+        if (pcBtn) {
+          if (t === tab) {
+            pcBtn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60";
+          } else {
+            pcBtn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition";
+          }
+        }
+
+        const mobBtn = document.getElementById('mobTab' + t.charAt(0).toUpperCase() + t.slice(1));
+        if (mobBtn) {
+          if (t === tab) {
+            mobBtn.className = "flex flex-col items-center justify-center flex-1 py-1 text-blue-600 dark:text-blue-400 font-bold transition";
+          } else {
+            mobBtn.className = "flex flex-col items-center justify-center flex-1 py-1 text-slate-400 dark:text-slate-500 font-medium transition";
+          }
+        }
+      });
+
+      const mobMoreBtn = document.getElementById('mobTabMore');
+      if (mobMoreBtn) {
+        if (tab === 'master' || tab === 'members') {
+          mobMoreBtn.className = "flex flex-col items-center justify-center flex-1 py-1 text-blue-600 dark:text-blue-400 font-bold transition";
+        } else {
+          mobMoreBtn.className = "flex flex-col items-center justify-center flex-1 py-1 text-slate-400 dark:text-slate-500 font-medium transition";
+        }
+      }
+
+      if (tab === 'creative') {
+        renderCreativeProjectsList();
+      } else if (tab === 'members') {
+        renderMembersTable();
+      } else if (tab === 'updates') {
+        renderAllUpdatesLogs();
+      }
+    }
+
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    init();
+  </script>
+</body>
+</html>
