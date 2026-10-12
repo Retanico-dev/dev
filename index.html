@@ -19,7 +19,6 @@
     .is-touch-device .touch-target-row {
       min-height: 40px;
     }
-    /* スクロールバー非表示 */
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
@@ -154,48 +153,34 @@
     <div id="appView" class="hidden space-y-3 sm:space-y-6">
 
       <!-- 制作進行（行灯ステータス一覧） -->
-      <div id="creativeSection" class="space-y-3 sm:space-y-5">
+      <div id="creativeSection" class="space-y-3 sm:space-y-4">
         
-        <!-- 上部ヘッダー（スマホ時は1行にスッキリ整頓） -->
-        <div class="flex items-center justify-between gap-2">
-          <div class="min-w-0 flex-1">
-            <h2 class="text-base sm:text-lg font-bold flex items-center space-x-2 truncate">
-              <span>制作案件ボード</span>
-              <span id="creativeScopeBadge" class="text-[11px] font-semibold px-2 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 flex-shrink-0">全案件</span>
-            </h2>
-            <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">ステータスを行灯で俯瞰・タップで詳細を開く</p>
+        <!-- ヘッダー＋絞り込みプルダウン一体型バー -->
+        <div class="flex items-center justify-between gap-2 bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+          <div class="min-w-0 flex-1 flex items-center space-x-2">
+            <h2 class="text-base sm:text-lg font-bold truncate">制作ボード</h2>
+            <span id="creativeScopeBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-900 flex-shrink-0">全案件</span>
           </div>
-          <button id="btnNewProjectTop" onclick="openModal('newProjectModal')" class="hidden px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-sm whitespace-nowrap touch-target-btn flex items-center space-x-1 flex-shrink-0">
-            <span>＋</span><span>新規起票</span>
-          </button>
-        </div>
+          
+          <div class="flex items-center space-x-2 flex-shrink-0">
+            <!-- 制作ステータス絞り込みプルダウン -->
+            <div class="relative">
+              <select id="creativeStatusSelect" onchange="handleCreativeFilterChange(this.value)" class="text-xs font-bold pl-3 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500 appearance-none touch-target-btn cursor-pointer">
+                <option value="active" selected>⚡ 進行中のみ (未完了)</option>
+                <option value="overdue">🔴 期日超過</option>
+                <option value="review">🟡 運営確認中</option>
+                <option value="working">🔵 作業中</option>
+                <option value="unstarted">⚫️ 未着手</option>
+                <option value="completed">🟢 完了済のみ</option>
+                <option value="all">📁 すべて表示 (完了含む)</option>
+              </select>
+              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400 text-xs">▼</div>
+            </div>
 
-        <!-- 行灯ステータス絞り込み（スマホ: 3列×2行の均等グリッド / PC: 1行展開） -->
-        <div class="grid grid-cols-3 sm:flex sm:overflow-x-auto sm:no-scrollbar gap-1.5 sm:gap-2 text-xs">
-          <button onclick="setAndonFilter('all')" class="andon-filter-btn px-2.5 sm:px-3.5 py-2 sm:py-1.5 rounded-xl border font-bold transition bg-blue-600 text-white border-blue-600 flex items-center justify-center space-x-1 touch-target-btn" data-status="all">
-            <span>すべて</span>
-            <span id="count_all" class="text-[11px] opacity-90">(0)</span>
-          </button>
-          <button onclick="setAndonFilter('overdue')" class="andon-filter-btn px-2 sm:px-3.5 py-2 sm:py-1.5 rounded-xl border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 flex items-center justify-center space-x-1 touch-target-btn" data-status="overdue">
-            <span>🔴 超過</span>
-            <span id="count_overdue" class="text-[11px] opacity-90">(0)</span>
-          </button>
-          <button onclick="setAndonFilter('review')" class="andon-filter-btn px-2 sm:px-3.5 py-2 sm:py-1.5 rounded-xl border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 flex items-center justify-center space-x-1 touch-target-btn" data-status="review">
-            <span>🟡 確認中</span>
-            <span id="count_review" class="text-[11px] opacity-90">(0)</span>
-          </button>
-          <button onclick="setAndonFilter('working')" class="andon-filter-btn px-2 sm:px-3.5 py-2 sm:py-1.5 rounded-xl border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 flex items-center justify-center space-x-1 touch-target-btn" data-status="working">
-            <span>🔵 作業中</span>
-            <span id="count_working" class="text-[11px] opacity-90">(0)</span>
-          </button>
-          <button onclick="setAndonFilter('unstarted')" class="andon-filter-btn px-2 sm:px-3.5 py-2 sm:py-1.5 rounded-xl border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 flex items-center justify-center space-x-1 touch-target-btn" data-status="unstarted">
-            <span>⚫️ 未着手</span>
-            <span id="count_unstarted" class="text-[11px] opacity-90">(0)</span>
-          </button>
-          <button onclick="setAndonFilter('completed')" class="andon-filter-btn px-2 sm:px-3.5 py-2 sm:py-1.5 rounded-xl border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 flex items-center justify-center space-x-1 touch-target-btn" data-status="completed">
-            <span>🟢 完了</span>
-            <span id="count_completed" class="text-[11px] opacity-90">(0)</span>
-          </button>
+            <button id="btnNewProjectTop" onclick="openModal('newProjectModal')" class="hidden px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-sm whitespace-nowrap touch-target-btn flex items-center space-x-1">
+              <span>＋</span><span class="hidden sm:inline">新規起票</span>
+            </button>
+          </div>
         </div>
 
         <!-- PC最適化：マルチカラムグリッド（スマホは1列、PCは2〜3列） -->
@@ -203,25 +188,34 @@
       </div>
 
       <!-- 営業・商談ボード -->
-      <div id="salesSection" class="hidden space-y-4 sm:space-y-6">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <h2 class="text-base sm:text-lg font-bold">営業・商談チケットプール</h2>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400">タップして詳細・記録を確認</p>
+      <div id="salesSection" class="hidden space-y-3 sm:space-y-4">
+        
+        <!-- ヘッダー＋絞り込みプルダウン一体型バー -->
+        <div class="flex items-center justify-between gap-2 bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+          <div class="min-w-0 flex-1">
+            <h2 class="text-base sm:text-lg font-bold truncate">営業チケットプール</h2>
           </div>
-          <button onclick="openModal('newLeadModal')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-semibold transition shadow-sm whitespace-nowrap touch-target-btn">
-            + チケット起票
-          </button>
-        </div>
 
-        <div class="flex overflow-x-auto no-scrollbar gap-1.5 pb-1 text-xs whitespace-nowrap py-1">
-          <button onclick="filterLeads('all')" class="lead-filter-btn px-3 py-2 sm:py-1 rounded-lg border dark:border-slate-700 bg-blue-600 text-white font-medium touch-target-btn" data-status="all">すべて</button>
-          <button onclick="filterLeads('未対応（HOT）')" class="lead-filter-btn px-3 py-2 sm:py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 touch-target-btn" data-status="未対応（HOT）">未対応HOT</button>
-          <button onclick="filterLeads('再送付')" class="lead-filter-btn px-3 py-2 sm:py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 touch-target-btn" data-status="再送付">再送付</button>
-          <button onclick="filterLeads('対応待ち')" class="lead-filter-btn px-3 py-2 sm:py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 touch-target-btn" data-status="対応待ち">対応待ち</button>
-          <button onclick="filterLeads('先方返信あり（要対応）')" class="lead-filter-btn px-3 py-2 sm:py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 touch-target-btn" data-status="先方返信あり（要対応）">返信あり</button>
-          <button onclick="filterLeads('相談決定')" class="lead-filter-btn px-3 py-2 sm:py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 touch-target-btn" data-status="相談決定">相談決定</button>
-          <button onclick="filterLeads('対応停止')" class="lead-filter-btn px-3 py-2 sm:py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 touch-target-btn" data-status="対応停止">対応停止</button>
+          <div class="flex items-center space-x-2 flex-shrink-0">
+            <!-- 営業ステータス絞り込みプルダウン -->
+            <div class="relative">
+              <select id="leadStatusSelect" onchange="filterLeads(this.value)" class="text-xs font-bold pl-3 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500 appearance-none touch-target-btn cursor-pointer">
+                <option value="active" selected>🔥 対応中のみ (未停止)</option>
+                <option value="未対応（HOT）">🔥 未対応HOT</option>
+                <option value="先方返信あり（要対応）">📬 返信あり</option>
+                <option value="再送付">再送付</option>
+                <option value="対応待ち">対応待ち</option>
+                <option value="相談決定">🎉 相談決定</option>
+                <option value="対応停止">停止のみ</option>
+                <option value="all">📁 すべて表示</option>
+              </select>
+              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400 text-xs">▼</div>
+            </div>
+
+            <button onclick="openModal('newLeadModal')" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-semibold transition shadow-sm whitespace-nowrap touch-target-btn flex items-center space-x-1">
+              <span>＋</span><span class="hidden sm:inline">起票</span>
+            </button>
+          </div>
         </div>
 
         <div id="leadsList" class="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div>
@@ -366,7 +360,7 @@
         </div>
       </div>
 
-      <!-- モーダル内部コンテナ：スマホは縦積み、PCは左右2ペイン分割 -->
+      <!-- モーダル内部コンテナ -->
       <div class="flex-1 flex flex-col md:flex-row min-h-0 divide-y md:divide-y-0 md:divide-x dark:divide-slate-800">
 
         <!-- 左ペイン: 進行パイプライン -->
@@ -534,7 +528,6 @@
         <span id="selectedCleanupCountText" class="text-blue-600 dark:text-blue-400">0 件 選択中</span>
       </div>
 
-      <!-- 古いファイル一覧コンテナ -->
       <div id="cleanupFilesList" class="space-y-1.5 max-h-64 overflow-y-auto p-2 bg-slate-50 dark:bg-slate-800/60 rounded-xl border dark:border-slate-800 text-xs">
         <div class="text-center py-6 text-slate-400">ファイル情報を取得中...</div>
       </div>
@@ -881,8 +874,8 @@
     let adminViewMode = 'admin';
 
     let allLeads = [];
-    let currentFilterStatus = 'all';
-    let currentAndonFilter = 'all';
+    let currentFilterStatus = 'active'; // 営業: デフォルト未停止
+    let currentAndonFilter = 'active';  // 制作: デフォルト進行中のみ（完了非表示）
     let currentActiveTab = 'creative';
     let selectedLead = null;
     let salesTemplates = [];
@@ -894,16 +887,12 @@
     let targetProjectForRelated = null;
     let pendingDeadlineShiftContext = null;
 
-    // ストレージクリーンアップ設定
     const STORAGE_LIMIT_CONFIG = {
-      WARNING_SIZE_MB: 800,   // 800MB以上で警告
-      WARNING_FILE_COUNT: 100 // またはファイル数100件以上で警告
+      WARNING_SIZE_MB: 800,
+      WARNING_FILE_COUNT: 100
     };
     let cachedStorageFilesForCleanup = [];
 
-    // ====================================================
-    // デバイス判定（UA ＋ タッチスクリーン機能判定ハイブリッド）
-    // ====================================================
     function detectTouchDevice() {
       const ua = navigator.userAgent || '';
       const isMobileUA = /Android|webOS|iPhone|iPad|IEMobile|Opera Mini/i.test(ua);
@@ -1317,18 +1306,13 @@
       return cachedCreativeProjects.find(p => p.group_id === project.group_id && p.id !== project.id);
     }
 
-    function setAndonFilter(key) {
+    // 制作ステータス絞り込み変更ハンドラ
+    function handleCreativeFilterChange(key) {
       currentAndonFilter = key;
-      document.querySelectorAll('.andon-filter-btn').forEach(btn => {
-        const isMatch = btn.dataset.status === key;
-        btn.className = isMatch
-          ? 'andon-filter-btn px-2.5 sm:px-3.5 py-2 sm:py-1.5 rounded-xl border font-bold transition bg-blue-600 text-white border-blue-600 flex items-center justify-center space-x-1 touch-target-btn'
-          : 'andon-filter-btn px-2 sm:px-3.5 py-2 sm:py-1.5 rounded-xl border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 flex items-center justify-center space-x-1 touch-target-btn';
-      });
       renderCreativeProjectsList();
     }
 
-    // 案件一覧描画
+    // 制作案件一覧描画（デフォルトで完了案件非表示）
     function renderCreativeProjectsList() {
       const container = document.getElementById('projectList');
       if (!container) return;
@@ -1342,21 +1326,14 @@
         return validTasks.some(t => t.assignee_id === myId);
       });
 
-      const counts = { all: 0, overdue: 0, review: 0, working: 0, unstarted: 0, completed: 0 };
-      targetProjects.forEach(p => {
-        const andon = evaluateProjectAndon(p);
-        counts.all++;
-        if (counts[andon.statusKey] !== undefined) counts[andon.statusKey]++;
-      });
-
-      ['all', 'overdue', 'review', 'working', 'unstarted', 'completed'].forEach(k => {
-        const el = document.getElementById('count_' + k);
-        if (el) el.innerText = `(${counts[k] || 0})`;
-      });
-
       const filtered = targetProjects.filter(p => {
-        if (currentAndonFilter === 'all') return true;
         const andon = evaluateProjectAndon(p);
+        if (currentAndonFilter === 'active') {
+          return andon.statusKey !== 'completed'; // 完了以外を表示
+        }
+        if (currentAndonFilter === 'all') {
+          return true; // 完了も含め全件
+        }
         return andon.statusKey === currentAndonFilter;
       });
 
@@ -1458,6 +1435,77 @@
             <div class="truncate">${latestLogHtml}</div>
           </div>
 
+        </div>`;
+      }).join('');
+    }
+
+    // 営業チケット絞り込み
+    function filterLeads(status) {
+      currentFilterStatus = status;
+      renderLeadsGrid();
+    }
+
+    function getLeadStatusBadge(lead) {
+      const st = lead.status;
+      if (st === '未対応（HOT）') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200">🔥 未対応HOT</span>';
+      if (st === '再送付') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">再送付</span>';
+      if (st === '対応待ち') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200">対応待ち</span>';
+      if (st === '先方返信あり（要対応）') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">📬 返信あり</span>';
+      if (st === '相談決定') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-700 border border-indigo-200">🎉 相談決定</span>';
+      if (st === '対応停止') return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">停止 (${lead.stop_reason || ''})</span>`;
+      return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">${st}</span>`;
+    }
+
+    function getLeadPhaseBadge(lead) {
+      if (lead.status === '先方返信あり（要対応）') {
+        return '<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">💬 ラリー中</span>';
+      }
+      if (lead.status === '相談決定') {
+        return '<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">相談中</span>';
+      }
+      return `<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">追客: ${lead.send_count || 0}/3</span>`;
+    }
+
+    function renderLeadsGrid() {
+      const container = document.getElementById('leadsList');
+      if (!container) return;
+
+      const filtered = allLeads.filter(l => {
+        if (currentFilterStatus === 'active') {
+          return l.status !== '対応停止'; // 停止以外を表示
+        }
+        if (currentFilterStatus === 'all') {
+          return true;
+        }
+        return l.status === currentFilterStatus;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="col-span-full p-6 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">該当するチケットはありません</div>';
+        return;
+      }
+
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      container.innerHTML = filtered.map(l => {
+        const isFollowupDue = l.next_followup_at && l.next_followup_at <= todayStr && l.status !== '対応停止' && l.status !== '相談決定';
+        const phaseBadge = getLeadPhaseBadge(l);
+
+        return `<div onclick="openLeadDetail('${l.id}')" class="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-blue-500 cursor-pointer transition space-y-2.5 relative touch-target-row active:scale-[0.99]">
+          <div class="flex justify-between items-start gap-2">
+            <h4 class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100 truncate flex-1 min-w-0">${l.client_name}</h4>
+            <div class="text-right space-y-1 flex-shrink-0">
+              ${getLeadStatusBadge(l)}
+              <div>${phaseBadge}</div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between text-xs pt-2 border-t border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400">
+            <div class="text-[11px]">
+              ${l.next_followup_at ? `次回: <span class="${isFollowupDue ? 'text-red-500 font-bold' : ''}">${l.next_followup_at}${isFollowupDue ? ' ⚠' : ''}</span>` : '次回: 未定'}
+            </div>
+            <div class="text-[11px] text-blue-600 dark:text-blue-400 font-medium">詳細 ➔</div>
+          </div>
         </div>`;
       }).join('');
     }
@@ -1660,7 +1708,6 @@
       }
     }
 
-    // チャットタイムライン（昇順描画）
     function renderProjectChatTimeline(project) {
       const timelineContainer = document.getElementById('chatModalTimeline');
       if (!timelineContainer) return;
@@ -1955,9 +2002,6 @@
       }
     }
 
-    // ====================================================
-    // ストレージ容量監視 ＆ クリーンアップロジック
-    // ====================================================
     async function checkStorageCapacityAndWarn(isManual = false) {
       if (!isAdminOrMaster()) return;
 
@@ -1998,7 +2042,6 @@
         const totalMB = (totalBytes / (1024 * 1024)).toFixed(1);
         const totalCount = allFiles.length;
 
-        // 古い順にソート（昇順）
         allFiles.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
         cachedStorageFilesForCleanup = allFiles;
 
@@ -2088,7 +2131,6 @@
 
         if (storageErr) throw new Error('ストレージ削除エラー: ' + storageErr.message);
 
-        // 各プロジェクトの tasks の logs と deliverable_url の参照をクリーニング
         for (const prj of cachedCreativeProjects) {
           const tasks = prj.tasks || [];
 
@@ -2379,7 +2421,6 @@
       renderProjectChatTimeline(project);
     }
 
-    // 財務モーダル
     async function openFinancialModal(projectId) {
       if (!isMaster()) return alert('この機能はMaster権限専用です');
       const targetPrj = cachedCreativeProjects.find(p => p.id === projectId);
@@ -2837,78 +2878,6 @@
       }
 
       renderLeadsGrid();
-    }
-
-    function filterLeads(status) {
-      currentFilterStatus = status;
-      document.querySelectorAll('.lead-filter-btn').forEach(btn => {
-        const isMatch = btn.dataset.status === status;
-        btn.className = isMatch 
-          ? 'lead-filter-btn px-3 py-2 sm:py-1 rounded-lg border dark:border-slate-700 bg-blue-600 text-white font-medium touch-target-btn'
-          : 'lead-filter-btn px-3 py-2 sm:py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 touch-target-btn';
-      });
-      renderLeadsGrid();
-    }
-
-    function getLeadStatusBadge(lead) {
-      const st = lead.status;
-      if (st === '未対応（HOT）') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200">🔥 未対応HOT</span>';
-      if (st === '再送付') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">再送付</span>';
-      if (st === '対応待ち') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200">対応待ち</span>';
-      if (st === '先方返信あり（要対応）') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">📬 返信あり</span>';
-      if (st === '相談決定') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-700 border border-indigo-200">🎉 相談決定</span>';
-      if (st === '対応停止') return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">停止 (${lead.stop_reason || ''})</span>`;
-      return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">${st}</span>`;
-    }
-
-    function getLeadPhaseBadge(lead) {
-      if (lead.status === '先方返信あり（要対応）') {
-        return '<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">💬 ラリー中</span>';
-      }
-      if (lead.status === '相談決定') {
-        return '<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">相談中</span>';
-      }
-      return `<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">追客: ${lead.send_count || 0}/3</span>`;
-    }
-
-    function renderLeadsGrid() {
-      const container = document.getElementById('leadsList');
-      if (!container) return;
-
-      const filtered = allLeads.filter(l => {
-        if (currentFilterStatus === 'all') return true;
-        if (currentFilterStatus === '対応停止') return l.status === '対応停止';
-        return l.status === currentFilterStatus;
-      });
-
-      if (filtered.length === 0) {
-        container.innerHTML = '<div class="col-span-full p-6 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">該当するチケットはありません</div>';
-        return;
-      }
-
-      const todayStr = new Date().toISOString().split('T')[0];
-
-      container.innerHTML = filtered.map(l => {
-        const isFollowupDue = l.next_followup_at && l.next_followup_at <= todayStr && l.status !== '対応停止' && l.status !== '相談決定';
-        const phaseBadge = getLeadPhaseBadge(l);
-
-        return `<div onclick="openLeadDetail('${l.id}')" class="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-blue-500 cursor-pointer transition space-y-2.5 relative touch-target-row active:scale-[0.99]">
-          <div class="flex justify-between items-start gap-2">
-            <h4 class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100 truncate flex-1 min-w-0">${l.client_name}</h4>
-            <div class="text-right space-y-1 flex-shrink-0">
-              ${getLeadStatusBadge(l)}
-              <div>${phaseBadge}</div>
-            </div>
-          </div>
-
-          <div class="flex items-center justify-between text-xs pt-2 border-t border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400">
-            <div class="text-[11px]">
-              ${l.next_followup_at ? `次回: <span class="${isFollowupDue ? 'text-red-500 font-bold' : ''}">${l.next_followup_at}${isFollowupDue ? ' ⚠' : ''}</span>` : '次回: 未定'}
-            </div>
-            <div class="text-[11px] text-blue-600 dark:text-blue-400 font-medium">詳細 ➔</div>
-          </div>
-        </div>`;
-      }).join('');
     }
 
     async function createLeadTicket() {
@@ -3516,6 +3485,8 @@
 
       if (tab === 'creative') {
         renderCreativeProjectsList();
+      } else if (tab === 'sales') {
+        renderLeadsGrid();
       } else if (tab === 'members') {
         renderMembersTable();
       } else if (tab === 'updates') {
