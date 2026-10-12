@@ -83,21 +83,21 @@
                 <span>🔄 視点切替</span>
                 <span id="pcDropdownViewTag" class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 font-semibold">全件</span>
               </button>
-              <button onclick="switchTab('master'); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium flex items-center space-x-2">
+              <button onclick="switchTab('master'); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium">
                 <span>🛠️ 工程マスター設定</span>
               </button>
-              <button onclick="switchTab('members'); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium flex items-center space-x-2">
+              <button onclick="switchTab('members'); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium">
                 <span>👥 所属メンバー管理</span>
               </button>
-              <button onclick="manualTriggerStorageCleanup(); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-medium flex items-center space-x-2">
+              <button onclick="manualTriggerStorageCleanup(); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-medium">
                 <span>📦 ストレージ容量管理</span>
               </button>
             </div>
             <div class="px-1 space-y-0.5">
-              <button onclick="openMyAccountModal(); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium flex items-center space-x-2">
+              <button onclick="openMyAccountModal(); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium">
                 <span>⚙️ アカウント設定</span>
               </button>
-              <button onclick="logout()" class="w-full text-left px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 font-bold flex items-center space-x-2">
+              <button onclick="logout()" class="w-full text-left px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 font-bold">
                 <span>🚪 ログアウト</span>
               </button>
             </div>
@@ -780,7 +780,7 @@
         <select id="newMemberRole" class="w-full px-3 py-2.5 border dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-800">
           <option value="user">クリエイター (User)</option>
           <option value="admin">管理者 (Admin)</option>
-          <option value="master">統括・代表 (Master)</option>
+          <option value="master">👑 統括・代表 (Master)</option>
         </select>
       </div>
       <div class="flex justify-end space-x-2 pt-2">
@@ -977,17 +977,15 @@
       return '担当制作中';
     }
 
+    // 制作中は余計なバッジを出さず、運営や先方ボールのみ注意喚起タグを付与
     function getBallHolderTag(ballKey) {
       if (ballKey === 'admin') {
-        return '<span class="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded">➔ 🛡️ 運営</span>';
+        return '<span class="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-900 ml-1">➔ 🛡️ 運営</span>';
       }
       if (ballKey === 'client') {
-        return '<span class="text-[10px] font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-1.5 py-0.5 rounded">➔ 🏢 先方</span>';
+        return '<span class="text-[10px] font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-1.5 py-0.5 rounded border border-purple-200 dark:border-purple-900 ml-1">➔ 🏢 先方</span>';
       }
-      if (ballKey === 'none') {
-        return '';
-      }
-      return '<span class="text-[10px] font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">👤 制作中</span>';
+      return '';
     }
 
     async function compressImageToJpeg(file) {
@@ -1272,7 +1270,7 @@
       renderCreativeProjectsList();
     }
 
-    // 制作案件一覧描画（PC: 統合ステータス列＆見切れ防止テーブル / スマホ: スマートカード）
+    // 制作案件一覧描画（PC: 1行フラットステータス列 ＆ 見切れ防止 / スマホ: スマートカード）
     function renderCreativeProjectsList() {
       const container = document.getElementById('projectList');
       if (!container) return;
@@ -1359,7 +1357,7 @@
             return `<div class="flex items-center justify-between text-xs py-0.5">
               <div class="flex items-center space-x-1.5 truncate">
                 <span class="font-bold text-slate-800 dark:text-slate-100">${item.taskTitle}</span>
-                <span class="text-slate-400">|</span>
+                <span class="text-slate-400">·</span>
                 <span class="text-slate-600 dark:text-slate-300 font-medium">${item.assigneeName}</span>
                 ${ballTag}
               </div>
@@ -1397,7 +1395,7 @@
         </div>`;
       }).join('') + `</div>`;
 
-      // ==================== PC向け1行リストテーブルHTML ====================
+      // ==================== PC向け1行リストテーブルHTML（1行フラットステータス） ====================
       const pcTableHtml = `
       <div class="hidden md:block bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
         <table class="w-full text-xs text-left border-collapse table-fixed">
@@ -1405,7 +1403,7 @@
             <tr class="bg-slate-50/75 dark:bg-slate-800/40 text-slate-400 font-semibold border-b border-slate-100 dark:border-slate-800">
               <th class="py-3 px-3.5 w-32">チケット / 区分</th>
               <th class="py-3 px-3">案件名</th>
-              <th class="py-3 px-3 w-56 lg:w-64">ステータス (工程 ｜ 担当 ➔ ボール)</th>
+              <th class="py-3 px-3 w-64 lg:w-72">ステータス</th>
               <th class="py-3 px-3 w-28 text-center">期日</th>
               <th class="hidden xl:table-cell py-3 px-3 w-64">最新ログ</th>
               <th class="py-3 px-3.5 text-right w-16"></th>
@@ -1455,22 +1453,23 @@
           </button>`;
         }
 
+        // 1行フラット表示のステータスHTML
         let statusCombinedHtml = '';
         let deadlineLineHtml = '';
 
         if (andon.statusKey === 'completed') {
           statusCombinedHtml = `
-            <div class="flex items-center space-x-1.5">
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">🟢 完了</span>
-              <span class="text-emerald-600 dark:text-emerald-400 font-bold">全工程完了</span>
+            <div class="flex items-center space-x-1.5 truncate">
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex-shrink-0">🟢 完了</span>
+              <span class="text-emerald-600 dark:text-emerald-400 font-bold truncate">全工程完了</span>
             </div>
           `;
           deadlineLineHtml = '<span class="text-slate-400">-</span>';
         } else if (andon.activeItems.length === 0) {
           statusCombinedHtml = `
-            <div class="flex items-center space-x-1.5">
-              <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">⚪ 未着手</span>
-              <span class="text-slate-400">待機中</span>
+            <div class="flex items-center space-x-1.5 truncate">
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700 flex-shrink-0">⚪ 未着手</span>
+              <span class="text-slate-400 truncate">待機中</span>
             </div>
           `;
           deadlineLineHtml = '<span class="text-slate-400">-</span>';
@@ -1478,24 +1477,21 @@
           statusCombinedHtml = andon.activeItems.map(item => {
             const ballTag = getBallHolderTag(item.ballKey);
             return `
-              <div class="space-y-1">
-                <div class="flex items-center space-x-1.5">
-                  <span class="px-1.5 py-0.2 rounded text-[10px] font-bold ${andon.badgeClass} flex-shrink-0">
-                    ${andon.dot} ${andon.label}
-                  </span>
-                  <span class="font-bold text-slate-800 dark:text-slate-100">${item.taskTitle}</span>
-                </div>
-                <div class="text-[11px] text-slate-500 flex items-center space-x-1 truncate pl-0.5">
-                  <span>${item.assigneeName}</span>
-                  ${ballTag}
-                </div>
+              <div class="flex items-center space-x-1.5 truncate">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${andon.badgeClass} flex-shrink-0">
+                  ${andon.dot} ${andon.label}
+                </span>
+                <span class="font-bold text-slate-800 dark:text-slate-100 flex-shrink-0">${item.taskTitle}</span>
+                <span class="text-slate-400 text-[10px] flex-shrink-0">·</span>
+                <span class="text-slate-600 dark:text-slate-300 truncate font-medium">${item.assigneeName}</span>
+                ${ballTag}
               </div>
             `;
           }).join('');
 
           deadlineLineHtml = andon.activeItems.map(item => {
             const deadlineClass = item.isOverdue ? 'text-red-600 dark:text-red-400 font-bold' : 'text-slate-600 dark:text-slate-300';
-            return `<div class="${deadlineClass} text-center">${item.deadline}</div>`;
+            return `<div class="${deadlineClass} text-center truncate">${item.deadline}</div>`;
           }).join('');
         }
 
@@ -1738,10 +1734,7 @@
             const appearance = getTaskStatusAppearance(t, todayStr);
             const assignee = allProfiles.find(u => u.id === t.assignee_id);
             const assigneeName = assignee ? getDisplayName(assignee) : '未設定';
-
-            let ballHint = '';
-            if (t.ball_holder === 'admin') ballHint = '<span class="text-[10px] font-bold text-amber-600 dark:text-amber-400">➔ 🛡️ 運営</span>';
-            else if (t.ball_holder === 'client') ballHint = '<span class="text-[10px] font-bold text-purple-600 dark:text-purple-400">➔ 🏢 先方</span>';
+            const ballTag = getBallHolderTag(t.ball_holder || 'creator');
 
             return `<div onclick="handlePipelineTaskClick('${t.id}')" class="relative group cursor-pointer flex items-center justify-between text-xs py-2 sm:py-1 px-2 rounded-lg hover:bg-white/80 dark:hover:bg-slate-800/80 transition -ml-2 touch-target-row active:bg-blue-50 dark:active:bg-blue-950/40">
               <span class="absolute -left-[14px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full ring-2 ${appearance.dotColor} z-10"></span>
@@ -1753,7 +1746,7 @@
                 <span class="${appearance.titleColor} font-bold sm:font-normal">${t.title}</span>
                 <span class="text-slate-400 text-[10px]">·</span>
                 <span class="text-slate-600 dark:text-slate-300 font-medium text-[11px] truncate">${assigneeName}</span>
-                ${ballHint}
+                ${ballTag}
               </div>
 
               <!-- 右端：期日のみ美しく整列 -->
