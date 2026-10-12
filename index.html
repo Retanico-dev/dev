@@ -442,6 +442,7 @@
                 <label class="block text-[10px] text-slate-400 mb-1">工程ステータス</label>
                 <select id="chatInputStatus" onchange="handleStatusAutoAssist()" class="w-full px-2.5 py-2 border dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 font-semibold outline-none text-xs">
                   <option value="">(変更なし)</option>
+                  <option value="未着手">⚫️ 未着手</option>
                   <option value="作業中">🔵 作業中</option>
                   <option value="提出・確認待ち">🟡 提出・確認待ち</option>
                   <option value="リテイク">🟠 リテイク指示</option>
@@ -884,16 +885,30 @@
       return r === 'admin' || r === 'master';
     }
 
+    // ====================================================
+    // 期日表示フォーマッタ（ゼロ揃え MM/DD ＋ 控えめな曜日表記）
+    // ====================================================
     function formatDeadlineStr(dateStr) {
-      if (!dateStr) return '未定';
+      if (!dateStr) return '<span class="text-slate-400">未定</span>';
       const parts = dateStr.split('-');
       if (parts.length !== 3) return dateStr;
+      
       const y = parseInt(parts[0], 10);
-      const m = parts[1];
-      const d = parts[2];
+      const m = parseInt(parts[1], 10);
+      const d = parseInt(parts[2], 10);
+
+      const dObj = new Date(y, m - 1, d);
+      const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+      const dayName = isNaN(dObj.getTime()) ? '' : dayNames[dObj.getDay()];
+
+      const padM = String(m).padStart(2, '0');
+      const padD = String(d).padStart(2, '0');
       const curYear = new Date().getFullYear();
-      if (y > curYear) return y + '/' + m + '/' + d;
-      return m + '/' + d;
+
+      const yearPrefix = (y > curYear) ? `'${String(y).slice(-2)} ` : '';
+      const dayPart = dayName ? `<span class="text-[10px] text-slate-400 dark:text-slate-500 font-normal ml-0.5">(${dayName})</span>` : '';
+
+      return `<span class="font-mono tracking-tight">${yearPrefix}${padM}/${padD}</span>${dayPart}`;
     }
 
     function isLogItemUnread(logItem) {
@@ -1105,7 +1120,7 @@
 
       if (status === '提出・確認待ち') {
         ballSelect.value = 'admin';
-      } else if (status === 'リテイク' || status === '作業中') {
+      } else if (status === 'リテイク' || status === '作業中' || status === '未着手') {
         ballSelect.value = 'creator';
       } else if (status === '完了') {
         ballSelect.value = 'none';
@@ -1350,7 +1365,6 @@
           activeSummaryHtml = '<div class="text-xs text-slate-400">前工程の完了待機中</div>';
         } else {
           activeSummaryHtml = andon.activeItems.map(item => {
-            const deadlineClass = item.isOverdue ? 'text-red-600 dark:text-red-400 font-bold' : 'text-slate-500 dark:text-slate-400';
             const ballTag = getBallHolderTag(item.ballKey);
 
             return `<div class="flex items-center justify-between text-xs py-0.5">
@@ -1360,7 +1374,7 @@
                 <span class="text-slate-600 dark:text-slate-300 font-medium">${item.assigneeName}</span>
                 ${ballTag}
               </div>
-              <div class="text-[11px] ${deadlineClass} font-mono flex-shrink-0">
+              <div class="text-[11px] font-mono flex-shrink-0">
                 ${item.deadline}
               </div>
             </div>`;
@@ -1394,7 +1408,7 @@
         </div>`;
       }).join('') + `</div>`;
 
-      // ==================== PC向け1行リストテーブルHTML（ステータス列統合 ＆ 右端見切れ解消） ====================
+      // ==================== PC向け1行リストテーブルHTML ====================
       const pcTableHtml = `
       <div class="hidden md:block bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
         <table class="w-full text-xs text-left border-collapse table-fixed">
@@ -1403,7 +1417,7 @@
               <th class="py-3 px-3.5 w-32">チケット / 種別</th>
               <th class="py-3 px-3">案件名</th>
               <th class="py-3 px-3 w-56 lg:w-64">ステータス (工程 ｜ 担当 ➔ ボール)</th>
-              <th class="py-3 px-3 w-20 text-center">期日</th>
+              <th class="py-3 px-3 w-28 text-center">期日</th>
               <th class="hidden xl:table-cell py-3 px-3 w-64">最新ログ</th>
               <th class="py-3 px-3.5 text-right w-16"></th>
             </tr>
@@ -1452,7 +1466,6 @@
           </button>`;
         }
 
-        // 統合ステータス列のHTML組み立て
         let statusCombinedHtml = '';
         let deadlineLineHtml = '';
 
@@ -1492,8 +1505,8 @@
           }).join('');
 
           deadlineLineHtml = andon.activeItems.map(item => {
-            const deadlineClass = item.isOverdue ? 'text-red-600 dark:text-red-400 font-bold' : 'text-slate-500 dark:text-slate-400';
-            return `<div class="${deadlineClass} font-mono text-center">${item.deadline}</div>`;
+            const deadlineClass = item.isOverdue ? 'text-red-600 dark:text-red-400 font-bold' : 'text-slate-600 dark:text-slate-300';
+            return `<div class="${deadlineClass} text-center">${item.deadline}</div>`;
           }).join('');
         }
 
@@ -1606,7 +1619,7 @@
       }).join('');
     }
 
-    // 案件チャットモーダル
+    // 案件チャットモーダル（左ペインの重複を解消）
     function openProjectChatModal(projectId) {
       selectedProjectForChat = cachedCreativeProjects.find(p => p.id === projectId);
       if (!selectedProjectForChat) return;
@@ -1662,6 +1675,7 @@
       const tasks = getFilteredTasksForProject(p).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
       const todayStr = new Date().toISOString().split('T')[0];
 
+      // パイプライン（右側の重複表示を排除し、左側バッジに統一）
       const taskListContainer = document.getElementById('chatModalTaskListContainer');
       taskListContainer.innerHTML = `<div class="relative ml-2.5 pl-4 sm:pl-4 space-y-1 sm:space-y-2 border-l-2 border-slate-300 dark:border-slate-700 my-1 py-1">`
         + tasks.map((t) => {
@@ -1698,9 +1712,9 @@
                 ${ballTag}
               </div>
 
-              <div class="flex items-center space-x-1.5 text-[11px] font-mono flex-shrink-0">
-                <span class="${isOverdue ? 'text-red-500 font-bold' : 'text-slate-400'}">${formatDeadlineStr(t.deadline)}</span>
-                <span class="text-[10px] text-slate-400">(${t.status})</span>
+              <!-- 右端：期日のみ美しく表示し重複ステータス文字は削除 -->
+              <div class="flex items-center space-x-1.5 text-[11px] flex-shrink-0">
+                <span class="${isOverdue ? 'text-red-500 font-bold' : 'text-slate-500 dark:text-slate-400'}">${formatDeadlineStr(t.deadline)}</span>
               </div>
             </div>`;
           }).join('')
@@ -1920,7 +1934,7 @@
       const signStr = diffDays > 0 ? `+${diffDays}日 (後ろ倒し)` : `${diffDays}日 (前倒し)`;
       document.getElementById('shiftModalLeadText').innerHTML = 
         `「<span class="text-blue-600 dark:text-blue-400">${targetTask.title}</span>」の締切が <strong>${signStr}</strong> 変更されます。<br>` +
-        `<span class="text-[11px] font-normal text-slate-500 font-mono">（${oldDeadline} ➔ ${newDeadline}）</span>`;
+        `<span class="text-[11px] font-normal text-slate-500 font-mono">（${formatDeadlineStr(oldDeadline)} ➔ ${formatDeadlineStr(newDeadline)}）</span>`;
 
       const listContainer = document.getElementById('shiftCandidatesList');
       listContainer.innerHTML = subsequentTasks.map(t => {
@@ -1933,9 +1947,9 @@
             <input type="checkbox" value="${t.id}" data-shifted="${shiftedDateStr}" checked class="shift-task-checkbox w-4 h-4 rounded text-blue-600">
             <span class="font-bold text-slate-800 dark:text-slate-100">${t.title}</span>
           </div>
-          <div class="text-[11px] text-slate-500 font-mono">
+          <div class="text-[11px] text-slate-500 font-mono flex items-center space-x-1">
             <span>${formatDeadlineStr(t.deadline)}</span>
-            <span class="mx-1 text-slate-400">➔</span>
+            <span class="text-slate-400">➔</span>
             <span class="font-bold text-blue-600 dark:text-blue-400">${formatDeadlineStr(shiftedDateStr)}</span>
           </div>
         </label>`;
@@ -2012,6 +2026,7 @@
         else if (newStatus === '完了') logType = '承認・完了';
         else if (newStatus === '作業中') logType = '作業着手';
         else if (newStatus === '提出・確認待ち') logType = '提出・確認待ち';
+        else if (newStatus === '未着手') logType = 'ステータス更新';
         else if (isBallChanged && !comment) {
           logType = '手番変更';
           comment = `ボールを「${getBallHolderShortText(newBallHolder)}」に渡しました。`;
