@@ -633,7 +633,7 @@
     </div>
   </div>
 
-  <!-- ==================== 【新設計】新規案件起票モーダル（楽曲 / MV チケット分割対応） ==================== -->
+  <!-- 新規案件起票モーダル（楽曲 / MV チケット分割対応） -->
   <div id="newProjectModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-5 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto border border-slate-200 dark:border-slate-800">
       <h3 class="font-bold text-base sm:text-lg">新規制作案件起票</h3>
@@ -648,7 +648,6 @@
         <input type="url" id="newPrjDrive" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="https://drive.google.com/...">
       </div>
 
-      <!-- チケット分割選択 -->
       <div class="border-t dark:border-slate-800 pt-3 space-y-2">
         <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">作成するチケット（関連チケットとして連携）</label>
         <div class="grid grid-cols-2 gap-2 text-xs">
@@ -663,7 +662,6 @@
         </div>
       </div>
 
-      <!-- 工程組み込み -->
       <div class="border-t dark:border-slate-800 pt-3">
         <div class="flex items-center justify-between mb-2">
           <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">着手日 & 工程組み込み</label>
@@ -872,7 +870,7 @@
       document.getElementById('attachedFilePreview').classList.add('hidden');
     }
 
-    // 先行判定 & 行灯判定
+    // 先行判定 & アクティブタスク抽出
     function getActiveBallTasks(tasks) {
       const taskMap = new Map();
       tasks.forEach(t => taskMap.set(t.title, t));
@@ -925,6 +923,9 @@
       return activeTasks;
     }
 
+    // ----------------------------------------------------
+    // 【案1採用】行灯ステータス & 並行タスク全抽出
+    // ----------------------------------------------------
     function evaluateProjectAndon(project) {
       const tasks = project.tasks || [];
       const todayStr = new Date().toISOString().split('T')[0];
@@ -933,92 +934,79 @@
         return {
           statusKey: 'completed',
           label: '全工程完了',
+          color: 'bg-emerald-500',
           badgeClass: 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300',
           dot: '🟢',
-          assigneeName: '-',
-          taskTitle: '完了',
-          deadline: '-',
+          activeItems: [],
           remark: 'すべての制作工程が完了しました'
         };
       }
 
-      const overdueTask = tasks.find(t => t.deadline && t.deadline < todayStr && t.status !== '完了');
-      if (overdueTask) {
-        const assignee = allProfiles.find(u => u.id === overdueTask.assignee_id);
-        return {
-          statusKey: 'overdue',
-          label: '期日超過',
-          badgeClass: 'bg-red-100 dark:bg-red-950/70 text-red-700 dark:text-red-300 border border-red-300',
-          dot: '🔴',
-          assigneeName: getDisplayName(assignee),
-          taskTitle: overdueTask.title,
-          deadline: formatDeadlineStr(overdueTask.deadline),
-          remark: '期日超過 (' + overdueTask.status + ')'
-        };
-      }
-
-      const reviewTask = tasks.find(t => t.status === '提出・確認待ち');
-      if (reviewTask) {
-        const assignee = allProfiles.find(u => u.id === reviewTask.assignee_id);
-        return {
-          statusKey: 'review',
-          label: '運営確認中',
-          badgeClass: 'bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300',
-          dot: '🟡',
-          assigneeName: getDisplayName(assignee),
-          taskTitle: reviewTask.title,
-          deadline: formatDeadlineStr(reviewTask.deadline),
-          remark: '成果物提出あり・検収待ち'
-        };
-      }
-
-      const workingTask = tasks.find(t => t.status === '作業中' || t.status === 'リテイク');
-      if (workingTask) {
-        const assignee = allProfiles.find(u => u.id === workingTask.assignee_id);
-        return {
-          statusKey: 'working',
-          label: '作業中',
-          badgeClass: 'bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-300',
-          dot: '🔵',
-          assigneeName: getDisplayName(assignee),
-          taskTitle: workingTask.title,
-          deadline: formatDeadlineStr(workingTask.deadline),
-          remark: workingTask.status === 'リテイク' ? 'リテイク対応中' : '制作進行中'
-        };
-      }
-
       const activeTasks = getActiveBallTasks(tasks);
-      const unstartedTask = activeTasks.find(t => t.status === '未着手');
-      if (unstartedTask) {
-        const assignee = allProfiles.find(u => u.id === unstartedTask.assignee_id);
+
+      // 各タスクの詳細情報をオブジェクト化
+      const activeItems = activeTasks.map(t => {
+        const assignee = allProfiles.find(u => u.id === t.assignee_id);
+        const isOverdue = t.deadline && t.deadline < todayStr && t.status !== '完了';
+        
+        let stateNote = t.status;
+        if (isOverdue) stateNote = '期日超過 (' + t.status + ')';
+        else if (t.status === '提出・確認待ち') stateNote = '成果物提出あり・検収待ち';
+        else if (t.status === 'リテイク') stateNote = 'リテイク対応中';
+        else if (t.status === '未着手') stateNote = '着手可能';
+
         return {
-          statusKey: 'unstarted',
-          label: '未着手',
-          badgeClass: 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700',
-          dot: '⚫️',
+          id: t.id,
+          taskTitle: t.title,
           assigneeName: getDisplayName(assignee),
-          taskTitle: unstartedTask.title,
-          deadline: formatDeadlineStr(unstartedTask.deadline),
-          remark: '着手可能（着手前）'
+          deadline: formatDeadlineStr(t.deadline),
+          isOverdue: isOverdue,
+          status: t.status,
+          stateNote: stateNote
         };
+      });
+
+      // 案件全体のバッジ判定（優先度: 🔴期日超過 > 🟡確認中 > 🔵作業中 > ⚫️未着手）
+      let statusKey = 'unstarted';
+      let label = '未着手';
+      let dot = '⚫️';
+      let badgeClass = 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700';
+
+      if (activeItems.some(item => item.isOverdue)) {
+        statusKey = 'overdue';
+        label = '期日超過';
+        dot = '🔴';
+        badgeClass = 'bg-red-100 dark:bg-red-950/70 text-red-700 dark:text-red-300 border border-red-300';
+      } else if (activeItems.some(item => item.status === '提出・確認待ち')) {
+        statusKey = 'review';
+        label = '運営確認中';
+        dot = '🟡';
+        badgeClass = 'bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300';
+      } else if (activeItems.some(item => item.status === '作業中' || item.status === 'リテイク')) {
+        statusKey = 'working';
+        label = '作業中';
+        dot = '🔵';
+        badgeClass = 'bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-300';
+      } else if (activeItems.length === 0) {
+        statusKey = 'unstarted';
+        label = '待機中';
+        dot = '⚪️';
+        badgeClass = 'bg-slate-100 dark:bg-slate-800 text-slate-500';
       }
 
       return {
-        statusKey: 'unstarted',
-        label: '待機中',
-        badgeClass: 'bg-slate-100 dark:bg-slate-800 text-slate-500',
-        dot: '⚪️',
-        assigneeName: '前工程待ち',
-        taskTitle: '-',
-        deadline: '-',
-        remark: '前工程の完了待ち'
+        statusKey: statusKey,
+        label: label,
+        dot: dot,
+        badgeClass: badgeClass,
+        activeItems: activeItems,
+        remark: activeItems.length > 1 ? `${activeItems.length}工程が並行稼働中` : (activeItems[0]?.stateNote || '前工程待ち')
       };
     }
 
-    // カテゴリ（トラック種別）の判定ユーティリティ
+    // カテゴリ判定
     function getProjectCategory(project) {
       if (project.category) return project.category;
-      // タスクの構成から自動推測（後方互換）
       const titles = (project.tasks || []).map(t => t.title);
       const hasMusic = titles.some(t => ['作曲', '作詞', '編曲', 'レコーディング', 'ミキシング', 'マスタリング'].includes(t));
       const hasMv = titles.some(t => ['イラスト', '映像'].includes(t));
@@ -1033,7 +1021,6 @@
       return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 border border-blue-200 dark:border-blue-800">🎵 [楽曲]</span>';
     }
 
-    // 関連チケットを探す
     function getRelatedProject(project) {
       if (!project.group_id) return null;
       return cachedCreativeProjects.find(p => p.group_id === project.group_id && p.id !== project.id);
@@ -1128,9 +1115,33 @@
             + '</button>';
         }
 
+        // 【案1採用】並行稼働タスクの複数行HTML構築
+        let activeTasksHtml = '';
+        if (andon.statusKey === 'completed') {
+          activeTasksHtml = '<div class="text-xs text-emerald-600 dark:text-emerald-400 font-bold">✓ すべての工程が完了しました</div>';
+        } else if (andon.activeItems.length === 0) {
+          activeTasksHtml = '<div class="text-xs text-slate-400">現在、前工程の完了待機中です</div>';
+        } else {
+          activeTasksHtml = '<div class="space-y-1.5 divide-y divide-slate-200/60 dark:divide-slate-700/60">'
+            + andon.activeItems.map((item, idx) => {
+                const deadlineClass = item.isOverdue ? 'text-red-600 dark:text-red-400 font-extrabold' : 'text-slate-500 dark:text-slate-400';
+                return '<div class="text-xs pt-1 first:pt-0 space-y-0.5">'
+                  + '<div class="flex justify-between items-center font-bold text-slate-800 dark:text-slate-100">'
+                  + '<span>担当: ' + item.assigneeName + '</span>'
+                  + '<span class="' + deadlineClass + '">期日: ' + item.deadline + (item.isOverdue ? ' ⚠超過' : '') + '</span>'
+                  + '</div>'
+                  + '<div class="flex justify-between items-center text-[11px] text-slate-600 dark:text-slate-300">'
+                  + '<span>対応事項: <strong class="text-blue-600 dark:text-blue-400">' + item.taskTitle + '</strong></span>'
+                  + '<span class="text-slate-400 truncate max-w-[180px]">' + item.stateNote + '</span>'
+                  + '</div>'
+                  + '</div>';
+              }).join('')
+            + '</div>';
+        }
+
         return '<div onclick="openProjectChatModal(\'' + p.id + '\')" class="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-blue-500 cursor-pointer transition space-y-2.5 relative group ' + (hasUnread ? 'ring-1 ring-red-400' : '') + '">'
           
-          <!-- タイトル + カテゴリバッジ [楽曲] or [イラスト/MV] + 行灯バッジ -->
+          <!-- タイトル + カテゴリバッジ + 行灯バッジ -->
           + '<div class="flex flex-wrap items-start justify-between gap-2">'
           + '<div class="flex items-center space-x-1.5 flex-1 min-w-0">'
           + catBadge
@@ -1142,22 +1153,15 @@
           + '</div>'
           + '</div>'
 
-          <!-- 関連チケットリンクがある場合 -->
+          <!-- 関連チケットリンク -->
           + (relatedLinkHtml ? '<div class="flex items-center space-x-1.5 pt-0.5">' + relatedLinkHtml + '</div>' : '')
 
-          <!-- 行灯ステータス要件: 誰が、何を、いつまでに -->
-          + '<div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80 text-xs space-y-1">'
-          + '<div class="flex justify-between items-center font-bold text-slate-800 dark:text-slate-100">'
-          + '<span>担当: ' + andon.assigneeName + '</span>'
-          + '<span class="' + (andon.statusKey === 'overdue' ? 'text-red-600 dark:text-red-400 font-extrabold' : 'text-slate-500 dark:text-slate-400') + '">期日: ' + andon.deadline + '</span>'
-          + '</div>'
-          + '<div class="flex justify-between items-center text-[11px] pt-1 border-t border-slate-200/60 dark:border-slate-700/60">'
-          + '<span class="text-slate-600 dark:text-slate-300 font-medium">対応事項: <strong class="text-blue-600 dark:text-blue-400">' + andon.taskTitle + '</strong></span>'
-          + '<span class="text-slate-400 truncate max-w-[200px]">' + andon.remark + '</span>'
-          + '</div>'
+          <!-- 【案1】並行稼働対応 ボール保持者リスト枠 -->
+          + '<div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80">'
+          + activeTasksHtml
           + '</div>'
 
-          <!-- 最新ログ -->
+          <!-- 最新ログプレビュー -->
           + '<div class="flex items-center justify-between text-xs text-slate-500 pt-1 border-t border-slate-100 dark:border-slate-800">'
           + '<div class="flex items-center space-x-1.5 min-w-0 truncate">'
           + '<span class="text-sm">💬</span>'
@@ -1196,7 +1200,6 @@
         ? '<a href="' + p.drive_url + '" target="_blank" class="text-[11px] px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-600 dark:text-slate-300 hover:underline">Drive ↗</a>'
         : '';
 
-      // 関連チケットリンク
       const relatedLinkContainer = document.getElementById('chatModalRelatedLink');
       const relatedPrj = getRelatedProject(p);
       if (relatedPrj) {
@@ -2437,9 +2440,7 @@
       renderMembersTable();
     }
 
-    // ----------------------------------------------------
-    // 【新規案件起票（楽曲 / イラスト・MV 分割起票対応）】
-    // ----------------------------------------------------
+    // 新規案件起票
     async function createCreativeProject() {
       const baseTitle = document.getElementById('newPrjTitle').value.trim();
       const drive = document.getElementById('newPrjDrive').value.trim();
@@ -2477,12 +2478,8 @@
       dates.illust = addDays(baseDate, getD('illust'));
       dates.movie = addDays(dates.illust, getD('movie'));
 
-      // 共通のグループIDを生成（関連チケットとして紐付ける）
       const groupId = 'grp_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
 
-      const createdProjects = [];
-
-      // 1. 楽曲チケットの起票
       if (createMusic) {
         const { data: prjMusic, error: errM } = await supabaseClient.from('projects').insert({
           type: 'creative',
@@ -2511,10 +2508,8 @@
         if (musicTasks.length > 0) {
           await supabaseClient.from('tasks').insert(musicTasks);
         }
-        createdProjects.push(prjMusic);
       }
 
-      // 2. イラスト/MVチケットの起票
       if (createMv) {
         const { data: prjMv, error: errV } = await supabaseClient.from('projects').insert({
           type: 'creative',
@@ -2543,7 +2538,6 @@
         if (mvTasks.length > 0) {
           await supabaseClient.from('tasks').insert(mvTasks);
         }
-        createdProjects.push(prjMv);
       }
 
       closeModal('newProjectModal');
