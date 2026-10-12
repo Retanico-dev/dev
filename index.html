@@ -55,7 +55,7 @@
         <span id="roleBadge" class="hidden sm:inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">Guest</span>
       </div>
 
-      <!-- PCヘッダーナビ（日常業務の3機能に絞り込み、横幅崩れを解消） -->
+      <!-- PCヘッダーナビ（日常業務の3機能） -->
       <nav id="pcAdminNav" class="hidden md:flex items-center space-x-1 lg:space-x-2 flex-1 justify-center max-w-md">
         <button onclick="switchTab('creative')" id="pcTabCreative" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60">制作進行</button>
         <button onclick="switchTab('sales')" id="pcTabSales" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">営業・商談</button>
@@ -76,7 +76,7 @@
             <span class="text-[10px] text-slate-400">▼</span>
           </button>
 
-          <!-- PCアバターメニュー（設定系・管理系を集約） -->
+          <!-- PCアバターメニュー -->
           <div id="pcUserDropdown" class="hidden absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 py-2 z-50 animate-in fade-in zoom-in-95 text-xs">
             <div id="pcAdminMenuSection" class="hidden border-b border-slate-100 dark:border-slate-800 pb-1.5 mb-1.5 px-1 space-y-0.5">
               <button onclick="toggleAdminViewMode(); togglePcUserMenu();" id="pcDropdownViewToggle" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-between">
@@ -206,8 +206,8 @@
           </div>
         </div>
 
-        <!-- PC最適化：マルチカラムグリッド（スマホは1列、PCは2〜3列） -->
-        <div id="projectList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"></div>
+        <!-- 案件コンテナ（PCは1行リストテーブル / スマホはスマートカード） -->
+        <div id="projectList"></div>
       </div>
 
       <!-- 営業・商談ボード -->
@@ -357,7 +357,7 @@
     </div>
   </div>
 
-  <!-- ==================== 案件統合チャット＆進捗モーダル（財務ボタン削除済） ==================== -->
+  <!-- ==================== 案件統合チャット＆進捗モーダル ==================== -->
   <div id="projectChatModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl md:max-w-5xl w-full p-3.5 sm:p-5 border border-slate-200 dark:border-slate-800 max-h-[95vh] h-[92vh] sm:h-[90vh] flex flex-col shadow-2xl overflow-hidden">
       
@@ -435,7 +435,7 @@
                 </div>
                 <div>
                   <label class="block text-[10px] text-slate-400 mb-1">締切期日</label>
-                  <input type="date" id="chatInputDeadline" class="w-full px-2.5 py-2 border dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 text-xs">
+                  <input type="date" id="chatInputDeadline" class="w-full px-2.5 py-2 border dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs">
                 </div>
               </div>
               <div>
@@ -1269,7 +1269,7 @@
       renderCreativeProjectsList();
     }
 
-    // 制作案件一覧描画（デフォルトで完了案件非表示）
+    // 制作案件一覧描画（PC: 1行リストテーブル / スマホ: スマートカード）
     function renderCreativeProjectsList() {
       const container = document.getElementById('projectList');
       if (!container) return;
@@ -1295,11 +1295,12 @@
       });
 
       if (filtered.length === 0) {
-        container.innerHTML = '<div class="col-span-full p-8 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs">該当する制作案件はありません</div>';
+        container.innerHTML = '<div class="p-8 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs">該当する制作案件はありません</div>';
         return;
       }
 
-      container.innerHTML = filtered.map(p => {
+      // ==================== スマホ向けカードHTML ====================
+      const mobileCardsHtml = `<div class="block md:hidden space-y-3">` + filtered.map(p => {
         const andon = evaluateProjectAndon(p);
         const hasUnread = getProjectUnreadStatus(p);
         const cat = getProjectCategory(p);
@@ -1367,7 +1368,6 @@
         }
 
         return `<div onclick="openProjectChatModal('${p.id}')" class="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 cursor-pointer transition space-y-2.5 relative group flex flex-col justify-between active:scale-[0.99]">
-          
           <div class="space-y-2">
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center space-x-1.5 min-w-0">
@@ -1391,9 +1391,136 @@
             <span class="text-xs flex-shrink-0">💬</span>
             <div class="truncate">${latestLogHtml}</div>
           </div>
-
         </div>`;
-      }).join('');
+      }).join('') + `</div>`;
+
+      // ==================== PC向け1行リストテーブルHTML ====================
+      const pcTableHtml = `
+      <div class="hidden md:block bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+        <table class="w-full text-xs text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-50/75 dark:bg-slate-800/40 text-slate-400 font-semibold border-b border-slate-100 dark:border-slate-800">
+              <th class="py-3 px-4 w-28">状態</th>
+              <th class="py-3 px-3 w-36">チケット / 種別</th>
+              <th class="py-3 px-3 min-w-[200px]">案件名</th>
+              <th class="py-3 px-3 w-64">現在工程 ｜ 担当 ➔ ボール</th>
+              <th class="py-3 px-3 w-24">期日</th>
+              <th class="py-3 px-3 min-w-[200px]">最新ログ</th>
+              <th class="py-3 px-4 text-right w-20">操作</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
+      ` + filtered.map(p => {
+        const andon = evaluateProjectAndon(p);
+        const hasUnread = getProjectUnreadStatus(p);
+        const cat = getProjectCategory(p);
+        const catBadge = getCategoryBadgeHtml(cat);
+        const relatedPrj = getRelatedProject(p);
+        const validTasks = getFilteredTasksForProject(p).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
+
+        const codeBadge = p.ticket_code 
+          ? `<span class="font-mono font-bold text-slate-600 dark:text-slate-300">${p.ticket_code}</span>`
+          : '<span class="text-slate-400">-</span>';
+
+        let latestLog = null;
+        let latestTaskTitle = '';
+        validTasks.forEach(t => {
+          (t.logs || []).forEach(l => {
+            if (!latestLog || new Date(l.at) > new Date(latestLog.at)) {
+              latestLog = l;
+              latestTaskTitle = t.title;
+            }
+          });
+        });
+
+        let latestLogHtml = '<span class="text-slate-400 italic">-</span>';
+        if (latestLog) {
+          const dateStr = new Date(latestLog.at).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+          const textPreview = latestLog.comment || (latestLog.url ? '提出ファイルあり' : latestLog.type);
+          latestLogHtml = `<span class="font-semibold text-slate-700 dark:text-slate-300">[${latestTaskTitle}]</span> <span class="truncate text-slate-600 dark:text-slate-400">${textPreview}</span> <span class="text-[10px] text-slate-400 font-mono">(${dateStr})</span>`;
+        }
+
+        const unreadDot = hasUnread 
+          ? '<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse inline-block mr-1 flex-shrink-0"></span>'
+          : '';
+
+        let relatedLinkHtml = '';
+        if (relatedPrj) {
+          const relCat = getProjectCategory(relatedPrj);
+          const relLabel = relCat === 'mv' ? '🎬 MV' : '🎵 楽曲';
+          relatedLinkHtml = `<button onclick="event.stopPropagation(); openProjectChatModal('${relatedPrj.id}')" class="text-[10px] px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 transition" title="ペアチケットを開く">
+            🔗 ${relLabel}
+          </button>`;
+        }
+
+        let stageLineHtml = '';
+        let deadlineLineHtml = '';
+
+        if (andon.statusKey === 'completed') {
+          stageLineHtml = '<span class="text-emerald-600 dark:text-emerald-400 font-bold">✓ 全工程完了</span>';
+          deadlineLineHtml = '<span class="text-slate-400">-</span>';
+        } else if (andon.activeItems.length === 0) {
+          stageLineHtml = '<span class="text-slate-400">前工程の完了待機中</span>';
+          deadlineLineHtml = '<span class="text-slate-400">-</span>';
+        } else {
+          stageLineHtml = andon.activeItems.map(item => {
+            const ballTag = getBallHolderTag(item.ballKey);
+            return `<div class="truncate flex items-center space-x-1.5">
+              <span class="font-bold text-slate-800 dark:text-slate-100">${item.taskTitle}</span>
+              <span class="text-slate-400">|</span>
+              <span class="text-slate-600 dark:text-slate-300">${item.assigneeName}</span>
+              ${ballTag}
+            </div>`;
+          }).join('');
+
+          deadlineLineHtml = andon.activeItems.map(item => {
+            const deadlineClass = item.isOverdue ? 'text-red-600 dark:text-red-400 font-bold' : 'text-slate-500 dark:text-slate-400';
+            return `<div class="${deadlineClass} font-mono">${item.deadline}</div>`;
+          }).join('');
+        }
+
+        return `
+          <tr onclick="openProjectChatModal('${p.id}')" class="hover:bg-blue-50/40 dark:hover:bg-slate-800/60 cursor-pointer transition group">
+            <td class="py-3 px-4 whitespace-nowrap">
+              <span class="px-2 py-0.5 rounded text-[11px] font-bold ${andon.badgeClass} inline-flex items-center space-x-1">
+                <span>${andon.dot}</span>
+                <span>${andon.label}</span>
+              </span>
+            </td>
+            <td class="py-3 px-3 whitespace-nowrap">
+              <div class="flex items-center space-x-1.5">
+                ${catBadge}
+                ${codeBadge}
+              </div>
+            </td>
+            <td class="py-3 px-3">
+              <div class="flex items-center space-x-2">
+                ${unreadDot}
+                <span class="font-bold text-sm text-slate-800 dark:text-slate-100 group-hover:text-blue-600 transition truncate max-w-xs">${p.title}</span>
+                ${relatedLinkHtml}
+              </div>
+            </td>
+            <td class="py-3 px-3">
+              <div class="space-y-0.5">${stageLineHtml}</div>
+            </td>
+            <td class="py-3 px-3 whitespace-nowrap">
+              <div class="space-y-0.5">${deadlineLineHtml}</div>
+            </td>
+            <td class="py-3 px-3 text-slate-500 max-w-sm">
+              <div class="truncate">${latestLogHtml}</div>
+            </td>
+            <td class="py-3 px-4 text-right whitespace-nowrap">
+              <span class="text-blue-600 dark:text-blue-400 font-bold text-xs group-hover:underline">開く ➔</span>
+            </td>
+          </tr>
+        `;
+      }).join('') + `
+          </tbody>
+        </table>
+      </div>
+      `;
+
+      container.innerHTML = mobileCardsHtml + pcTableHtml;
     }
 
     // 営業チケット絞り込み
@@ -2449,7 +2576,6 @@
       window.addEventListener('resize', detectTouchDevice);
       initTheme();
 
-      // PCメニュー外側クリックで閉じる
       window.addEventListener('click', (e) => {
         const dd = document.getElementById('pcUserDropdown');
         const btn = document.getElementById('pcUserNameBtn');
