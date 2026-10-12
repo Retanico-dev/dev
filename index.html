@@ -179,6 +179,7 @@
           </button>
         </div>
 
+        <!-- PC最適化：マルチカラムグリッド（スマホは1列、PCは2〜3列） -->
         <div id="projectList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"></div>
       </div>
 
@@ -428,7 +429,7 @@
               <div class="absolute bottom-2 left-2 flex items-center space-x-2">
                 <button type="button" onclick="toggleTaskControlPanel()" id="btnToggleTaskPanel" class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 hover:bg-slate-100 text-slate-700 dark:text-slate-200 transition shadow-xs touch-target-btn">
                   <span>⚙️ 進行設定</span>
-                  <span id="panelActiveDot" class="hidden w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                  <span id="panelActiveDot" class="hidden w-2 h-2 rounded-full bg-blue-500"></span>
                 </button>
                 <label class="cursor-pointer inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-200 transition touch-target-btn">
                   <span>📎 添付</span>
@@ -802,13 +803,593 @@
 
   <script>
     // ====================================================
-    // セキュア一時署名URL解決ヘルパー（Private Storage対応）
+    // グローバル状態
+    // ====================================================
+    let currentUser = null;
+    let userProfile = null;
+    let allProfiles = [];
+    let adminViewMode = 'admin';
+
+    let allLeads = [];
+    let currentFilterStatus = 'all';
+    let currentAndonFilter = 'all';
+    let currentActiveTab = 'creative';
+    let selectedLead = null;
+    let salesTemplates = [];
+    let selectedProjectForChat = null;
+    let selectedProjectForFinancial = null;
+    let cachedCreativeProjects = [];
+    let pendingUploadFile = null;
+
+    let targetProjectForRelated = null;
+    let pendingDeadlineShiftContext = null;
+
+    // ====================================================
+    // 【最上部宣言】基本判定ヘルパー関数群（ReferenceError完全防止）
+    // ====================================================
+    function isMaster() {
+      if (!userProfile || !userProfile.role) return false;
+      return String(userProfile.role).toLowerCase() === 'master';
+    }
+
+    function isAdminOrMaster() {
+      if (!userProfile || !userProfile.role) return false;
+      const r = String(userProfile.role).toLowerCase();
+      return r === 'admin' || r === 'master';
+    }
+
+    function getCurrentUserIdentifier() {
+      if (!userProfile) return '';
+      return userProfile.name || userProfile.user_id || userProfile.email || '';
+    }
+
+    function getDisplayName(profile) {
+      if (!profile) return '未設定';
+      return profile.name || profile.user_id || '未設定';
+    }
+
+    function detectTouchDevice() {
+      const ua = navigator.userAgent || '';
+      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+      const isTouchScreen = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
+      
+      if (isMobileUA || isTouchScreen) {
+        document.documentElement.classList.add('is-touch-device');
+      } else {
+        document.documentElement.classList.remove('is-touch-device');
+      }
+    }
+
+    function formatDeadlineStr(dateStr) {
+      if (!dateStr) return '未定';
+      const parts = dateStr.split('-');
+      if (parts.length !== 3) return dateStr;
+      const y = parseInt(parts[0], 10);
+      const m = parts[1];
+      const d = parts[2];
+      const curYear = new Date().getFullYear();
+      if (y > curYear) return y + '/' + m + '/' + d;
+      return m + '/' + d;
+    }
+
+    function isLogItemUnread(logItem) {
+      if (!logItem) return false;
+      const myId = getCurrentUserIdentifier();
+      if (!myId) return false;
+      if (logItem.user === myId) return false;
+      const readByList = logItem.read_by || [];
+      return !readByList.includes(myId);
+    }
+
+    function getTaskUnreadStatus(task) {
+      const logs = task.logs || [];
+      if (logs.length === 0) return false;
+      return logs.some(l => isLogItemUnread(l));
+    }
+
+    function getProjectUnreadStatus(project) {
+      const validTasks = getFilteredTasksForProject(project);
+      return validTasks.some(t => getTaskUnreadStatus(t));
+    }
+
+    async function updateHeartbeat() {
+      if (!currentUser) return;
+      try {
+        await supabaseClient.from('profiles').update({
+          last_active_at: new Date().toISOString()
+        }).eq('id', currentUser.id);
+      } catch (e) {
+        console.error("Heartbeat error:", e);
+      }
+    }
+
+    function getNextTicketNumber(startDateStr) {
+      const d = new Date(startDateStr || new Date());
+      const yy = String(d.getFullYear()).slice(-2);
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const prefix = `${yy}${mm}`;
+
+      let maxNum = 0;
+      cachedCreativeProjects.forEach(p => {
+        if (p.ticket_code && p.ticket_code.startsWith(prefix)) {
+          const match = p.ticket_code.match(new RegExp(`^${prefix}-(\\d+)`));
+          if (match) {
+            const num = parseInt(match[1], 10);
+            if (num > maxNum) maxNum = num;
+          }
+        }
+      });
+
+      const nextNumStr = String(maxNum + 1).padStart(2, '0');
+      return { prefix, nextNumStr };
+    }
+
+    function getBallHolderShortText(ballKey) {
+      if (ballKey === 'admin') return '🛡️ 運営確認中';
+      if (ballKey === 'client') return '🏢 先方確認中';
+      if (ballKey === 'none') return '⚪ 完了';
+      return '👤 担当制作中';
+    }
+
+    function getBallHolderTag(ballKey) {
+      if (ballKey === 'admin') {
+        return '<span class="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded">➔ 🛡️ 運営</span>';
+      }
+      if (ballKey === 'client') {
+        return '<span class="text-[10px] font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/60 px-1.5 py-0.5 rounded">➔ 🏢 先方</span>';
+      }
+      if (ballKey === 'none') {
+        return '';
+      }
+      return '<span class="text-[10px] font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">作業中</span>';
+    }
+
+    async function compressImageToJpeg(file) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = new Image();
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const maxDimension = 1600;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > maxDimension || height > maxDimension) {
+              if (width > height) {
+                height = Math.round((height * maxDimension) / width);
+                width = maxDimension;
+              } else {
+                width = Math.round((width * maxDimension) / height);
+                height = maxDimension;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            canvas.toBlob((blob) => {
+              if (blob) {
+                const newFileName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
+                const compressedFile = new File([blob], newFileName, { type: "image/jpeg" });
+                resolve(compressedFile);
+              } else {
+                resolve(file);
+              }
+            }, 'image/jpeg', 0.8);
+          };
+          img.onerror = () => resolve(file);
+          img.src = e.target.result;
+        };
+        reader.onerror = () => resolve(file);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const overlay = document.getElementById('dropOverlay');
+      if (overlay) overlay.classList.remove('hidden');
+    }
+
+    function handleDragLeave(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const overlay = document.getElementById('dropOverlay');
+      if (overlay) overlay.classList.add('hidden');
+    }
+
+    async function handleFileDrop(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const overlay = document.getElementById('dropOverlay');
+      if (overlay) overlay.classList.add('hidden');
+
+      const files = e.dataTransfer.files;
+      if (files && files.length > 0) {
+        await processSelectedFile(files[0]);
+      }
+    }
+
+    async function handleFileInputChange(e) {
+      const files = e.target.files;
+      if (files && files.length > 0) {
+        await processSelectedFile(files[0]);
+      }
+      e.target.value = '';
+    }
+
+    async function processSelectedFile(file) {
+      let finalFile = file;
+      if (file.type.startsWith('image/')) {
+        finalFile = await compressImageToJpeg(file);
+      }
+
+      pendingUploadFile = finalFile;
+
+      const previewBox = document.getElementById('attachedFilePreview');
+      const nameEl = document.getElementById('attachedFileName');
+      const sizeEl = document.getElementById('attachedFileSize');
+      const iconEl = document.getElementById('attachedFileIcon');
+
+      const isAudio = finalFile.type.startsWith('audio/') || finalFile.name.endsWith('.mp3') || finalFile.name.endsWith('.m4a');
+      const isImg = finalFile.type === 'image/jpeg' || finalFile.type.startsWith('image/');
+
+      iconEl.innerText = isAudio ? '🎵' : (isImg ? '🖼️' : '📎');
+      nameEl.innerText = finalFile.name;
+      sizeEl.innerText = '(' + (finalFile.size / (1024 * 1024)).toFixed(2) + ' MB)';
+      previewBox.classList.remove('hidden');
+
+      const statusSelect = document.getElementById('chatInputStatus');
+      if (statusSelect && !statusSelect.value) {
+        statusSelect.value = '提出・確認待ち';
+        handleStatusAutoAssist();
+      }
+    }
+
+    function removeAttachedFile() {
+      pendingUploadFile = null;
+      document.getElementById('attachedFilePreview').classList.add('hidden');
+    }
+
+    function toggleTaskControlPanel(forceOpen = false) {
+      const panel = document.getElementById('taskControlPanel');
+      if (!panel) return;
+      if (forceOpen) {
+        panel.classList.remove('hidden');
+      } else {
+        panel.classList.toggle('hidden');
+      }
+      updateControlPanelActiveState();
+    }
+
+    function updateControlPanelActiveState() {
+      const panel = document.getElementById('taskControlPanel');
+      const dot = document.getElementById('panelActiveDot');
+      if (panel && dot) {
+        dot.classList.toggle('hidden', panel.classList.contains('hidden'));
+      }
+    }
+
+    function handleStatusAutoAssist() {
+      const status = document.getElementById('chatInputStatus').value;
+      const ballSelect = document.getElementById('chatInputBallHolder');
+      if (!ballSelect) return;
+
+      if (status === '提出・確認待ち') {
+        ballSelect.value = 'admin';
+      } else if (status === 'リテイク' || status === '作業中') {
+        ballSelect.value = 'creator';
+      } else if (status === '完了') {
+        ballSelect.value = 'none';
+      }
+    }
+
+    function getActiveBallTasks(tasks) {
+      const taskMap = new Map();
+      tasks.forEach(t => taskMap.set(t.title, t));
+      const activeTasks = [];
+
+      const upstreamPaths = {
+        'マスタリング': [['ミキシング', 'レコーディング', '編曲', '作曲']],
+        'ミキシング': [
+          ['レコーディング', '編曲', '作曲'],
+          ['レコーディング', '作詞', '作曲']
+        ],
+        'レコーディング': [
+          ['編曲', '作曲'],
+          ['作詞', '作曲']
+        ],
+        '編曲': [['作曲']],
+        '作詞': [['作曲']],
+        '作曲': [],
+        '映像': [['イラスト']],
+        'イラスト': []
+      };
+
+      tasks.forEach(t => {
+        if (t.status === '完了') return;
+        if (t.status === '作業中' || t.status === '提出・確認待ち' || t.status === 'リテイク') {
+          activeTasks.push(t);
+          return;
+        }
+
+        const paths = upstreamPaths[t.title] || [];
+        let isReady = true;
+
+        for (const path of paths) {
+          let nearestParent = null;
+          for (const ancestorTitle of path) {
+            if (taskMap.has(ancestorTitle)) {
+              nearestParent = taskMap.get(ancestorTitle);
+              break;
+            }
+          }
+          if (nearestParent && nearestParent.status !== '完了') {
+            isReady = false;
+            break;
+          }
+        }
+
+        if (isReady) activeTasks.push(t);
+      });
+
+      return activeTasks;
+    }
+
+    function evaluateProjectAndon(project) {
+      const tasks = getFilteredTasksForProject(project);
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      if (tasks.length > 0 && tasks.every(t => t.status === '完了')) {
+        return {
+          statusKey: 'completed',
+          label: '完了',
+          dot: '🟢',
+          badgeClass: 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300',
+          activeItems: []
+        };
+      }
+
+      const activeTasks = getActiveBallTasks(tasks);
+
+      const activeItems = activeTasks.map(t => {
+        const assignee = allProfiles.find(u => u.id === t.assignee_id);
+        const isOverdue = t.deadline && t.deadline < todayStr && t.status !== '完了';
+        const ballKey = t.ball_holder || (t.status === '提出・確認待ち' ? 'admin' : 'creator');
+
+        return {
+          id: t.id,
+          taskTitle: t.title,
+          assigneeName: getDisplayName(assignee),
+          ballShort: getBallHolderShortText(ballKey),
+          ballKey: ballKey,
+          deadline: formatDeadlineStr(t.deadline),
+          isOverdue: isOverdue,
+          status: t.status
+        };
+      });
+
+      let statusKey = 'unstarted';
+      let label = '未着手';
+      let dot = '⚫️';
+      let badgeClass = 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300';
+
+      if (activeItems.some(item => item.isOverdue)) {
+        statusKey = 'overdue';
+        label = '期日超過';
+        dot = '🔴';
+        badgeClass = 'bg-red-100 dark:bg-red-950/70 text-red-700 dark:text-red-300 border border-red-200';
+      } else if (activeItems.some(item => item.status === '提出・確認待ち' || item.ballKey === 'admin')) {
+        statusKey = 'review';
+        label = '確認中';
+        dot = '🟡';
+        badgeClass = 'bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-200';
+      } else if (activeItems.some(item => item.status === '作業中' || item.status === 'リテイク')) {
+        statusKey = 'working';
+        label = '作業中';
+        dot = '🔵';
+        badgeClass = 'bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-200';
+      } else if (activeItems.length === 0) {
+        statusKey = 'unstarted';
+        label = '待機中';
+        dot = '⚪️';
+        badgeClass = 'bg-slate-100 dark:bg-slate-800 text-slate-500';
+      }
+
+      return {
+        statusKey: statusKey,
+        label: label,
+        dot: dot,
+        badgeClass: badgeClass,
+        activeItems: activeItems
+      };
+    }
+
+    function getProjectCategory(project) {
+      if (project.category) return project.category;
+      const titles = (project.tasks || []).map(t => t.title);
+      const hasMusic = titles.some(t => ['作曲', '作詞', '編曲', 'レコーディング', 'ミキシング', 'マスタリング'].includes(t));
+      const hasMv = titles.some(t => ['イラスト', '映像'].includes(t));
+      if (hasMv && !hasMusic) return 'mv';
+      return 'music';
+    }
+
+    function getFilteredTasksForProject(project) {
+      const cat = getProjectCategory(project);
+      const allTasks = project.tasks || [];
+      if (cat === 'mv') {
+        return allTasks.filter(t => ['イラスト', '映像'].includes(t.title));
+      } else {
+        return allTasks.filter(t => !['イラスト', '映像'].includes(t.title));
+      }
+    }
+
+    function getCategoryBadgeHtml(cat) {
+      if (cat === 'mv') {
+        return '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800">🎬 MV</span>';
+      }
+      return '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800">🎵 楽曲</span>';
+    }
+
+    function getRelatedProject(project) {
+      if (!project.group_id) return null;
+      return cachedCreativeProjects.find(p => p.group_id === project.group_id && p.id !== project.id);
+    }
+
+    function setAndonFilter(key) {
+      currentAndonFilter = key;
+      document.querySelectorAll('.andon-filter-btn').forEach(btn => {
+        const isMatch = btn.dataset.status === key;
+        btn.className = isMatch
+          ? 'andon-filter-btn px-3.5 py-2 sm:py-1.5 rounded-xl border font-bold transition bg-blue-600 text-white border-blue-600 touch-target-btn'
+          : 'andon-filter-btn px-3.5 py-2 sm:py-1.5 rounded-xl border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 touch-target-btn';
+      });
+      renderCreativeProjectsList();
+    }
+
+    function renderCreativeProjectsList() {
+      const container = document.getElementById('projectList');
+      if (!container) return;
+
+      const isUserMode = !isAdminOrMaster() || adminViewMode === 'creator';
+      const myId = currentUser ? currentUser.id : '';
+
+      let targetProjects = cachedCreativeProjects.filter(p => {
+        if (!isUserMode) return true;
+        const validTasks = getFilteredTasksForProject(p);
+        return validTasks.some(t => t.assignee_id === myId);
+      });
+
+      const counts = { all: 0, overdue: 0, review: 0, working: 0, unstarted: 0, completed: 0 };
+      targetProjects.forEach(p => {
+        const andon = evaluateProjectAndon(p);
+        counts.all++;
+        if (counts[andon.statusKey] !== undefined) counts[andon.statusKey]++;
+      });
+
+      ['all', 'overdue', 'review', 'working', 'unstarted', 'completed'].forEach(k => {
+        const el = document.getElementById('count_' + k);
+        if (el) el.innerText = counts[k] || 0;
+      });
+
+      const filtered = targetProjects.filter(p => {
+        if (currentAndonFilter === 'all') return true;
+        const andon = evaluateProjectAndon(p);
+        return andon.statusKey === currentAndonFilter;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="col-span-full p-8 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs">該当する制作案件はありません</div>';
+        return;
+      }
+
+      container.innerHTML = filtered.map(p => {
+        const andon = evaluateProjectAndon(p);
+        const hasUnread = getProjectUnreadStatus(p);
+        const cat = getProjectCategory(p);
+        const catBadge = getCategoryBadgeHtml(cat);
+        const relatedPrj = getRelatedProject(p);
+        const validTasks = getFilteredTasksForProject(p).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
+
+        const codeBadge = p.ticket_code 
+          ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border dark:border-slate-700">${p.ticket_code}</span>`
+          : '';
+
+        let latestLog = null;
+        let latestTaskTitle = '';
+        validTasks.forEach(t => {
+          (t.logs || []).forEach(l => {
+            if (!latestLog || new Date(l.at) > new Date(latestLog.at)) {
+              latestLog = l;
+              latestTaskTitle = t.title;
+            }
+          });
+        });
+
+        let latestLogHtml = '<span class="text-slate-400 italic">ログなし</span>';
+        if (latestLog) {
+          const dateStr = new Date(latestLog.at).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+          const textPreview = latestLog.comment || (latestLog.url ? '提出ファイルあり' : latestLog.type);
+          latestLogHtml = `<span class="font-semibold text-slate-700 dark:text-slate-300">[${latestTaskTitle}]</span> <span class="truncate">${textPreview}</span> <span class="text-[10px] text-slate-400">(${dateStr})</span>`;
+        }
+
+        const unreadDot = hasUnread 
+          ? '<span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>'
+          : '';
+
+        let relatedLinkHtml = '';
+        if (relatedPrj) {
+          const relCat = getProjectCategory(relatedPrj);
+          const relLabel = relCat === 'mv' ? '🎬 MVへ' : '🎵 楽曲へ';
+          relatedLinkHtml = `<button onclick="event.stopPropagation(); openProjectChatModal('${relatedPrj.id}')" class="text-[10px] px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 font-semibold transition touch-target-btn">
+            ${relLabel} ➔
+          </button>`;
+        }
+
+        let activeSummaryHtml = '';
+        if (andon.statusKey === 'completed') {
+          activeSummaryHtml = '<div class="text-xs text-emerald-600 dark:text-emerald-400 font-bold">✓ 全工程完了</div>';
+        } else if (andon.activeItems.length === 0) {
+          activeSummaryHtml = '<div class="text-xs text-slate-400">前工程の完了待機中</div>';
+        } else {
+          activeSummaryHtml = andon.activeItems.map(item => {
+            const deadlineClass = item.isOverdue ? 'text-red-600 dark:text-red-400 font-bold' : 'text-slate-500 dark:text-slate-400';
+            const ballTag = getBallHolderTag(item.ballKey);
+
+            return `<div class="flex items-center justify-between text-xs py-0.5">
+              <div class="flex items-center space-x-1.5 truncate">
+                <span class="font-bold text-slate-800 dark:text-slate-100">${item.taskTitle}</span>
+                <span class="text-slate-400">|</span>
+                <span class="text-slate-600 dark:text-slate-300 font-medium">${item.assigneeName}</span>
+                ${ballTag}
+              </div>
+              <div class="text-[11px] ${deadlineClass} font-mono flex-shrink-0">
+                ${item.deadline}
+              </div>
+            </div>`;
+          }).join('');
+        }
+
+        return `<div onclick="openProjectChatModal('${p.id}')" class="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 cursor-pointer transition space-y-2.5 relative group flex flex-col justify-between active:scale-[0.99]">
+          
+          <div class="space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center space-x-1.5 min-w-0">
+                ${unreadDot}
+                ${codeBadge}
+                ${catBadge}
+                <h3 class="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 truncate group-hover:text-blue-600 transition">${p.title}</h3>
+              </div>
+              <div class="flex items-center space-x-1.5 flex-shrink-0">
+                ${relatedLinkHtml}
+                <span class="px-2 py-0.5 rounded text-[11px] font-bold ${andon.badgeClass}">${andon.dot} ${andon.label}</span>
+              </div>
+            </div>
+
+            <div class="bg-slate-50 dark:bg-slate-800/40 p-2 sm:p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 space-y-1">
+              ${activeSummaryHtml}
+            </div>
+          </div>
+
+          <div class="text-[11px] text-slate-500 flex items-center space-x-1.5 min-w-0 truncate pt-2 border-t border-slate-100 dark:border-slate-800/60">
+            <span class="text-xs flex-shrink-0">💬</span>
+            <div class="truncate">${latestLogHtml}</div>
+          </div>
+
+        </div>`;
+      }).join('');
+    }
+
+    // ====================================================
+    // Private Storage セキュアURL＆削除処理
     // ====================================================
     async function resolveSecureMediaUrl(rawPathOrUrl) {
       if (!rawPathOrUrl) return '';
-      // 既に完全なHTTP/HTTPS外部URLの場合はそのまま返す
       if (rawPathOrUrl.startsWith('http://') || rawPathOrUrl.startsWith('https://')) {
-        // もし過去の公開StorageURL形式だった場合はパスを抽出してSignedURL化を試行
         const match = rawPathOrUrl.match(/\/project_files\/(.+)$/);
         if (match && match[1]) {
           try {
@@ -822,7 +1403,6 @@
         return rawPathOrUrl;
       }
 
-      // Storage内のパス文字列（{projectId}/{filename}）の場合はSignedURL（2時間有効）を生成
       try {
         const { data, error } = await supabaseClient
           .storage
@@ -838,7 +1418,6 @@
       return '';
     }
 
-    // ストレージ上の指定案件フォルダ配下のファイルを全て物理削除
     async function purgeProjectStorageFiles(projectId) {
       if (!projectId) return;
       try {
@@ -867,7 +1446,6 @@
 
       let renderedText = text || '';
 
-      // 通常テキスト内のURLを展開
       renderedText = renderedText.replace(urlRegex, (url) => {
         const cleanUrl = url.trim();
         const lower = cleanUrl.toLowerCase();
@@ -886,7 +1464,6 @@
         return `<a href="${cleanUrl}" target="_blank" class="text-blue-600 dark:text-blue-400 underline font-bold break-all hover:text-blue-700">${cleanUrl} ↗</a>` + mediaHtml;
       });
 
-      // 別途セキュアな一時署名メディアURLが存在する場合のプレイヤー描画
       if (mediaSignedUrl) {
         const lower = mediaSignedUrl.toLowerCase();
         let secureMediaBlock = '';
@@ -910,7 +1487,6 @@
       return renderedText;
     }
 
-    // チャットタイムライン（昇順 ＆ セキュア一時署名URL解決）
     async function renderProjectChatTimeline(project) {
       const timelineContainer = document.getElementById('chatModalTimeline');
       if (!timelineContainer) return;
@@ -930,7 +1506,6 @@
         return;
       }
 
-      // 各ログの添付メディア（filePath / url）の一時署名URLを並列解決
       const resolvedList = await Promise.all(allLogs.map(async (l) => {
         const targetPath = l.file_path || l.url || null;
         let signedUrl = '';
@@ -1003,150 +1578,242 @@
       scrollToLatestMessage();
     }
 
-    // ====================================================
-    // 【統合送信処理】Private Storage アップロード＆ファイルパス保持
-    // ====================================================
-    async function executeFinalChatSubmission(shouldShiftSubsequent) {
-      closeModal('deadlineShiftModal');
-
-      const btn = document.getElementById('btnSubmitChat');
-      const taskId = document.getElementById('chatInputTaskId').value;
-      const newStatus = document.getElementById('chatInputStatus').value;
-      const newAssigneeId = document.getElementById('chatInputAssigneeId').value || null;
-      const newBallHolder = document.getElementById('chatInputBallHolder').value || 'creator';
-      const newDeadline = document.getElementById('chatInputDeadline').value || null;
-      let comment = document.getElementById('chatInputComment').value.trim();
-
-      const targetTask = (selectedProjectForChat.tasks || []).find(t => t.id === taskId);
-      if (!targetTask) return;
-
-      const isAssigneeChanged = (targetTask.assignee_id || null) !== newAssigneeId;
-      const isBallChanged = (targetTask.ball_holder || 'creator') !== newBallHolder;
-      const isDeadlineChanged = (targetTask.deadline || null) !== newDeadline;
-
-      if (!comment && !pendingUploadFile && !newStatus && !isAssigneeChanged && !isBallChanged && !isDeadlineChanged) {
-        alert('メッセージを入力するか、添付ファイル、または進行設定を変更してください');
-        return;
-      }
-
-      btn.disabled = true;
-      btn.innerText = '送信中...';
-
-      let uploadedFilePath = null;
-
-      try {
-        if (pendingUploadFile) {
-          const fileExt = pendingUploadFile.name.split('.').pop();
-          const cleanBase = pendingUploadFile.name.replace(/[^a-zA-Z0-9_-]/g, '_');
-          const fileName = `${Date.now()}_${cleanBase}.${fileExt}`;
-          const filePath = `${selectedProjectForChat.id}/${fileName}`;
-
-          const { error: uploadErr } = await supabaseClient
-            .storage
-            .from('project_files')
-            .upload(filePath, pendingUploadFile, {
-              cacheControl: '3600',
-              upsert: false
-            });
-
-          if (uploadErr) throw new Error('アップロード失敗: ' + uploadErr.message);
-
-          uploadedFilePath = filePath;
-        }
-
-        const urlMatch = comment.match(/(https?:\/\/[^\s]+)/);
-        const detectedUrl = urlMatch ? urlMatch[0] : null;
-
-        const currentUserName = getCurrentUserIdentifier() || '担当者';
-
-        let logType = 'コメント';
-        if (uploadedFilePath || detectedUrl) logType = '提出';
-        else if (newStatus === 'リテイク') logType = 'リテイク指示';
-        else if (newStatus === '完了') logType = '承認・完了';
-        else if (newStatus === '作業中') logType = '作業着手';
-        else if (newStatus === '提出・確認待ち') logType = '提出・確認待ち';
-        else if (isBallChanged && !comment) {
-          logType = '手番変更';
-          comment = `ボールを「${getBallHolderShortText(newBallHolder)}」に渡しました。`;
-        } else if (isDeadlineChanged && !comment) {
-          logType = '期日変更';
-          comment = `締切期日を「${newDeadline || '未設定'}」に変更しました。`;
-        } else if (isAssigneeChanged && !comment) {
-          const newAssigneeObj = allProfiles.find(u => u.id === newAssigneeId);
-          logType = '担当アサイン';
-          comment = `担当者を「${getDisplayName(newAssigneeObj)}」に設定しました。`;
-        }
-
-        const logs = targetTask.logs || [];
-        if (comment || uploadedFilePath || detectedUrl || newStatus) {
-          logs.push({
-            type: logType,
-            user: currentUserName,
-            file_path: uploadedFilePath || null,
-            url: detectedUrl || null,
-            comment: comment || 'ファイルを提出・更新しました。',
-            read_by: [currentUserName],
-            at: new Date().toISOString()
-          });
-        }
-
-        const updateData = { logs: logs };
-        if (uploadedFilePath) updateData.deliverable_url = uploadedFilePath;
-        else if (detectedUrl) updateData.deliverable_url = detectedUrl;
-        
-        if (newStatus) updateData.status = newStatus;
-        if (isAssigneeChanged) updateData.assignee_id = newAssigneeId;
-        if (isBallChanged) updateData.ball_holder = newBallHolder;
-        if (isDeadlineChanged) updateData.deadline = newDeadline;
-
-        const { error: dbErr } = await supabaseClient.from('tasks').update(updateData).eq('id', taskId);
-        if (dbErr) throw dbErr;
-
-        if (uploadedFilePath) targetTask.deliverable_url = uploadedFilePath;
-        else if (detectedUrl) targetTask.deliverable_url = detectedUrl;
-        
-        if (newStatus) targetTask.status = newStatus;
-        if (isAssigneeChanged) targetTask.assignee_id = newAssigneeId;
-        if (isBallChanged) targetTask.ball_holder = newBallHolder;
-        if (isDeadlineChanged) targetTask.deadline = newDeadline;
-        targetTask.logs = logs;
-
-        if (shouldShiftSubsequent && pendingDeadlineShiftContext) {
-          const checkedBoxes = Array.from(document.querySelectorAll('.shift-task-checkbox:checked'));
-          const updatePromises = checkedBoxes.map(cb => {
-            const shiftTaskId = cb.value;
-            const shiftedDate = cb.getAttribute('data-shifted');
-            const targetSubTask = (selectedProjectForChat.tasks || []).find(t => t.id === shiftTaskId);
-            if (targetSubTask) targetSubTask.deadline = shiftedDate;
-            return supabaseClient.from('tasks').update({ deadline: shiftedDate }).eq('id', shiftTaskId);
-          });
-          if (updatePromises.length > 0) {
-            await Promise.all(updatePromises);
-          }
-        }
-
-        pendingDeadlineShiftContext = null;
-        removeAttachedFile();
-        document.getElementById('chatInputComment').value = '';
-        document.getElementById('chatInputStatus').value = '';
-        document.getElementById('taskControlPanel').classList.add('hidden');
-        updateControlPanelActiveState();
-
-        await loadCreativeProjects();
-        openProjectChatModal(selectedProjectForChat.id);
-        renderAllUpdatesLogs();
-
-      } catch (err) {
-        alert('エラー: ' + err.message);
-      } finally {
-        btn.disabled = false;
-        btn.innerText = '送信 ➔';
+    function scrollToLatestMessage() {
+      const container = document.getElementById('chatModalTimeline');
+      if (container) {
+        container.scrollTop = container.scrollHeight;
       }
     }
 
-    // ====================================================
-    // 【案件完全削除（ストレージファイル物理削除連動）】
-    // ====================================================
+    // 案件チャットモーダルオープン
+    function openProjectChatModal(projectId) {
+      selectedProjectForChat = cachedCreativeProjects.find(p => p.id === projectId);
+      if (!selectedProjectForChat) return;
+
+      const p = selectedProjectForChat;
+      const cat = getProjectCategory(p);
+      const catEl = document.getElementById('chatModalCategoryBadge');
+      
+      const codeEl = document.getElementById('chatModalCodeBadge');
+      if (p.ticket_code) {
+        codeEl.classList.remove('hidden');
+        codeEl.innerText = p.ticket_code;
+      } else {
+        codeEl.classList.add('hidden');
+      }
+
+      if (cat === 'mv') {
+        catEl.className = "text-[11px] font-bold px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 dark:bg-purple-950/70 dark:text-purple-300 border border-purple-200 dark:border-purple-800";
+        catEl.innerText = "🎬 MV";
+      } else {
+        catEl.className = "text-[11px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 border border-blue-200 dark:border-blue-800";
+        catEl.innerText = "🎵 楽曲";
+      }
+
+      document.getElementById('chatModalTitle').innerText = p.title;
+
+      const driveEl = document.getElementById('chatModalDriveLink');
+      driveEl.innerHTML = p.drive_url 
+        ? `<a href="${p.drive_url}" target="_blank" class="text-[11px] px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-600 dark:text-slate-300 hover:underline">Drive ↗</a>`
+        : '';
+
+      const relatedLinkContainer = document.getElementById('chatModalRelatedLink');
+      const relatedPrj = getRelatedProject(p);
+      if (relatedPrj) {
+        const relCat = getProjectCategory(relatedPrj);
+        const relCode = relatedPrj.ticket_code ? `[${relatedPrj.ticket_code}] ` : '';
+        const relLabel = relCat === 'mv' ? `🎬 関連: ${relCode}MVを開く` : `🎵 関連: ${relCode}楽曲を開く`;
+        relatedLinkContainer.innerHTML = `<button onclick="openProjectChatModal('${relatedPrj.id}')" class="text-xs px-2.5 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 transition touch-target-btn">
+          ${relLabel} ➔
+        </button>`;
+      } else if (isAdminOrMaster()) {
+        const addLabel = cat === 'music' ? '＋ 🎬 関連MVを追加' : '＋ 🎵 関連楽曲を追加';
+        relatedLinkContainer.innerHTML = `<button onclick="openAddRelatedModal('${p.id}')" class="text-xs px-2.5 py-1.5 rounded-lg border border-dashed border-indigo-300 dark:border-indigo-800 bg-indigo-50/60 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 font-semibold transition touch-target-btn">
+          ${addLabel}
+        </button>`;
+      } else {
+        relatedLinkContainer.innerHTML = '';
+      }
+
+      const delBtn = document.getElementById('chatModalDeleteBtn');
+      if (delBtn) delBtn.classList.toggle('hidden', !isAdminOrMaster());
+
+      const fnBtn = document.getElementById('chatModalFinancialBtn');
+      if (fnBtn) {
+        if (isMaster()) {
+          fnBtn.classList.remove('hidden');
+          fnBtn.onclick = () => openFinancialModal(p.id);
+        } else {
+          fnBtn.classList.add('hidden');
+        }
+      }
+
+      const tasks = getFilteredTasksForProject(p).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      const taskListContainer = document.getElementById('chatModalTaskListContainer');
+      taskListContainer.innerHTML = `<div class="relative ml-2.5 pl-4 sm:pl-4 space-y-1 sm:space-y-2 border-l-2 border-slate-300 dark:border-slate-700 my-1 py-1">`
+        + tasks.map((t) => {
+            const isDone = t.status === '完了';
+            const isOverdue = t.deadline && t.deadline < todayStr && !isDone;
+            const assignee = allProfiles.find(u => u.id === t.assignee_id);
+            const assigneeName = assignee ? getDisplayName(assignee) : '未設定';
+
+            let dotColor = 'bg-slate-300 dark:bg-slate-600 ring-slate-100 dark:ring-slate-900';
+            let titleColor = 'text-slate-600 dark:text-slate-400';
+            if (isDone) {
+              dotColor = 'bg-emerald-500 ring-emerald-100 dark:ring-emerald-950';
+              titleColor = 'text-emerald-700 dark:text-emerald-300 line-through opacity-80';
+            } else if (isOverdue) {
+              dotColor = 'bg-red-500 ring-red-100 dark:ring-red-950';
+              titleColor = 'text-red-600 dark:text-red-400 font-bold';
+            } else if (t.status === '提出・確認待ち') {
+              dotColor = 'bg-amber-500 ring-amber-100 dark:ring-amber-950';
+              titleColor = 'text-amber-700 dark:text-amber-300 font-bold';
+            } else if (t.status === '作業中' || t.status === 'リテイク') {
+              dotColor = 'bg-blue-500 ring-blue-100 dark:ring-blue-950 animate-pulse';
+              titleColor = 'text-blue-700 dark:text-blue-300 font-bold';
+            }
+
+            const ballTag = getBallHolderTag(t.ball_holder || 'creator');
+
+            return `<div onclick="selectTaskForControl('${t.id}')" class="relative group cursor-pointer flex items-center justify-between text-xs py-2 sm:py-1 px-2 rounded-lg hover:bg-white/80 dark:hover:bg-slate-800/80 transition -ml-2 touch-target-row active:bg-blue-50 dark:active:bg-blue-950/40">
+              <span class="absolute -left-[14px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full ring-2 ${dotColor} z-10"></span>
+              
+              <div class="flex items-center space-x-1.5 truncate pl-2">
+                <span class="${titleColor} font-bold sm:font-normal">${t.title}</span>
+                <span class="text-slate-400 text-[10px]">·</span>
+                <span class="text-slate-600 dark:text-slate-300 font-medium text-[11px] truncate">${assigneeName}</span>
+                ${ballTag}
+              </div>
+
+              <div class="flex items-center space-x-1.5 text-[11px] font-mono flex-shrink-0">
+                <span class="${isOverdue ? 'text-red-500 font-bold' : 'text-slate-400'}">${formatDeadlineStr(t.deadline)}</span>
+                <span class="text-[10px] text-slate-400">(${t.status})</span>
+              </div>
+            </div>`;
+          }).join('')
+        + `</div>`;
+
+      const taskSelect = document.getElementById('chatInputTaskId');
+      taskSelect.innerHTML = tasks.map(t => {
+        return `<option value="${t.id}">${t.title}</option>`;
+      }).join('');
+
+      renderAssigneeDropdown();
+      syncSelectedTaskDetails();
+
+      document.getElementById('taskControlPanel').classList.add('hidden');
+      updateControlPanelActiveState();
+
+      renderProjectChatTimeline(p);
+
+      removeAttachedFile();
+      document.getElementById('chatInputStatus').value = '';
+      document.getElementById('chatInputComment').value = '';
+
+      openModal('projectChatModal');
+      autoMarkProjectTasksAsRead(p);
+    }
+
+    function selectTaskForControl(taskId) {
+      const taskSelect = document.getElementById('chatInputTaskId');
+      if (taskSelect) {
+        taskSelect.value = taskId;
+        syncSelectedTaskDetails();
+      }
+      toggleTaskControlPanel(true);
+    }
+
+    function syncSelectedTaskDetails() {
+      if (!selectedProjectForChat) return;
+      const taskId = document.getElementById('chatInputTaskId').value;
+      const targetTask = (selectedProjectForChat.tasks || []).find(t => t.id === taskId);
+      
+      const assigneeSelect = document.getElementById('chatInputAssigneeId');
+      const ballSelect = document.getElementById('chatInputBallHolder');
+      const deadlineInput = document.getElementById('chatInputDeadline');
+      const tagEl = document.getElementById('currentSelectedTaskTag');
+
+      if (targetTask) {
+        if (assigneeSelect) assigneeSelect.value = targetTask.assignee_id || '';
+        if (ballSelect) ballSelect.value = targetTask.ball_holder || 'creator';
+        if (deadlineInput) deadlineInput.value = targetTask.deadline || '';
+        if (tagEl) tagEl.innerText = `[${targetTask.title}]`;
+      }
+    }
+
+    function renderAssigneeDropdown() {
+      const select = document.getElementById('chatInputAssigneeId');
+      if (!select) return;
+      select.innerHTML = '<option value="">-- 未割当 --</option>' + allProfiles.map(u => {
+        return `<option value="${u.id}">${getDisplayName(u)}</option>`;
+      }).join('');
+    }
+
+    function handleChatSubmitClick() {
+      if (!selectedProjectForChat) return;
+
+      const taskId = document.getElementById('chatInputTaskId').value;
+      const newDeadline = document.getElementById('chatInputDeadline').value || null;
+      const targetTask = (selectedProjectForChat.tasks || []).find(t => t.id === taskId);
+      if (!targetTask) return;
+
+      const oldDeadline = targetTask.deadline || null;
+
+      if (newDeadline && oldDeadline && newDeadline !== oldDeadline) {
+        const oldTime = new Date(oldDeadline).getTime();
+        const newTime = new Date(newDeadline).getTime();
+        const diffDays = Math.round((newTime - oldTime) / (1000 * 60 * 60 * 24));
+
+        if (diffDays !== 0) {
+          const validTasks = getFilteredTasksForProject(selectedProjectForChat).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
+          const currentOrder = targetTask.sort_order || 0;
+          const subsequentTasks = validTasks.filter(t => (t.sort_order || 0) > currentOrder && t.deadline);
+
+          if (subsequentTasks.length > 0) {
+            openDeadlineShiftModal(targetTask, oldDeadline, newDeadline, diffDays, subsequentTasks);
+            return;
+          }
+        }
+      }
+
+      executeFinalChatSubmission(false);
+    }
+
+    function openDeadlineShiftModal(targetTask, oldDeadline, newDeadline, diffDays, subsequentTasks) {
+      pendingDeadlineShiftContext = {
+        diffDays: diffDays,
+        subsequentTasks: subsequentTasks
+      };
+
+      const signStr = diffDays > 0 ? `+${diffDays}日 (後ろ倒し)` : `${diffDays}日 (前倒し)`;
+      document.getElementById('shiftModalLeadText').innerHTML = 
+        `「<span class="text-blue-600 dark:text-blue-400">${targetTask.title}</span>」の締切が <strong>${signStr}</strong> 変更されます。<br>` +
+        `<span class="text-[11px] font-normal text-slate-500 font-mono">（${oldDeadline} ➔ ${newDeadline}）</span>`;
+
+      const listContainer = document.getElementById('shiftCandidatesList');
+      listContainer.innerHTML = subsequentTasks.map(t => {
+        const curDate = new Date(t.deadline);
+        curDate.setDate(curDate.getDate() + diffDays);
+        const shiftedDateStr = curDate.toISOString().split('T')[0];
+
+        return `<label class="flex items-center justify-between p-2.5 rounded-lg bg-white dark:bg-slate-800 border dark:border-slate-700 cursor-pointer hover:border-blue-400 transition touch-target-row">
+          <div class="flex items-center space-x-2 truncate">
+            <input type="checkbox" value="${t.id}" data-shifted="${shiftedDateStr}" checked class="shift-task-checkbox w-4 h-4 rounded text-blue-600">
+            <span class="font-bold text-slate-800 dark:text-slate-100">${t.title}</span>
+          </div>
+          <div class="text-[11px] text-slate-500 font-mono">
+            <span>${formatDeadlineStr(t.deadline)}</span>
+            <span class="mx-1 text-slate-400">➔</span>
+            <span class="font-bold text-blue-600 dark:text-blue-400">${formatDeadlineStr(shiftedDateStr)}</span>
+          </div>
+        </label>`;
+      }).join('');
+
+      openModal('deadlineShiftModal');
+    }
+
     async function deleteCurrentProject() {
       if (!selectedProjectForChat) return;
       if (!isAdminOrMaster()) return alert('案件の削除は管理者権限のみ可能です');
@@ -1165,13 +1832,11 @@
           const doubleConfirm = confirm(`【最終確認】関連チケット・添付された未公開音源/画像ファイルも含め、完全に削除します。よろしいですか？`);
           if (!doubleConfirm) return;
 
-          // 1. 両方のストレージファイルを物理削除
           await Promise.all([
             purgeProjectStorageFiles(p.id),
             purgeProjectStorageFiles(relatedPrj.id)
           ]);
 
-          // 2. DBレコード削除
           await supabaseClient.from('projects').delete().in('id', [p.id, relatedPrj.id]);
           closeModal('projectChatModal');
           await loadCreativeProjects();
@@ -1202,7 +1867,6 @@
       }
     }
 
-    // 以降、既存ロジック
     function openAddTaskModal() {
       if (!selectedProjectForChat) return;
       const p = selectedProjectForChat;
@@ -1320,7 +1984,7 @@
 
       const { data: newPrj, error: prjErr } = await supabaseClient.from('projects').insert({
         type: 'creative',
-        title: baseTitle,
+        title: p.title,
         category: newCat,
         ticket_code: newTicketCode,
         group_id: groupId,
@@ -1516,321 +2180,7 @@
       }
     }
 
-    let workflowMasters = [
-      { key: 'compose', name: '作曲', days: 7, track: 'music', order: 1, depends: [] },
-      { key: 'lyrics', name: '作詞', days: 5, track: 'music', order: 2, depends: ['作曲'] },
-      { key: 'arrange', name: '編曲', days: 7, track: 'music', order: 3, depends: ['作曲'] },
-      { key: 'rec', name: 'レコーディング', days: 3, track: 'music', order: 4, depends: ['作詞', '編曲'] },
-      { key: 'mix', name: 'ミキシング', days: 5, track: 'music', order: 5, depends: ['レコーディング'] },
-      { key: 'mastering', name: 'マスタリング', days: 2, track: 'music', order: 6, depends: ['ミキシング'] },
-      { key: 'illust', name: 'イラスト', days: 14, track: 'mv', order: 1, depends: [] },
-      { key: 'movie', name: '映像', days: 10, track: 'mv', order: 2, depends: ['イラスト'] }
-    ];
-
-    function handleFormSubmit(e) {
-      e.preventDefault();
-      handleSmartLogin();
-    }
-
-    async function handleSmartLogin() {
-      const identifier = document.getElementById('loginIdentifier').value.trim();
-      const password = document.getElementById('loginPassword').value.trim();
-      const msg = document.getElementById('loginMsg');
-
-      if (!identifier || !password) {
-        alert('ユーザーIDまたはメールアドレスとパスワードを入力してください');
-        return;
-      }
-
-      msg.innerText = "認証確認中...";
-      msg.className = "mt-4 text-xs text-center text-blue-500 font-bold";
-
-      let loginEmail = identifier;
-
-      try {
-        if (!identifier.includes('@')) {
-          const { data: profile, error: searchErr } = await supabaseClient
-            .from('profiles')
-            .select('email')
-            .eq('user_id', identifier)
-            .maybeSingle();
-
-          if (searchErr || !profile || !profile.email) {
-            msg.innerText = "エラー: 該当するユーザーIDが見つかりません";
-            msg.className = "mt-4 text-xs text-center text-red-500 font-bold";
-            alert("エラー: 該当するユーザーIDが見つかりません");
-            return;
-          }
-          loginEmail = profile.email;
-        }
-
-        const { data, error } = await supabaseClient.auth.signInWithPassword({ 
-          email: loginEmail, 
-          password: password 
-        });
-
-        if (error) {
-          msg.innerText = "ログイン失敗: " + error.message;
-          msg.className = "mt-4 text-xs text-center text-red-500 font-bold";
-          alert("ログイン失敗: " + error.message);
-        } else {
-          msg.innerText = "ログイン成功！";
-          msg.className = "mt-4 text-xs text-center text-emerald-500 font-bold";
-          currentUser = data.user;
-          
-          await supabaseClient.from('profiles').update({
-            last_sign_in_at: new Date().toISOString(),
-            last_active_at: new Date().toISOString()
-          }).eq('id', currentUser.id);
-
-          await loadUserProfile();
-        }
-      } catch (err) {
-        msg.innerText = "通信エラー: " + err.message;
-        msg.className = "mt-4 text-xs text-center text-red-500 font-bold";
-        alert("通信エラー: " + err.message);
-      }
-    }
-
-    async function init() {
-      detectTouchDevice();
-      window.addEventListener('resize', detectTouchDevice);
-      initTheme();
-      try {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (session) {
-          currentUser = session.user;
-          await loadUserProfile();
-          updateHeartbeat();
-          setInterval(updateHeartbeat, 120000);
-        } else {
-          renderAuthUI(false);
-        }
-      } catch (e) {
-        console.error("Init Error:", e);
-      }
-    }
-
-    async function loadUserProfile() {
-      try {
-        const { data, error } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).single();
-        if (error) console.error("Profile load err:", error);
-        
-        userProfile = data || { 
-          role: 'user', 
-          email: currentUser.email, 
-          name: '',
-          user_id: ''
-        };
-
-        renderAuthUI(true);
-        await loadDashboard();
-      } catch (err) {
-        alert("ユーザープロファイル取得エラー: " + err.message);
-      }
-    }
-
-    function renderAuthUI(isLoggedIn) {
-      const loginView = document.getElementById('loginView');
-      const appView = document.getElementById('appView');
-      const roleBadge = document.getElementById('roleBadge');
-      const viewToggleBtn = document.getElementById('viewToggleBtn');
-      const mobileViewToggleBtn = document.getElementById('mobileViewToggleBtn');
-      const pcNav = document.getElementById('pcAdminNav');
-      const pcUserActions = document.getElementById('pcUserActions');
-      const mobileHeaderActions = document.getElementById('mobileHeaderActions');
-      const mobileBottomNav = document.getElementById('mobileBottomNav');
-      const btnNewProjectTop = document.getElementById('btnNewProjectTop');
-
-      if (isLoggedIn && userProfile) {
-        loginView.classList.add('hidden');
-        appView.classList.remove('hidden');
-        roleBadge.classList.remove('hidden');
-
-        let roleText = 'User';
-        let roleClass = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300';
-        if (isMaster()) {
-          roleText = '👑 Master';
-          roleClass = 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 ring-1 ring-purple-300 dark:ring-purple-700';
-        } else if (userProfile.role === 'admin') {
-          roleText = '管理者';
-          roleClass = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300';
-        }
-
-        roleBadge.innerText = roleText;
-        roleBadge.className = roleClass;
-
-        const displayName = getDisplayName(userProfile);
-        const initial = displayName.charAt(0).toUpperCase() || 'U';
-        document.querySelectorAll('.userInitialAvatar').forEach(el => el.innerText = initial);
-        document.getElementById('pcUserDisplayName').innerText = displayName;
-        document.getElementById('mobileUserMenuName').innerText = displayName;
-        document.getElementById('mobileUserMenuRole').innerText = roleText;
-        document.getElementById('mobileUserMenuRole').className = roleClass;
-
-        if (isAdminOrMaster()) {
-          viewToggleBtn.classList.remove('hidden');
-          mobileViewToggleBtn.classList.remove('hidden');
-          btnNewProjectTop.classList.remove('hidden');
-          pcNav.classList.remove('md:hidden');
-          pcNav.classList.add('md:flex');
-          pcUserActions.classList.remove('md:hidden');
-          pcUserActions.classList.add('md:flex');
-          mobileHeaderActions.classList.remove('hidden');
-          mobileBottomNav.classList.remove('hidden');
-          applyAdminViewMode();
-        } else {
-          viewToggleBtn.classList.add('hidden');
-          mobileViewToggleBtn.classList.add('hidden');
-          btnNewProjectTop.classList.add('hidden');
-          pcNav.classList.add('md:hidden');
-          pcNav.classList.remove('md:flex');
-          pcUserActions.classList.remove('md:hidden');
-          pcUserActions.classList.add('md:flex');
-          mobileHeaderActions.classList.remove('hidden');
-          mobileBottomNav.classList.add('hidden');
-          
-          document.getElementById('salesSection').classList.add('hidden');
-          document.getElementById('updatesSection').classList.add('hidden');
-          document.getElementById('masterSection').classList.add('hidden');
-          document.getElementById('membersSection').classList.add('hidden');
-          document.getElementById('creativeSection').classList.remove('hidden');
-          
-          const scopeBadge = document.getElementById('creativeScopeBadge');
-          if (scopeBadge) scopeBadge.innerText = 'マイ担当のみ';
-          renderCreativeProjectsList();
-        }
-      } else {
-        loginView.classList.remove('hidden');
-        appView.classList.add('hidden');
-        roleBadge.classList.add('hidden');
-        pcNav.classList.add('md:hidden');
-        pcNav.classList.remove('md:flex');
-        pcUserActions.classList.add('md:hidden');
-        pcUserActions.classList.remove('md:flex');
-        mobileHeaderActions.classList.add('hidden');
-        mobileBottomNav.classList.add('hidden');
-      }
-    }
-
-    function toggleAdminViewMode() {
-      adminViewMode = (adminViewMode === 'admin') ? 'creator' : 'admin';
-      applyAdminViewMode();
-    }
-
-    function applyAdminViewMode() {
-      const btn = document.getElementById('viewToggleBtn');
-      const mobBtn = document.getElementById('mobileViewToggleBtn');
-      const scopeBadge = document.getElementById('creativeScopeBadge');
-
-      if (adminViewMode === 'creator') {
-        btn.innerText = 'マイ担当表示中 (全件へ戻る)';
-        btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 hover:bg-amber-100 transition whitespace-nowrap";
-        mobBtn.innerHTML = '<span>🔄 視点切替 (現在: マイ担当)</span>';
-        if (scopeBadge) scopeBadge.innerText = 'マイ担当のみ';
-      } else {
-        btn.innerText = '視点切替';
-        btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 transition whitespace-nowrap";
-        mobBtn.innerHTML = '<span>🔄 視点切替 (現在: 全案件)</span>';
-        if (scopeBadge) scopeBadge.innerText = '全案件';
-      }
-      renderCreativeProjectsList();
-    }
-
-    function openMyAccountModal() {
-      document.getElementById('myAccountName').value = userProfile.name || '';
-      document.getElementById('myAccountUserId').value = userProfile.user_id || '';
-      document.getElementById('myAccountNewPassword').value = '';
-      openModal('myAccountModal');
-    }
-
-    async function saveMyAccount() {
-      const newName = document.getElementById('myAccountName').value.trim();
-      const newUserId = document.getElementById('myAccountUserId').value.trim();
-      const newPassword = document.getElementById('myAccountNewPassword').value.trim();
-
-      if (!newName || !newUserId) return alert('表示名とユーザーIDは必須です');
-
-      const { error: profileErr } = await supabaseClient
-        .from('profiles')
-        .update({ name: newName, user_id: newUserId })
-        .eq('id', currentUser.id);
-
-      if (profileErr) return alert('更新エラー: ' + profileErr.message);
-
-      if (newPassword) {
-        if (newPassword.length < 6) return alert('パスワードは6文字以上で設定してください');
-        const { error: pwErr } = await supabaseClient.auth.updateUser({ password: newPassword });
-        if (pwErr) return alert('パスワード変更エラー: ' + pwErr.message);
-      }
-
-      alert('アカウント設定を保存しました！');
-      closeModal('myAccountModal');
-      await loadUserProfile();
-    }
-
-    async function logout() {
-      await supabaseClient.auth.signOut();
-      window.location.reload();
-    }
-
-    async function loadDashboard() {
-      await Promise.all([loadMasterFromDB(), loadAllProfiles(), loadSalesTemplates()]);
-      renderMasterTable();
-      renderCheckboxes();
-      await loadCreativeProjects();
-      if (isAdminOrMaster()) {
-        await loadLeads();
-        renderMembersTable();
-        renderAllUpdatesLogs();
-      }
-    }
-
-    async function loadMasterFromDB() {
-      try {
-        const { data } = await supabaseClient.from('process_masters').select('*');
-        if (data && data.length > 0) {
-          workflowMasters.forEach(w => {
-            const found = data.find(d => d.name === w.name);
-            if (found && typeof found.standard_days === 'number') {
-              w.days = found.standard_days;
-              w.db_id = found.id;
-            }
-          });
-        }
-      } catch (err) {
-        console.error("Master load error:", err);
-      }
-    }
-
-    async function loadAllProfiles() {
-      const { data } = await supabaseClient.from('profiles').select('*').order('created_at', { ascending: false });
-      allProfiles = data || [];
-    }
-
-    async function loadSalesTemplates() {
-      const { data } = await supabaseClient.from('sales_templates').select('*').order('sort_order');
-      salesTemplates = data || [];
-
-      const selector = document.getElementById('templateSelector');
-      if (!selector) return;
-      selector.innerHTML = '<option value="">-- 定型文を選択 --</option>' + salesTemplates.map(t => {
-        return `<option value="${t.id}">${t.title}</option>`;
-      }).join('');
-    }
-
-    async function loadCreativeProjects() {
-      const { data: prjs, error } = await supabaseClient
-        .from('projects')
-        .select('*, tasks(*)')
-        .eq('type', 'creative')
-        .order('created_at', { ascending: false });
-
-      if (error) console.error("Projects load error:", error);
-      cachedCreativeProjects = prjs || [];
-      renderCreativeProjectsList();
-    }
-
+    // CRM / リード管理
     async function loadLeads() {
       const { data } = await supabaseClient.from('leads').select('*').order('created_at', { ascending: false });
       allLeads = data || [];
@@ -2189,6 +2539,17 @@
       }).join('');
     }
 
+    let workflowMasters = [
+      { key: 'compose', name: '作曲', days: 7, track: 'music', order: 1, depends: [] },
+      { key: 'lyrics', name: '作詞', days: 5, track: 'music', order: 2, depends: ['作曲'] },
+      { key: 'arrange', name: '編曲', days: 7, track: 'music', order: 3, depends: ['作曲'] },
+      { key: 'rec', name: 'レコーディング', days: 3, track: 'music', order: 4, depends: ['作詞', '編曲'] },
+      { key: 'mix', name: 'ミキシング', days: 5, track: 'music', order: 5, depends: ['レコーディング'] },
+      { key: 'mastering', name: 'マスタリング', days: 2, track: 'music', order: 6, depends: ['ミキシング'] },
+      { key: 'illust', name: 'イラスト', days: 14, track: 'mv', order: 1, depends: [] },
+      { key: 'movie', name: '映像', days: 10, track: 'mv', order: 2, depends: ['イラスト'] }
+    ];
+
     function renderMasterTable() {
       const tbody = document.getElementById('masterTableBody');
       if (!tbody) return;
@@ -2501,6 +2862,294 @@
       await loadCreativeProjects();
     }
 
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      handleSmartLogin();
+    }
+
+    async function handleSmartLogin() {
+      const identifier = document.getElementById('loginIdentifier').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
+      const msg = document.getElementById('loginMsg');
+
+      if (!identifier || !password) {
+        alert('ユーザーIDまたはメールアドレスとパスワードを入力してください');
+        return;
+      }
+
+      msg.innerText = "認証確認中...";
+      msg.className = "mt-4 text-xs text-center text-blue-500 font-bold";
+
+      let loginEmail = identifier;
+
+      try {
+        if (!identifier.includes('@')) {
+          const { data: profile, error: searchErr } = await supabaseClient
+            .from('profiles')
+            .select('email')
+            .eq('user_id', identifier)
+            .maybeSingle();
+
+          if (searchErr || !profile || !profile.email) {
+            msg.innerText = "エラー: 該当するユーザーIDが見つかりません";
+            msg.className = "mt-4 text-xs text-center text-red-500 font-bold";
+            alert("エラー: 該当するユーザーIDが見つかりません");
+            return;
+          }
+          loginEmail = profile.email;
+        }
+
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ 
+          email: loginEmail, 
+          password: password 
+        });
+
+        if (error) {
+          msg.innerText = "ログイン失敗: " + error.message;
+          msg.className = "mt-4 text-xs text-center text-red-500 font-bold";
+          alert("ログイン失敗: " + error.message);
+        } else {
+          msg.innerText = "ログイン成功！";
+          msg.className = "mt-4 text-xs text-center text-emerald-500 font-bold";
+          currentUser = data.user;
+          
+          await supabaseClient.from('profiles').update({
+            last_sign_in_at: new Date().toISOString(),
+            last_active_at: new Date().toISOString()
+          }).eq('id', currentUser.id);
+
+          await loadUserProfile();
+        }
+      } catch (err) {
+        msg.innerText = "通信エラー: " + err.message;
+        msg.className = "mt-4 text-xs text-center text-red-500 font-bold";
+        alert("通信エラー: " + err.message);
+      }
+    }
+
+    async function loadUserProfile() {
+      try {
+        const { data, error } = await supabaseClient.from('profiles').select('*').eq('id', currentUser.id).maybeSingle();
+        if (error) console.error("Profile load err:", error);
+        
+        userProfile = data || { 
+          role: 'user', 
+          email: currentUser.email, 
+          name: '',
+          user_id: ''
+        };
+
+        renderAuthUI(true);
+        await loadDashboard();
+      } catch (err) {
+        console.error("Profile exception:", err);
+        userProfile = { role: 'user', email: currentUser.email, name: '', user_id: '' };
+        renderAuthUI(true);
+        await loadDashboard();
+      }
+    }
+
+    function renderAuthUI(isLoggedIn) {
+      const loginView = document.getElementById('loginView');
+      const appView = document.getElementById('appView');
+      const roleBadge = document.getElementById('roleBadge');
+      const viewToggleBtn = document.getElementById('viewToggleBtn');
+      const mobileViewToggleBtn = document.getElementById('mobileViewToggleBtn');
+      const pcNav = document.getElementById('pcAdminNav');
+      const pcUserActions = document.getElementById('pcUserActions');
+      const mobileHeaderActions = document.getElementById('mobileHeaderActions');
+      const mobileBottomNav = document.getElementById('mobileBottomNav');
+      const btnNewProjectTop = document.getElementById('btnNewProjectTop');
+
+      if (isLoggedIn && userProfile) {
+        loginView.classList.add('hidden');
+        appView.classList.remove('hidden');
+        roleBadge.classList.remove('hidden');
+
+        let roleText = 'User';
+        let roleClass = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300';
+        if (isMaster()) {
+          roleText = '👑 Master';
+          roleClass = 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 ring-1 ring-purple-300 dark:ring-purple-700';
+        } else if (userProfile.role === 'admin') {
+          roleText = '管理者';
+          roleClass = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300';
+        }
+
+        roleBadge.innerText = roleText;
+        roleBadge.className = roleClass;
+
+        const displayName = getDisplayName(userProfile);
+        const initial = displayName.charAt(0).toUpperCase() || 'U';
+        document.querySelectorAll('.userInitialAvatar').forEach(el => el.innerText = initial);
+        document.getElementById('pcUserDisplayName').innerText = displayName;
+        document.getElementById('mobileUserMenuName').innerText = displayName;
+        document.getElementById('mobileUserMenuRole').innerText = roleText;
+        document.getElementById('mobileUserMenuRole').className = roleClass;
+
+        if (isAdminOrMaster()) {
+          viewToggleBtn.classList.remove('hidden');
+          mobileViewToggleBtn.classList.remove('hidden');
+          btnNewProjectTop.classList.remove('hidden');
+          pcNav.classList.remove('md:hidden');
+          pcNav.classList.add('md:flex');
+          pcUserActions.classList.remove('md:hidden');
+          pcUserActions.classList.add('md:flex');
+          mobileHeaderActions.classList.remove('hidden');
+          mobileBottomNav.classList.remove('hidden');
+          applyAdminViewMode();
+        } else {
+          viewToggleBtn.classList.add('hidden');
+          mobileViewToggleBtn.classList.add('hidden');
+          btnNewProjectTop.classList.add('hidden');
+          pcNav.classList.add('md:hidden');
+          pcNav.classList.remove('md:flex');
+          pcUserActions.classList.remove('md:hidden');
+          pcUserActions.classList.add('md:flex');
+          mobileHeaderActions.classList.remove('hidden');
+          mobileBottomNav.classList.add('hidden');
+          
+          document.getElementById('salesSection').classList.add('hidden');
+          document.getElementById('updatesSection').classList.add('hidden');
+          document.getElementById('masterSection').classList.add('hidden');
+          document.getElementById('membersSection').classList.add('hidden');
+          document.getElementById('creativeSection').classList.remove('hidden');
+          
+          const scopeBadge = document.getElementById('creativeScopeBadge');
+          if (scopeBadge) scopeBadge.innerText = 'マイ担当のみ';
+          renderCreativeProjectsList();
+        }
+      } else {
+        loginView.classList.remove('hidden');
+        appView.classList.add('hidden');
+        roleBadge.classList.add('hidden');
+        pcNav.classList.add('md:hidden');
+        pcNav.classList.remove('md:flex');
+        pcUserActions.classList.add('md:hidden');
+        pcUserActions.classList.remove('md:flex');
+        mobileHeaderActions.classList.add('hidden');
+        mobileBottomNav.classList.add('hidden');
+      }
+    }
+
+    function toggleAdminViewMode() {
+      adminViewMode = (adminViewMode === 'admin') ? 'creator' : 'admin';
+      applyAdminViewMode();
+    }
+
+    function applyAdminViewMode() {
+      const btn = document.getElementById('viewToggleBtn');
+      const mobBtn = document.getElementById('mobileViewToggleBtn');
+      const scopeBadge = document.getElementById('creativeScopeBadge');
+
+      if (adminViewMode === 'creator') {
+        btn.innerText = 'マイ担当表示中 (全件へ戻る)';
+        btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 hover:bg-amber-100 transition whitespace-nowrap";
+        mobBtn.innerHTML = '<span>🔄 視点切替 (現在: マイ担当)</span>';
+        if (scopeBadge) scopeBadge.innerText = 'マイ担当のみ';
+      } else {
+        btn.innerText = '視点切替';
+        btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 transition whitespace-nowrap";
+        mobBtn.innerHTML = '<span>🔄 視点切替 (現在: 全案件)</span>';
+        if (scopeBadge) scopeBadge.innerText = '全案件';
+      }
+      renderCreativeProjectsList();
+    }
+
+    function openMyAccountModal() {
+      document.getElementById('myAccountName').value = userProfile.name || '';
+      document.getElementById('myAccountUserId').value = userProfile.user_id || '';
+      document.getElementById('myAccountNewPassword').value = '';
+      openModal('myAccountModal');
+    }
+
+    async function saveMyAccount() {
+      const newName = document.getElementById('myAccountName').value.trim();
+      const newUserId = document.getElementById('myAccountUserId').value.trim();
+      const newPassword = document.getElementById('myAccountNewPassword').value.trim();
+
+      if (!newName || !newUserId) return alert('表示名とユーザーIDは必須です');
+
+      const { error: profileErr } = await supabaseClient
+        .from('profiles')
+        .update({ name: newName, user_id: newUserId })
+        .eq('id', currentUser.id);
+
+      if (profileErr) return alert('更新エラー: ' + profileErr.message);
+
+      if (newPassword) {
+        if (newPassword.length < 6) return alert('パスワードは6文字以上で設定してください');
+        const { error: pwErr } = await supabaseClient.auth.updateUser({ password: newPassword });
+        if (pwErr) return alert('パスワード変更エラー: ' + pwErr.message);
+      }
+
+      alert('アカウント設定を保存しました！');
+      closeModal('myAccountModal');
+      await loadUserProfile();
+    }
+
+    async function logout() {
+      await supabaseClient.auth.signOut();
+      window.location.reload();
+    }
+
+    async function loadDashboard() {
+      await Promise.all([loadMasterFromDB(), loadAllProfiles(), loadSalesTemplates()]);
+      renderMasterTable();
+      renderCheckboxes();
+      await loadCreativeProjects();
+      if (isAdminOrMaster()) {
+        await loadLeads();
+        renderMembersTable();
+        renderAllUpdatesLogs();
+      }
+    }
+
+    async function loadMasterFromDB() {
+      try {
+        const { data } = await supabaseClient.from('process_masters').select('*');
+        if (data && data.length > 0) {
+          workflowMasters.forEach(w => {
+            const found = data.find(d => d.name === w.name);
+            if (found && typeof found.standard_days === 'number') {
+              w.days = found.standard_days;
+              w.db_id = found.id;
+            }
+          });
+        }
+      } catch (err) {
+        console.error("Master load error:", err);
+      }
+    }
+
+    async function loadAllProfiles() {
+      const { data } = await supabaseClient.from('profiles').select('*').order('created_at', { ascending: false });
+      allProfiles = data || [];
+    }
+
+    async function loadSalesTemplates() {
+      const { data } = await supabaseClient.from('sales_templates').select('*').order('sort_order');
+      salesTemplates = data || [];
+
+      const selector = document.getElementById('templateSelector');
+      if (!selector) return;
+      selector.innerHTML = '<option value="">-- 定型文を選択 --</option>' + salesTemplates.map(t => {
+        return `<option value="${t.id}">${t.title}</option>`;
+      }).join('');
+    }
+
+    async function loadCreativeProjects() {
+      const { data: prjs, error } = await supabaseClient
+        .from('projects')
+        .select('*, tasks(*)')
+        .eq('type', 'creative')
+        .order('created_at', { ascending: false });
+
+      if (error) console.error("Projects load error:", error);
+      cachedCreativeProjects = prjs || [];
+      renderCreativeProjectsList();
+    }
+
     function switchTab(tab) {
       currentActiveTab = tab;
       ['creative', 'sales', 'updates', 'master', 'members'].forEach(t => {
@@ -2578,6 +3227,25 @@
     function closeMobileMoreSheet() {
       const sheet = document.getElementById('mobileMoreSheet');
       if (sheet) sheet.classList.add('hidden');
+    }
+
+    async function init() {
+      detectTouchDevice();
+      window.addEventListener('resize', detectTouchDevice);
+      initTheme();
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session) {
+          currentUser = session.user;
+          await loadUserProfile();
+          updateHeartbeat();
+          setInterval(updateHeartbeat, 120000);
+        } else {
+          renderAuthUI(false);
+        }
+      } catch (e) {
+        console.error("Init Error:", e);
+      }
     }
 
     init();
