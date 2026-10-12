@@ -315,10 +315,13 @@
       <!-- ヘッダー -->
       <div class="flex items-start justify-between border-b dark:border-slate-800 pb-3 flex-shrink-0 gap-2">
         <div class="min-w-0 flex-1">
-          <div class="flex items-center space-x-2">
+          <div class="flex flex-wrap items-center gap-1.5">
+            <span id="chatModalCategoryBadge" class="text-xs font-bold px-2 py-0.5 rounded"></span>
             <h3 id="chatModalTitle" class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 truncate"></h3>
             <span id="chatModalDriveLink"></span>
           </div>
+          <!-- 関連チケットリンク -->
+          <div id="chatModalRelatedLink" class="mt-1"></div>
         </div>
         <div class="flex items-center space-x-1.5 flex-shrink-0">
           <button id="chatModalFinancialBtn" class="hidden px-2 py-1 text-xs rounded bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-bold border border-purple-200 dark:border-purple-800">
@@ -630,26 +633,44 @@
     </div>
   </div>
 
-  <!-- モーダル: 新規案件起票（案件名に完全統合） -->
+  <!-- ==================== 【新設計】新規案件起票モーダル（楽曲 / MV チケット分割対応） ==================== -->
   <div id="newProjectModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-5 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto border border-slate-200 dark:border-slate-800">
       <h3 class="font-bold text-base sm:text-lg">新規制作案件起票</h3>
+      
       <div>
-        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">案件名 *</label>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">基本案件名 *</label>
         <input type="text" id="newPrjTitle" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="例: 【〇〇様】2nd Single 制作">
       </div>
+
       <div>
         <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">共有ドライブURL (任意)</label>
         <input type="url" id="newPrjDrive" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="https://drive.google.com/...">
       </div>
 
-      <div class="border-t dark:border-slate-800 pt-3">
-        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">自動納期計算・工程組み込み</label>
-        <div class="flex items-center space-x-2 mb-2">
-          <label class="text-xs text-slate-500">着手予定日:</label>
-          <input type="date" id="autoCalcStartDate" class="px-2 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs sm:text-sm">
+      <!-- チケット分割選択 -->
+      <div class="border-t dark:border-slate-800 pt-3 space-y-2">
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">作成するチケット（関連チケットとして連携）</label>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <label class="flex items-center space-x-2 p-2 rounded-lg border dark:border-slate-700 bg-blue-50/50 dark:bg-blue-950/20 cursor-pointer">
+            <input type="checkbox" id="checkCreateMusic" checked onchange="toggleTrackCheckboxes()" class="rounded text-blue-600">
+            <span class="font-bold text-blue-700 dark:text-blue-300">🎵 [楽曲] チケット</span>
+          </label>
+          <label class="flex items-center space-x-2 p-2 rounded-lg border dark:border-slate-700 bg-purple-50/50 dark:bg-purple-950/20 cursor-pointer">
+            <input type="checkbox" id="checkCreateMv" checked onchange="toggleTrackCheckboxes()" class="rounded text-purple-600">
+            <span class="font-bold text-purple-700 dark:text-purple-300">🎬 [イラスト/MV] チケット</span>
+          </label>
         </div>
-        <div id="processCheckboxes" class="space-y-1.5 max-h-40 overflow-y-auto p-2 bg-slate-50 dark:bg-slate-800 rounded-lg border dark:border-slate-700 text-xs sm:text-sm"></div>
+      </div>
+
+      <!-- 工程組み込み -->
+      <div class="border-t dark:border-slate-800 pt-3">
+        <div class="flex items-center justify-between mb-2">
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">着手日 & 工程組み込み</label>
+          <input type="date" id="autoCalcStartDate" class="px-2 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs">
+        </div>
+        
+        <div id="processCheckboxes" class="space-y-1.5 max-h-44 overflow-y-auto p-2 bg-slate-50 dark:bg-slate-800 rounded-lg border dark:border-slate-700 text-xs"></div>
       </div>
 
       <div class="flex justify-end space-x-2 pt-2">
@@ -784,7 +805,7 @@
       });
     }
 
-    // ドラッグ＆ドロップ ＆ 添付ファイル処理
+    // D&D & ファイル選択
     function handleDragOver(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -912,7 +933,6 @@
         return {
           statusKey: 'completed',
           label: '全工程完了',
-          color: 'bg-emerald-500',
           badgeClass: 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300',
           dot: '🟢',
           assigneeName: '-',
@@ -928,7 +948,6 @@
         return {
           statusKey: 'overdue',
           label: '期日超過',
-          color: 'bg-red-500',
           badgeClass: 'bg-red-100 dark:bg-red-950/70 text-red-700 dark:text-red-300 border border-red-300',
           dot: '🔴',
           assigneeName: getDisplayName(assignee),
@@ -944,7 +963,6 @@
         return {
           statusKey: 'review',
           label: '運営確認中',
-          color: 'bg-amber-500',
           badgeClass: 'bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300',
           dot: '🟡',
           assigneeName: getDisplayName(assignee),
@@ -960,7 +978,6 @@
         return {
           statusKey: 'working',
           label: '作業中',
-          color: 'bg-blue-500',
           badgeClass: 'bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-300',
           dot: '🔵',
           assigneeName: getDisplayName(assignee),
@@ -977,7 +994,6 @@
         return {
           statusKey: 'unstarted',
           label: '未着手',
-          color: 'bg-slate-700 dark:bg-slate-300',
           badgeClass: 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700',
           dot: '⚫️',
           assigneeName: getDisplayName(assignee),
@@ -990,7 +1006,6 @@
       return {
         statusKey: 'unstarted',
         label: '待機中',
-        color: 'bg-slate-400',
         badgeClass: 'bg-slate-100 dark:bg-slate-800 text-slate-500',
         dot: '⚪️',
         assigneeName: '前工程待ち',
@@ -1000,7 +1015,33 @@
       };
     }
 
-    // 制作案件一覧描画（案件名1本表示）
+    // カテゴリ（トラック種別）の判定ユーティリティ
+    function getProjectCategory(project) {
+      if (project.category) return project.category;
+      // タスクの構成から自動推測（後方互換）
+      const titles = (project.tasks || []).map(t => t.title);
+      const hasMusic = titles.some(t => ['作曲', '作詞', '編曲', 'レコーディング', 'ミキシング', 'マスタリング'].includes(t));
+      const hasMv = titles.some(t => ['イラスト', '映像'].includes(t));
+      if (hasMv && !hasMusic) return 'mv';
+      return 'music';
+    }
+
+    function getCategoryBadgeHtml(cat) {
+      if (cat === 'mv') {
+        return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-950/70 dark:text-purple-300 border border-purple-200 dark:border-purple-800">🎬 [イラスト/MV]</span>';
+      }
+      return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 border border-blue-200 dark:border-blue-800">🎵 [楽曲]</span>';
+    }
+
+    // 関連チケットを探す
+    function getRelatedProject(project) {
+      if (!project.group_id) return null;
+      return cachedCreativeProjects.find(p => p.group_id === project.group_id && p.id !== project.id);
+    }
+
+    // ----------------------------------------------------
+    // 【制作案件一覧描画】
+    // ----------------------------------------------------
     function setAndonFilter(key) {
       currentAndonFilter = key;
       document.querySelectorAll('.andon-filter-btn').forEach(btn => {
@@ -1050,6 +1091,9 @@
       container.innerHTML = filtered.map(p => {
         const andon = evaluateProjectAndon(p);
         const hasUnread = getProjectUnreadStatus(p);
+        const cat = getProjectCategory(p);
+        const catBadge = getCategoryBadgeHtml(cat);
+        const relatedPrj = getRelatedProject(p);
 
         let latestLog = null;
         let latestTaskTitle = '';
@@ -1075,17 +1119,33 @@
           ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500 text-white animate-pulse">NEW</span>'
           : '';
 
+        let relatedLinkHtml = '';
+        if (relatedPrj) {
+          const relCat = getProjectCategory(relatedPrj);
+          const relLabel = relCat === 'mv' ? '🎬 関連: イラスト/MV' : '🎵 関連: 楽曲';
+          relatedLinkHtml = '<button onclick="event.stopPropagation(); openProjectChatModal(\'' + relatedPrj.id + '\')" class="text-[10px] px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 font-semibold transition truncate">'
+            + relLabel + ' ➔'
+            + '</button>';
+        }
+
         return '<div onclick="openProjectChatModal(\'' + p.id + '\')" class="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-blue-500 cursor-pointer transition space-y-2.5 relative group ' + (hasUnread ? 'ring-1 ring-red-400' : '') + '">'
           
-          <!-- 案件名と行灯バッジ（クライアント名表記を撤廃して1本化） -->
-          + '<div class="flex justify-between items-start gap-2">'
-          + '<h3 class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 truncate group-hover:text-blue-600 transition flex-1 min-w-0">' + p.title + '</h3>'
+          <!-- タイトル + カテゴリバッジ [楽曲] or [イラスト/MV] + 行灯バッジ -->
+          + '<div class="flex flex-wrap items-start justify-between gap-2">'
+          + '<div class="flex items-center space-x-1.5 flex-1 min-w-0">'
+          + catBadge
+          + '<h3 class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 truncate group-hover:text-blue-600 transition">' + p.title + '</h3>'
+          + '</div>'
           + '<div class="flex items-center space-x-1.5 flex-shrink-0">'
           + unreadBadge
           + '<span class="px-2.5 py-1 rounded-full text-xs font-bold ' + andon.badgeClass + '">' + andon.dot + ' ' + andon.label + '</span>'
           + '</div>'
           + '</div>'
 
+          <!-- 関連チケットリンクがある場合 -->
+          + (relatedLinkHtml ? '<div class="flex items-center space-x-1.5 pt-0.5">' + relatedLinkHtml + '</div>' : '')
+
+          <!-- 行灯ステータス要件: 誰が、何を、いつまでに -->
           + '<div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80 text-xs space-y-1">'
           + '<div class="flex justify-between items-center font-bold text-slate-800 dark:text-slate-100">'
           + '<span>担当: ' + andon.assigneeName + '</span>'
@@ -1097,6 +1157,7 @@
           + '</div>'
           + '</div>'
 
+          <!-- 最新ログ -->
           + '<div class="flex items-center justify-between text-xs text-slate-500 pt-1 border-t border-slate-100 dark:border-slate-800">'
           + '<div class="flex items-center space-x-1.5 min-w-0 truncate">'
           + '<span class="text-sm">💬</span>'
@@ -1109,18 +1170,44 @@
       }).join('');
     }
 
-    // 案件チャットモーダル
+    // ----------------------------------------------------
+    // 【案件チャットモーダル】
+    // ----------------------------------------------------
     function openProjectChatModal(projectId) {
       selectedProjectForChat = cachedCreativeProjects.find(p => p.id === projectId);
       if (!selectedProjectForChat) return;
 
       const p = selectedProjectForChat;
+      const cat = getProjectCategory(p);
+      const catEl = document.getElementById('chatModalCategoryBadge');
+      
+      if (cat === 'mv') {
+        catEl.className = "text-xs font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-700 dark:bg-purple-950/70 dark:text-purple-300 border border-purple-200 dark:border-purple-800";
+        catEl.innerText = "🎬 [イラスト/MV]";
+      } else {
+        catEl.className = "text-xs font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 border border-blue-200 dark:border-blue-800";
+        catEl.innerText = "🎵 [楽曲]";
+      }
+
       document.getElementById('chatModalTitle').innerText = p.title;
 
       const driveEl = document.getElementById('chatModalDriveLink');
       driveEl.innerHTML = p.drive_url 
         ? '<a href="' + p.drive_url + '" target="_blank" class="text-[11px] px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-600 dark:text-slate-300 hover:underline">Drive ↗</a>'
         : '';
+
+      // 関連チケットリンク
+      const relatedLinkContainer = document.getElementById('chatModalRelatedLink');
+      const relatedPrj = getRelatedProject(p);
+      if (relatedPrj) {
+        const relCat = getProjectCategory(relatedPrj);
+        const relLabel = relCat === 'mv' ? '🎬 関連: イラスト/MVチケットを開く' : '🎵 関連: 楽曲チケットを開く';
+        relatedLinkContainer.innerHTML = '<button onclick="openProjectChatModal(\'' + relatedPrj.id + '\')" class="text-xs px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 transition">'
+          + relLabel + ' ➔'
+          + '</button>';
+      } else {
+        relatedLinkContainer.innerHTML = '';
+      }
 
       const fnBtn = document.getElementById('chatModalFinancialBtn');
       if (fnBtn) {
@@ -2089,7 +2176,6 @@
       closeModal('leadDetailModal');
       loadLeads();
 
-      // 案件名に自動入力（CL名と案件名を統合）
       document.getElementById('newPrjTitle').value = '【' + selectedLead.client_name + ' 様】制作案件';
       openModal('newProjectModal');
     }
@@ -2105,6 +2191,7 @@
             allTaskLogs.push({
               ...l,
               projectTitle: p.title,
+              category: getProjectCategory(p),
               taskTitle: t.title,
               taskId: t.id,
               projectId: p.id
@@ -2125,10 +2212,12 @@
         const dateStr = new Date(l.at).toLocaleString('ja-JP');
         const badgeColor = l.type === '提出' ? 'bg-blue-100 text-blue-700' : l.type === 'リテイク指示' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700';
         const formattedComment = formatMessageWithLinksAndMedia(l.comment || '');
+        const catBadge = getCategoryBadgeHtml(l.category);
 
         return '<div class="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-1.5 hover:border-slate-300 dark:hover:border-slate-700 transition ' + (isUnread ? 'ring-1 ring-red-400' : '') + '">'
           + '<div class="flex flex-wrap items-center justify-between gap-1 text-[11px]">'
           + '<div class="flex items-center space-x-1.5 min-w-0">'
+          + catBadge
           + '<span class="font-bold text-slate-800 dark:text-slate-200 truncate">' + l.projectTitle + '</span>'
           + '<span class="text-slate-400">/</span>'
           + '<span class="text-blue-600 dark:text-blue-400 font-semibold truncate">[' + l.taskTitle + ']</span>'
@@ -2227,16 +2316,27 @@
     function renderCheckboxes() {
       const checkContainer = document.getElementById('processCheckboxes');
       if (!checkContainer) return;
+
+      const createMusic = document.getElementById('checkCreateMusic')?.checked ?? true;
+      const createMv = document.getElementById('checkCreateMv')?.checked ?? true;
+
       checkContainer.innerHTML = workflowMasters.map(w => {
-        const tag = w.track === 'music' ? '[楽曲]' : '[MV]';
-        return '<label class="flex items-center space-x-2 cursor-pointer">'
-          + '<input type="checkbox" value="' + w.key + '" data-name="' + w.name + '" data-days="' + w.days + '" data-track="' + w.track + '" checked class="rounded text-blue-600">'
+        const isMusic = w.track === 'music';
+        const tag = isMusic ? '[楽曲]' : '[イラスト/MV]';
+        const isHidden = (isMusic && !createMusic) || (!isMusic && !createMv);
+
+        return '<label class="flex items-center space-x-2 cursor-pointer ' + (isHidden ? 'opacity-30 pointer-events-none' : '') + '">'
+          + '<input type="checkbox" value="' + w.key + '" data-name="' + w.name + '" data-days="' + w.days + '" data-track="' + w.track + '" ' + (isHidden ? '' : 'checked') + ' class="rounded text-blue-600">'
           + '<span class="text-xs text-slate-700 dark:text-slate-300 font-medium">' + tag + ' ' + w.name + ' (' + w.days + '日)</span>'
           + '</label>';
       }).join('');
 
       const today = new Date();
       document.getElementById('autoCalcStartDate').value = today.toISOString().split('T')[0];
+    }
+
+    function toggleTrackCheckboxes() {
+      renderCheckboxes();
     }
 
     function renderMembersTable() {
@@ -2337,23 +2437,18 @@
       renderMembersTable();
     }
 
-    // 新規案件起票（案件名1本化）
+    // ----------------------------------------------------
+    // 【新規案件起票（楽曲 / イラスト・MV 分割起票対応）】
+    // ----------------------------------------------------
     async function createCreativeProject() {
-      const title = document.getElementById('newPrjTitle').value.trim();
+      const baseTitle = document.getElementById('newPrjTitle').value.trim();
       const drive = document.getElementById('newPrjDrive').value.trim();
       const startDateStr = document.getElementById('autoCalcStartDate').value;
+      const createMusic = document.getElementById('checkCreateMusic').checked;
+      const createMv = document.getElementById('checkCreateMv').checked;
 
-      if (!title) return alert('案件名を入力してください');
-
-      const { data: prj, error: prjErr } = await supabaseClient.from('projects').insert({
-        type: 'creative',
-        title: title,
-        client_name: null,
-        drive_url: drive || null,
-        status: '進行中'
-      }).select().single();
-
-      if (prjErr) return alert(prjErr.message);
+      if (!baseTitle) return alert('案件名を入力してください');
+      if (!createMusic && !createMv) return alert('少なくとも1つのチケット（楽曲またはイラスト/MV）を選択してください');
 
       const checkedKeys = new Set(
         Array.from(document.querySelectorAll('#processCheckboxes input:checked')).map(cb => cb.value)
@@ -2366,7 +2461,6 @@
         return res;
       };
       const fmt = (d) => d.toISOString().split('T')[0];
-
       const getD = (k) => {
         const found = workflowMasters.find(w => w.key === k);
         return found ? found.days : 0;
@@ -2383,22 +2477,73 @@
       dates.illust = addDays(baseDate, getD('illust'));
       dates.movie = addDays(dates.illust, getD('movie'));
 
-      const tasksToInsert = [];
-      workflowMasters.forEach(w => {
-        if (checkedKeys.has(w.key)) {
-          tasksToInsert.push({
-            project_id: prj.id,
-            title: w.name,
-            deadline: fmt(dates[w.key]),
-            sort_order: w.order,
-            status: '未着手',
-            logs: []
-          });
-        }
-      });
+      // 共通のグループIDを生成（関連チケットとして紐付ける）
+      const groupId = 'grp_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
 
-      if (tasksToInsert.length > 0) {
-        await supabaseClient.from('tasks').insert(tasksToInsert);
+      const createdProjects = [];
+
+      // 1. 楽曲チケットの起票
+      if (createMusic) {
+        const { data: prjMusic, error: errM } = await supabaseClient.from('projects').insert({
+          type: 'creative',
+          title: baseTitle,
+          category: 'music',
+          group_id: (createMusic && createMv) ? groupId : null,
+          drive_url: drive || null,
+          status: '進行中'
+        }).select().single();
+
+        if (errM) return alert('楽曲チケット作成エラー: ' + errM.message);
+
+        const musicTasks = [];
+        workflowMasters.filter(w => w.track === 'music').forEach(w => {
+          if (checkedKeys.has(w.key)) {
+            musicTasks.push({
+              project_id: prjMusic.id,
+              title: w.name,
+              deadline: fmt(dates[w.key]),
+              sort_order: w.order,
+              status: '未着手',
+              logs: []
+            });
+          }
+        });
+        if (musicTasks.length > 0) {
+          await supabaseClient.from('tasks').insert(musicTasks);
+        }
+        createdProjects.push(prjMusic);
+      }
+
+      // 2. イラスト/MVチケットの起票
+      if (createMv) {
+        const { data: prjMv, error: errV } = await supabaseClient.from('projects').insert({
+          type: 'creative',
+          title: baseTitle,
+          category: 'mv',
+          group_id: (createMusic && createMv) ? groupId : null,
+          drive_url: drive || null,
+          status: '進行中'
+        }).select().single();
+
+        if (errV) return alert('MVチケット作成エラー: ' + errV.message);
+
+        const mvTasks = [];
+        workflowMasters.filter(w => w.track === 'mv').forEach(w => {
+          if (checkedKeys.has(w.key)) {
+            mvTasks.push({
+              project_id: prjMv.id,
+              title: w.name,
+              deadline: fmt(dates[w.key]),
+              sort_order: w.order,
+              status: '未着手',
+              logs: []
+            });
+          }
+        });
+        if (mvTasks.length > 0) {
+          await supabaseClient.from('tasks').insert(mvTasks);
+        }
+        createdProjects.push(prjMv);
       }
 
       closeModal('newProjectModal');
