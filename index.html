@@ -83,21 +83,21 @@
                 <span>🔄 視点切替</span>
                 <span id="pcDropdownViewTag" class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 font-semibold">全件</span>
               </button>
-              <button onclick="switchTab('master'); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium">
+              <button onclick="switchTab('master'); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium flex items-center space-x-2">
                 <span>🛠️ 工程マスター設定</span>
               </button>
-              <button onclick="switchTab('members'); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium">
+              <button onclick="switchTab('members'); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium flex items-center space-x-2">
                 <span>👥 所属メンバー管理</span>
               </button>
-              <button onclick="manualTriggerStorageCleanup(); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-medium">
+              <button onclick="manualTriggerStorageCleanup(); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-medium flex items-center space-x-2">
                 <span>📦 ストレージ容量管理</span>
               </button>
             </div>
             <div class="px-1 space-y-0.5">
-              <button onclick="openMyAccountModal(); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium">
+              <button onclick="openMyAccountModal(); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium flex items-center space-x-2">
                 <span>⚙️ アカウント設定</span>
               </button>
-              <button onclick="logout()" class="w-full text-left px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 font-bold">
+              <button onclick="logout()" class="w-full text-left px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 font-bold flex items-center space-x-2">
                 <span>🚪 ログアウト</span>
               </button>
             </div>
@@ -363,7 +363,11 @@
       <div class="flex items-start justify-between border-b dark:border-slate-800 pb-2.5 flex-shrink-0 gap-2">
         <div class="min-w-0 flex-1">
           <div class="flex flex-wrap items-center gap-1.5">
-            <span id="chatModalCodeBadge" class="text-[11px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border dark:border-slate-700"></span>
+            <!-- チケットコードバッジ（クリックで手動編集可能） -->
+            <button id="chatModalCodeBadge" onclick="editCurrentTicketCode()" title="クリックして案件番号を編集" class="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border dark:border-slate-700 transition flex items-center space-x-1 cursor-pointer">
+              <span id="chatModalCodeText"></span>
+              <span class="text-[9px] text-slate-400 opacity-60">✎</span>
+            </button>
             <span id="chatModalCategoryBadge" class="text-[11px] font-bold px-1.5 py-0.5 rounded"></span>
             <h3 id="chatModalTitle" class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 truncate"></h3>
             <span id="chatModalDriveLink"></span>
@@ -798,7 +802,7 @@
     </div>
   </div>
 
-  <!-- 新規案件起票モーダル -->
+  <!-- 新規案件起票モーダル（案件No手動編集対応） -->
   <div id="newProjectModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-5 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto border border-slate-200 dark:border-slate-800">
       <h3 class="font-bold text-base sm:text-lg">新規制作案件起票</h3>
@@ -808,9 +812,22 @@
         <input type="text" id="newPrjTitle" class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="例: 【〇〇様】2nd Single 制作">
       </div>
 
-      <div>
-        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">共有ドライブURL (任意)</label>
-        <input type="url" id="newPrjDrive" class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="https://drive.google.com/...">
+      <!-- 案件No手動指定欄 -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+            案件識別番号 (指定可)
+          </label>
+          <div class="relative">
+            <input type="text" id="newPrjCustomCode" class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm font-mono font-bold" placeholder="例: 2610-1">
+          </div>
+          <span class="text-[10px] text-slate-400 mt-0.5 block">※末尾のM/Vは自動付与されます</span>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">共有ドライブURL (任意)</label>
+          <input type="url" id="newPrjDrive" class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="https://drive.google.com/...">
+        </div>
       </div>
 
       <div class="border-t dark:border-slate-800 pt-3 space-y-2">
@@ -830,7 +847,7 @@
       <div class="border-t dark:border-slate-800 pt-3">
         <div class="flex items-center justify-between mb-2">
           <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">着手日 & 工程組み込み</label>
-          <input type="date" id="autoCalcStartDate" class="px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs">
+          <input type="date" id="autoCalcStartDate" onchange="syncSuggestedTicketNumber()" class="px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs">
         </div>
         
         <div id="processCheckboxes" class="space-y-2 max-h-48 overflow-y-auto p-2.5 bg-slate-50 dark:bg-slate-800 rounded-lg border dark:border-slate-700 text-xs"></div>
@@ -957,6 +974,9 @@
       }
     }
 
+    // ====================================================
+    // 自動採番ロジック（頭ゼロ撤去: 2610-1 形式）
+    // ====================================================
     function getNextTicketNumber(startDateStr) {
       const d = new Date(startDateStr || new Date());
       const yy = String(d.getFullYear()).slice(-2);
@@ -974,8 +994,45 @@
         }
       });
 
-      const nextNumStr = String(maxNum + 1).padStart(2, '0');
+      // 頭ゼロを外し、シンプルな数値連番（1, 2, 3...）にする
+      const nextNumStr = String(maxNum + 1);
       return { prefix, nextNumStr };
+    }
+
+    // 起票モーダル初期化時の番号自動補完
+    function syncSuggestedTicketNumber() {
+      const startDateStr = document.getElementById('autoCalcStartDate')?.value;
+      const { prefix, nextNumStr } = getNextTicketNumber(startDateStr);
+      const input = document.getElementById('newPrjCustomCode');
+      if (input && !input.value) {
+        input.value = `${prefix}-${nextNumStr}`;
+      }
+    }
+
+    // チケットモーダル内から番号を手動編集
+    async function editCurrentTicketCode() {
+      if (!selectedProjectForChat) return;
+      if (!isAdminOrMaster()) return alert('案件番号の編集は管理者権限のみ可能です');
+
+      const currentCode = selectedProjectForChat.ticket_code || '';
+      const newCode = prompt('案件番号（チケットコード）を編集してください:', currentCode);
+      if (newCode === null) return;
+      const trimmed = newCode.trim();
+      if (!trimmed) return alert('案件番号を空にすることはできません');
+
+      const { error } = await supabaseClient
+        .from('projects')
+        .update({ ticket_code: trimmed })
+        .eq('id', selectedProjectForChat.id);
+
+      if (error) {
+        alert('番号変更エラー: ' + error.message);
+        return;
+      }
+
+      selectedProjectForChat.ticket_code = trimmed;
+      document.getElementById('chatModalCodeText').innerText = trimmed;
+      await loadCreativeProjects();
     }
 
     function getBallHolderShortText(ballKey) {
@@ -1277,7 +1334,7 @@
       renderCreativeProjectsList();
     }
 
-    // 制作案件一覧描画（PC: 1行フラットステータス列 ＆ 見切れ防止 / スマホ: スマートカード）
+    // 制作案件一覧描画（PC: チケット/区分列の幅を拡げて見切れ解消）
     function renderCreativeProjectsList() {
       const container = document.getElementById('projectList');
       if (!container) return;
@@ -1339,7 +1396,7 @@
         }
 
         const unreadDot = hasUnread 
-          ? '<span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>'
+          ? '<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>'
           : '';
 
         let relatedLinkHtml = '';
@@ -1396,19 +1453,19 @@
           </div>
 
           <div class="text-[11px] text-slate-500 flex items-center space-x-1.5 min-w-0 truncate pt-2 border-t border-slate-100 dark:border-slate-800/60">
-            <span class="text-xs flex-shrink-0">💬</span>
+            <span class="text-xs font-bold text-slate-400 flex-shrink-0">LOG:</span>
             <div class="truncate">${latestLogHtml}</div>
           </div>
         </div>`;
       }).join('') + `</div>`;
 
-      // ==================== PC向け1行リストテーブルHTML（1行フラットステータス） ====================
+      // ==================== PC向け1行リストテーブルHTML（列幅を拡げて見切れ解消） ====================
       const pcTableHtml = `
       <div class="hidden md:block bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
         <table class="w-full text-xs text-left border-collapse table-fixed">
           <thead>
             <tr class="bg-slate-50/75 dark:bg-slate-800/40 text-slate-400 font-semibold border-b border-slate-100 dark:border-slate-800">
-              <th class="py-3 px-3.5 w-32">チケット / 区分</th>
+              <th class="py-3 px-3.5 w-36 lg:w-40">チケット / 区分</th>
               <th class="py-3 px-3">案件名</th>
               <th class="py-3 px-3 w-64 lg:w-72">ステータス</th>
               <th class="py-3 px-3 w-28 text-center">期日</th>
@@ -1426,7 +1483,7 @@
         const validTasks = getFilteredTasksForProject(p).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
 
         const codeBadge = p.ticket_code 
-          ? `<span class="font-mono font-bold text-slate-600 dark:text-slate-300 text-[11px] truncate">${p.ticket_code}</span>`
+          ? `<span class="font-mono font-bold text-slate-700 dark:text-slate-200 text-xs">${p.ticket_code}</span>`
           : '<span class="text-slate-400">-</span>';
 
         let latestLog = null;
@@ -1504,7 +1561,7 @@
         return `
           <tr onclick="openProjectChatModal('${p.id}')" class="hover:bg-blue-50/40 dark:hover:bg-slate-800/60 cursor-pointer transition group">
             <td class="py-3 px-3.5 whitespace-nowrap">
-              <div class="flex items-center space-x-1.5 truncate">
+              <div class="flex items-center space-x-1.5">
                 ${catBadge}
                 ${codeBadge}
               </div>
@@ -1656,7 +1713,6 @@
       };
     }
 
-    // スマホ用パイプラインアコーディオンの開閉トグル
     function toggleMobilePipeline(forceOpen = null) {
       const container = document.getElementById('chatModalTaskListContainer');
       const btn = document.getElementById('btnToggleMobilePipeline');
@@ -1683,12 +1739,13 @@
       const cat = getProjectCategory(p);
       const catEl = document.getElementById('chatModalCategoryBadge');
       
-      const codeEl = document.getElementById('chatModalCodeBadge');
+      const codeBtn = document.getElementById('chatModalCodeBadge');
+      const codeText = document.getElementById('chatModalCodeText');
       if (p.ticket_code) {
-        codeEl.classList.remove('hidden');
-        codeEl.innerText = p.ticket_code;
+        codeBtn.classList.remove('hidden');
+        codeText.innerText = p.ticket_code;
       } else {
-        codeEl.classList.add('hidden');
+        codeBtn.classList.add('hidden');
       }
 
       if (cat === 'mv') {
@@ -1730,8 +1787,6 @@
       renderPipelineTree(p);
 
       const tasks = getFilteredTasksForProject(p).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
-      
-      // 進行中（ボールがある、または直近の未完了タスク）を自動検知してフォーカス
       if (tasks.length > 0) {
         const activeTasks = getActiveBallTasks(tasks);
         const targetTask = activeTasks.length > 0 
@@ -1740,9 +1795,7 @@
         selectTaskForControl(targetTask.id);
       }
 
-      // スマホではパイプラインを閉じた状態でスタート
       toggleMobilePipeline(false);
-
       renderProjectChatTimeline(p);
 
       removeAttachedFile();
@@ -3353,7 +3406,12 @@
       }).join('');
 
       const today = new Date();
-      document.getElementById('autoCalcStartDate').value = today.toISOString().split('T')[0];
+      const todayStr = today.toISOString().split('T')[0];
+      const startEl = document.getElementById('autoCalcStartDate');
+      if (startEl && !startEl.value) {
+        startEl.value = todayStr;
+      }
+      syncSuggestedTicketNumber();
     }
 
     function toggleTrackCheckboxes() {
@@ -3458,10 +3516,12 @@
       renderMembersTable();
     }
 
+    // 新規制作案件起票（手動番号指定対応）
     async function createCreativeProject() {
       const baseTitle = document.getElementById('newPrjTitle').value.trim();
       const drive = document.getElementById('newPrjDrive').value.trim();
       const startDateStr = document.getElementById('autoCalcStartDate').value;
+      const customCodeInput = document.getElementById('newPrjCustomCode').value.trim();
       const createMusic = document.getElementById('checkCreateMusic').checked;
       const createMv = document.getElementById('checkCreateMv').checked;
 
@@ -3497,10 +3557,18 @@
       dates.movie = addDays(dates.illust, getD('movie'));
 
       const groupId = 'grp_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
-      const { prefix, nextNumStr } = getNextTicketNumber(startDateStr);
+      
+      // 手動指定がある場合はそれを採用、なければ最新+1から算出
+      let baseCode = customCodeInput;
+      if (!baseCode) {
+        const { prefix, nextNumStr } = getNextTicketNumber(startDateStr);
+        baseCode = `${prefix}-${nextNumStr}`;
+      }
 
-      const musicCode = `${prefix}-${nextNumStr}M`;
-      const mvCode = `${prefix}-${nextNumStr}V`;
+      // 末尾に既にMやVが含まれていたら一度除去
+      const cleanBaseCode = baseCode.replace(/[MV]$/i, '');
+      const musicCode = `${cleanBaseCode}M`;
+      const mvCode = `${cleanBaseCode}V`;
 
       if (createMusic) {
         const { data: prjMusic, error: errM } = await supabaseClient.from('projects').insert({
@@ -3567,6 +3635,9 @@
       }
 
       closeModal('newProjectModal');
+      document.getElementById('newPrjTitle').value = '';
+      document.getElementById('newPrjDrive').value = '';
+      document.getElementById('newPrjCustomCode').value = '';
       await loadCreativeProjects();
     }
 
@@ -3615,7 +3686,12 @@
       }
     }
 
-    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function openModal(id) { 
+      document.getElementById(id).classList.remove('hidden'); 
+      if (id === 'newProjectModal') {
+        syncSuggestedTicketNumber();
+      }
+    }
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
     function initTheme() {
