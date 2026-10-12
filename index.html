@@ -923,9 +923,7 @@
       return activeTasks;
     }
 
-    // ----------------------------------------------------
-    // 【案1採用】行灯ステータス & 並行タスク全抽出
-    // ----------------------------------------------------
+    // 行灯ステータス & 並行タスク全抽出
     function evaluateProjectAndon(project) {
       const tasks = project.tasks || [];
       const todayStr = new Date().toISOString().split('T')[0];
@@ -944,7 +942,6 @@
 
       const activeTasks = getActiveBallTasks(tasks);
 
-      // 各タスクの詳細情報をオブジェクト化
       const activeItems = activeTasks.map(t => {
         const assignee = allProfiles.find(u => u.id === t.assignee_id);
         const isOverdue = t.deadline && t.deadline < todayStr && t.status !== '完了';
@@ -966,7 +963,6 @@
         };
       });
 
-      // 案件全体のバッジ判定（優先度: 🔴期日超過 > 🟡確認中 > 🔵作業中 > ⚫️未着手）
       let statusKey = 'unstarted';
       let label = '未着手';
       let dot = '⚫️';
@@ -1115,7 +1111,6 @@
             + '</button>';
         }
 
-        // 【案1採用】並行稼働タスクの複数行HTML構築
         let activeTasksHtml = '';
         if (andon.statusKey === 'completed') {
           activeTasksHtml = '<div class="text-xs text-emerald-600 dark:text-emerald-400 font-bold">✓ すべての工程が完了しました</div>';
@@ -1123,7 +1118,7 @@
           activeTasksHtml = '<div class="text-xs text-slate-400">現在、前工程の完了待機中です</div>';
         } else {
           activeTasksHtml = '<div class="space-y-1.5 divide-y divide-slate-200/60 dark:divide-slate-700/60">'
-            + andon.activeItems.map((item, idx) => {
+            + andon.activeItems.map((item) => {
                 const deadlineClass = item.isOverdue ? 'text-red-600 dark:text-red-400 font-extrabold' : 'text-slate-500 dark:text-slate-400';
                 return '<div class="text-xs pt-1 first:pt-0 space-y-0.5">'
                   + '<div class="flex justify-between items-center font-bold text-slate-800 dark:text-slate-100">'
@@ -1156,18 +1151,17 @@
           <!-- 関連チケットリンク -->
           + (relatedLinkHtml ? '<div class="flex items-center space-x-1.5 pt-0.5">' + relatedLinkHtml + '</div>' : '')
 
-          <!-- 【案1】並行稼働対応 ボール保持者リスト枠 -->
+          <!-- 並行稼働対応 ボール保持者リスト枠 -->
           + '<div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80">'
           + activeTasksHtml
           + '</div>'
 
-          <!-- 最新ログプレビュー -->
-          + '<div class="flex items-center justify-between text-xs text-slate-500 pt-1 border-t border-slate-100 dark:border-slate-800">'
-          + '<div class="flex items-center space-x-1.5 min-w-0 truncate">'
-          + '<span class="text-sm">💬</span>'
+          <!-- 【案A適用】最新ログプレビュー（「チャット開く」ボタンを撤廃し全幅表示） -->
+          + '<div class="text-xs text-slate-500 pt-1 border-t border-slate-100 dark:border-slate-800">'
+          + '<div class="flex items-center space-x-1.5 min-w-0 w-full truncate">'
+          + '<span class="text-sm flex-shrink-0">💬</span>'
           + latestLogHtml
           + '</div>'
-          + '<span class="text-[11px] text-blue-600 dark:text-blue-400 font-bold group-hover:translate-x-0.5 transition flex-shrink-0 ml-2">チャット開く ➔</span>'
           + '</div>'
 
           + '</div>';
