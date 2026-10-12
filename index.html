@@ -357,14 +357,19 @@
           <span class="text-[10px] text-blue-100 font-normal">（音声: mp3/m4a ｜ 画像: 自動で軽量JPEG化）</span>
         </div>
 
-        <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
-          <div class="flex items-center space-x-1.5 flex-1 min-w-[180px]">
+        <!-- 対象工程・担当者・ステータス設定バー -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+          <div class="flex items-center space-x-1.5">
             <span class="text-slate-500 whitespace-nowrap font-medium">工程:</span>
-            <select id="chatInputTaskId" class="w-full px-2 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs text-slate-800 dark:text-slate-200 font-bold"></select>
+            <select id="chatInputTaskId" onchange="syncSelectedTaskAssignee()" class="w-full px-2 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs text-slate-800 dark:text-slate-200 font-bold"></select>
+          </div>
+          <div class="flex items-center space-x-1.5">
+            <span class="text-slate-500 whitespace-nowrap font-medium">担当:</span>
+            <select id="chatInputAssigneeId" class="w-full px-2 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs font-semibold"></select>
           </div>
           <div class="flex items-center space-x-1.5">
             <span class="text-slate-500 whitespace-nowrap font-medium">状態:</span>
-            <select id="chatInputStatus" class="px-2 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs font-semibold">
+            <select id="chatInputStatus" class="w-full px-2 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs font-semibold">
               <option value="">(変更なし)</option>
               <option value="作業中">🔵 作業中</option>
               <option value="提出・確認待ち">🟡 提出・確認待ち</option>
@@ -417,6 +422,10 @@
         <select id="addTaskNameSelect" onchange="handleAddTaskSelectChange()" class="w-full px-2.5 py-2 border dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-800 font-bold"></select>
       </div>
       <div>
+        <label class="block text-[11px] font-semibold text-slate-500 mb-1">担当クリエイター (任意)</label>
+        <select id="addTaskAssigneeSelect" class="w-full px-2.5 py-1.5 border dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-800 font-medium"></select>
+      </div>
+      <div>
         <label class="block text-[11px] font-semibold text-slate-500 mb-1">締切期日 *</label>
         <input type="date" id="addTaskDeadlineInput" class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs">
       </div>
@@ -440,7 +449,7 @@
       </div>
       <div class="flex justify-end space-x-2 pt-2">
         <button onclick="closeModal('addRelatedModal')" class="px-3 py-1.5 border dark:border-slate-700 rounded-lg text-xs">キャンセル</button>
-        <button onclick="submitCreateRelatedProject()" class="px-4 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold">ペア起票 ➔</button>
+        <button onclick="submitCreateRelatedProject()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold">ペア起票 ➔</button>
       </div>
     </div>
   </div>
@@ -751,7 +760,7 @@
     }
 
     function getDisplayName(profile) {
-      if (!profile) return '未アサイン';
+      if (!profile) return '未設定';
       return profile.name || profile.user_id || '未設定';
     }
 
@@ -809,9 +818,6 @@
       }
     }
 
-    // ====================================================
-    // 【通し番号 採番ロジック】YYMM-XX(M/V)
-    // ====================================================
     function getNextTicketNumber(startDateStr) {
       const d = new Date(startDateStr || new Date());
       const yy = String(d.getFullYear()).slice(-2);
@@ -821,7 +827,6 @@
       let maxNum = 0;
       cachedCreativeProjects.forEach(p => {
         if (p.ticket_code && p.ticket_code.startsWith(prefix)) {
-          // 例: "2610-03M" -> "03"
           const match = p.ticket_code.match(new RegExp(`^${prefix}-(\\d+)`));
           if (match) {
             const num = parseInt(match[1], 10);
@@ -834,7 +839,6 @@
       return { prefix, nextNumStr };
     }
 
-    // 画像自動軽量化（Canvas変換）
     async function compressImageToJpeg(file) {
       return new Promise((resolve) => {
         const reader = new FileReader();
@@ -879,7 +883,6 @@
       });
     }
 
-    // D&D & ファイル選択
     function handleDragOver(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -946,9 +949,6 @@
       document.getElementById('attachedFilePreview').classList.add('hidden');
     }
 
-    // ====================================================
-    // 作曲 ➔ (作詞 ∥ 編曲) ➔ Rec ➔ Mix ➔ Mas 先行判定
-    // ====================================================
     function getActiveBallTasks(tasks) {
       const taskMap = new Map();
       tasks.forEach(t => taskMap.set(t.title, t));
@@ -1164,9 +1164,8 @@
         const cat = getProjectCategory(p);
         const catBadge = getCategoryBadgeHtml(cat);
         const relatedPrj = getRelatedProject(p);
-        const validTasks = getFilteredTasksForProject(p);
+        const validTasks = getFilteredTasksForProject(p).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
 
-        // チケット通し番号バッジ
         const codeBadge = p.ticket_code 
           ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border dark:border-slate-700">${p.ticket_code}</span>`
           : '';
@@ -1209,6 +1208,7 @@
             + '</button>';
         }
 
+        // ボール保持タスク
         let activeTasksHtml = '';
         if (andon.statusKey === 'completed') {
           activeTasksHtml = '<div class="text-xs text-emerald-600 dark:text-emerald-400 font-bold">✓ すべての工程が完了しました</div>';
@@ -1232,6 +1232,23 @@
             + '</div>';
         }
 
+        // ====================================================
+        // 【新機能】全工程のアサイン体制布陣（チップ一覧）
+        // ====================================================
+        const teamAssigneesHtml = validTasks.map(t => {
+          const assignee = allProfiles.find(u => u.id === t.assignee_id);
+          const isAssigned = !!assignee;
+          const name = isAssigned ? getDisplayName(assignee) : '未割当';
+          const chipStyle = isAssigned
+            ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'
+            : 'bg-slate-50 dark:bg-slate-900 text-slate-400 border-dashed border-slate-200 dark:border-slate-800';
+
+          return `<span class="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] border ${chipStyle}">
+            <span class="font-bold text-slate-500 dark:text-slate-400">${t.title}:</span>
+            <span class="${isAssigned ? 'font-semibold' : 'italic'}">${name}</span>
+          </span>`;
+        }).join('');
+
         return '<div onclick="openProjectChatModal(\'' + p.id + '\')" class="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-blue-500 cursor-pointer transition space-y-2.5 relative group ' + (hasUnread ? 'ring-1 ring-red-400' : '') + '">'
           
           <!-- 通し番号 + タイトル + カテゴリバッジ + 行灯バッジ -->
@@ -1250,9 +1267,15 @@
           <!-- 関連チケットリンク / 追加ボタン -->
           + (relatedLinkHtml ? '<div class="flex items-center space-x-1.5 pt-0.5">' + relatedLinkHtml + '</div>' : '')
 
-          <!-- 並行稼働対応 ボール保持者リスト枠 -->
+          <!-- 現在のボール保持者（作業中・期日超過タスク） -->
           + '<div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80">'
           + activeTasksHtml
+          + '</div>'
+
+          <!-- 全工程アサイン体制布陣 -->
+          + '<div class="space-y-1 pt-1">'
+          + '<span class="text-[10px] font-bold text-slate-400 block tracking-tight">👤 担当クリエイター布陣:</span>'
+          + '<div class="flex flex-wrap gap-1">' + teamAssigneesHtml + '</div>'
           + '</div>'
 
           <!-- 最新ログプレビュー（全幅表示） -->
@@ -1278,7 +1301,6 @@
       const cat = getProjectCategory(p);
       const catEl = document.getElementById('chatModalCategoryBadge');
       
-      // 通し番号
       const codeEl = document.getElementById('chatModalCodeBadge');
       if (p.ticket_code) {
         codeEl.classList.remove('hidden');
@@ -1302,7 +1324,6 @@
         ? '<a href="' + p.drive_url + '" target="_blank" class="text-[11px] px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-600 dark:text-slate-300 hover:underline">Drive ↗</a>'
         : '';
 
-      // 関連チケットリンク or 追加ボタン
       const relatedLinkContainer = document.getElementById('chatModalRelatedLink');
       const relatedPrj = getRelatedProject(p);
       if (relatedPrj) {
@@ -1321,7 +1342,6 @@
         relatedLinkContainer.innerHTML = '';
       }
 
-      // 管理者限定：削除ボタン
       const delBtn = document.getElementById('chatModalDeleteBtn');
       if (delBtn) {
         delBtn.classList.toggle('hidden', !isAdminOrMaster());
@@ -1340,12 +1360,15 @@
       const tasks = getFilteredTasksForProject(p).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
       const todayStr = new Date().toISOString().split('T')[0];
 
+      // パイプライン進捗ストリップ
       const stripContainer = document.getElementById('chatModalPipelineStrip');
       stripContainer.innerHTML = tasks.map(t => {
         const isDone = t.status === '完了';
         const isOverdue = t.deadline && t.deadline < todayStr && !isDone;
         const isReview = t.status === '提出・確認待ち';
         const isWorking = t.status === '作業中' || t.status === 'リテイク';
+        const assignee = allProfiles.find(u => u.id === t.assignee_id);
+        const assigneeName = assignee ? getDisplayName(assignee) : '未設定';
 
         let badge = 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400';
         let dot = '⚪';
@@ -1354,15 +1377,20 @@
         else if (isReview) { badge = 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 font-bold'; dot = '🟡'; }
         else if (isWorking) { badge = 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 font-bold'; dot = '🔵'; }
 
-        return '<span class="px-2 py-1 rounded-md ' + badge + ' inline-flex items-center space-x-1">'
-          + '<span>' + dot + '</span><span>' + t.title + '</span>'
-          + '</span>';
+        return `<span class="px-2 py-1 rounded-md ${badge} inline-flex items-center space-x-1">
+          <span>${dot}</span><span>${t.title}</span><span class="text-[10px] opacity-75">(${assigneeName})</span>
+        </span>`;
       }).join('<span class="text-slate-300 dark:text-slate-700">➔</span>');
 
+      // 対象工程選択プルダウン
       const taskSelect = document.getElementById('chatInputTaskId');
       taskSelect.innerHTML = tasks.map(t => {
         return '<option value="' + t.id + '">' + t.title + ' (' + t.status + ')</option>';
       }).join('');
+
+      // 担当クリエイタープルダウンの同期
+      renderAssigneeDropdown();
+      syncSelectedTaskAssignee();
 
       renderProjectChatTimeline(p);
 
@@ -1372,6 +1400,26 @@
 
       openModal('projectChatModal');
       autoMarkProjectTasksAsRead(p);
+    }
+
+    // 担当者プルダウン候補を描画
+    function renderAssigneeDropdown() {
+      const select = document.getElementById('chatInputAssigneeId');
+      if (!select) return;
+      select.innerHTML = '<option value="">-- 未割当 --</option>' + allProfiles.map(u => {
+        return '<option value="' + u.id + '">' + getDisplayName(u) + '</option>';
+      }).join('');
+    }
+
+    // 選択された工程の現在の担当者をプルダウンに反映
+    function syncSelectedTaskAssignee() {
+      if (!selectedProjectForChat) return;
+      const taskId = document.getElementById('chatInputTaskId').value;
+      const targetTask = (selectedProjectForChat.tasks || []).find(t => t.id === taskId);
+      const assigneeSelect = document.getElementById('chatInputAssigneeId');
+      if (targetTask && assigneeSelect) {
+        assigneeSelect.value = targetTask.assignee_id || '';
+      }
     }
 
     function formatMessageWithLinksAndMedia(text) {
@@ -1397,9 +1445,6 @@
       });
     }
 
-    // ====================================================
-    // 【新機能】既読者一覧の描画付きチャットタイムライン
-    // ====================================================
     function renderProjectChatTimeline(project) {
       const timelineContainer = document.getElementById('chatModalTimeline');
       if (!timelineContainer) return;
@@ -1437,7 +1482,6 @@
           separateUrlHtml = '<div class="mt-1">' + formatMessageWithLinksAndMedia(l.url) + '</div>';
         }
 
-        // 既読メンバーの集計＆表示（投稿者を除く閲覧者）
         const readMembers = (l.read_by || []).filter(name => name !== l.user);
         let readStatusHtml = '';
         if (readMembers.length > 0) {
@@ -1470,10 +1514,16 @@
       const btn = document.getElementById('btnSubmitChat');
       const taskId = document.getElementById('chatInputTaskId').value;
       const newStatus = document.getElementById('chatInputStatus').value;
+      const newAssigneeId = document.getElementById('chatInputAssigneeId').value || null;
       let comment = document.getElementById('chatInputComment').value.trim();
 
-      if (!comment && !pendingUploadFile && !newStatus) {
-        alert('メッセージを入力するか、ファイルを添付、またはステータスを選択してください');
+      const targetTask = (selectedProjectForChat.tasks || []).find(t => t.id === taskId);
+      if (!targetTask) return;
+
+      const isAssigneeChanged = (targetTask.assignee_id || null) !== newAssigneeId;
+
+      if (!comment && !pendingUploadFile && !newStatus && !isAssigneeChanged) {
+        alert('メッセージを入力するか、ファイルを添付、または担当者・ステータスを変更してください');
         return;
       }
 
@@ -1515,8 +1565,6 @@
         const detectedUrl = urlMatch ? urlMatch[0] : null;
 
         const currentUserName = getCurrentUserIdentifier() || '担当者';
-        const targetTask = (selectedProjectForChat.tasks || []).find(t => t.id === taskId);
-        if (!targetTask) return;
 
         let logType = 'コメント';
         if (uploadedFileUrl || detectedUrl) logType = '提出';
@@ -1524,26 +1572,35 @@
         else if (newStatus === '完了') logType = '承認・完了';
         else if (newStatus === '作業中') logType = '作業着手';
         else if (newStatus === '提出・確認待ち') logType = '提出・確認待ち';
+        else if (isAssigneeChanged && !comment) {
+          const newAssigneeObj = allProfiles.find(u => u.id === newAssigneeId);
+          logType = '担当アサイン';
+          comment = `担当者を「${getDisplayName(newAssigneeObj)}」に設定しました。`;
+        }
 
         const logs = targetTask.logs || [];
-        logs.unshift({
-          type: logType,
-          user: currentUserName,
-          url: detectedUrl || null,
-          comment: comment || 'ファイルを提出しました。',
-          read_by: [currentUserName],
-          at: new Date().toISOString()
-        });
+        if (comment || uploadedFileUrl || detectedUrl || newStatus) {
+          logs.unshift({
+            type: logType,
+            user: currentUserName,
+            url: detectedUrl || null,
+            comment: comment || '更新を行いました。',
+            read_by: [currentUserName],
+            at: new Date().toISOString()
+          });
+        }
 
         const updateData = { logs: logs };
         if (detectedUrl) updateData.deliverable_url = detectedUrl;
         if (newStatus) updateData.status = newStatus;
+        if (isAssigneeChanged) updateData.assignee_id = newAssigneeId;
 
         const { error: dbErr } = await supabaseClient.from('tasks').update(updateData).eq('id', taskId);
         if (dbErr) throw dbErr;
 
         if (detectedUrl) targetTask.deliverable_url = detectedUrl;
         if (newStatus) targetTask.status = newStatus;
+        if (isAssigneeChanged) targetTask.assignee_id = newAssigneeId;
         targetTask.logs = logs;
 
         removeAttachedFile();
@@ -1582,6 +1639,14 @@
         }).join('');
       }
 
+      // 担当者候補
+      const assigneeSelect = document.getElementById('addTaskAssigneeSelect');
+      if (assigneeSelect) {
+        assigneeSelect.innerHTML = '<option value="">-- 未割当 --</option>' + allProfiles.map(u => {
+          return '<option value="' + u.id + '">' + getDisplayName(u) + '</option>';
+        }).join('');
+      }
+
       handleAddTaskSelectChange();
       openModal('addTaskModal');
     }
@@ -1601,6 +1666,7 @@
       const select = document.getElementById('addTaskNameSelect');
       const taskName = select.value;
       const deadline = document.getElementById('addTaskDeadlineInput').value;
+      const assigneeId = document.getElementById('addTaskAssigneeSelect')?.value || null;
 
       if (!taskName) return alert('追加する工程がありません');
       if (!deadline) return alert('締切日を入力してください');
@@ -1611,6 +1677,7 @@
       const { data: newTask, error } = await supabaseClient.from('tasks').insert({
         project_id: selectedProjectForChat.id,
         title: taskName,
+        assignee_id: assigneeId,
         deadline: deadline,
         sort_order: sortOrder,
         status: '未着手',
@@ -1658,7 +1725,6 @@
         p.category = currentCat;
       }
 
-      // 親コードから新コードを生成 (例: "2610-01M" -> "2610-01V")
       let newTicketCode = null;
       if (p.ticket_code) {
         const baseNum = p.ticket_code.replace(/[MV]$/, '');
@@ -1772,7 +1838,6 @@
       }
     }
 
-    // 閲覧時に既読をつける
     async function autoMarkProjectTasksAsRead(project) {
       const myId = getCurrentUserIdentifier();
       if (!myId || !project) return;
@@ -2785,9 +2850,6 @@
       renderMembersTable();
     }
 
-    // ====================================================
-    // 【新規起票】通し番号 (YYMM-XXM / YYMM-XXV) 自動採番
-    // ====================================================
     async function createCreativeProject() {
       const baseTitle = document.getElementById('newPrjTitle').value.trim();
       const drive = document.getElementById('newPrjDrive').value.trim();
@@ -2814,7 +2876,6 @@
         return found ? found.days : 0;
       };
 
-      // 日程順算
       const dates = {};
       dates.compose = addDays(baseDate, getD('compose'));
       dates.lyrics = addDays(dates.compose, getD('lyrics'));
@@ -2827,7 +2888,6 @@
       dates.illust = addDays(baseDate, getD('illust'));
       dates.movie = addDays(dates.illust, getD('movie'));
 
-      // 共通グループIDと、共通ベース番号の自動採番
       const groupId = 'grp_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
       const { prefix, nextNumStr } = getNextTicketNumber(startDateStr);
 
