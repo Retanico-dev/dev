@@ -19,6 +19,14 @@
     .is-touch-device .touch-target-row {
       min-height: 40px;
     }
+    /* スクロールバー非表示 */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
@@ -112,7 +120,7 @@
   </header>
 
   <!-- ==================== メインコンテンツ ==================== -->
-  <main class="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-8">
+  <main class="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-8">
     
     <!-- 1. ログイン画面 -->
     <div id="loginView" class="max-w-md mx-auto mt-8 sm:mt-16 p-6 sm:p-8 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
@@ -143,44 +151,50 @@
     </div>
 
     <!-- 2. ダッシュボード画面 -->
-    <div id="appView" class="hidden space-y-4 sm:space-y-6">
+    <div id="appView" class="hidden space-y-3 sm:space-y-6">
 
       <!-- 制作進行（行灯ステータス一覧） -->
-      <div id="creativeSection" class="space-y-4 sm:space-y-6">
-        <div class="flex flex-wrap justify-between items-center gap-2">
-          <div>
-            <h2 class="text-base sm:text-lg font-bold flex items-center space-x-2">
+      <div id="creativeSection" class="space-y-3 sm:space-y-5">
+        
+        <!-- 上部ヘッダー（スマホ時は1行にスッキリ整頓） -->
+        <div class="flex items-center justify-between gap-2">
+          <div class="min-w-0 flex-1">
+            <h2 class="text-base sm:text-lg font-bold flex items-center space-x-2 truncate">
               <span>制作案件ボード</span>
-              <span id="creativeScopeBadge" class="text-[11px] font-semibold px-2 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">全案件</span>
+              <span id="creativeScopeBadge" class="text-[11px] font-semibold px-2 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 flex-shrink-0">全案件</span>
             </h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">行灯で現在ステータスを可視化。タップして工程布陣・チャットを確認</p>
+            <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">ステータスを行灯で俯瞰・タップで詳細を開く</p>
           </div>
-          <div class="flex items-center space-x-2">
-            <button id="btnNewProjectTop" onclick="openModal('newProjectModal')" class="hidden px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-semibold transition shadow-sm whitespace-nowrap touch-target-btn">
-              + 新規起票
-            </button>
-          </div>
+          <button id="btnNewProjectTop" onclick="openModal('newProjectModal')" class="hidden px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-sm whitespace-nowrap touch-target-btn flex items-center space-x-1 flex-shrink-0">
+            <span>＋</span><span>新規起票</span>
+          </button>
         </div>
 
-        <!-- 行灯ステータス絞り込みチップバー -->
-        <div class="flex overflow-x-auto no-scrollbar gap-2 pb-1 text-xs whitespace-nowrap py-1">
-          <button onclick="setAndonFilter('all')" class="andon-filter-btn px-3.5 py-2 sm:py-1.5 rounded-xl border font-bold transition bg-blue-600 text-white border-blue-600 touch-target-btn" data-status="all">
-            すべて (<span id="count_all">0</span>)
+        <!-- 行灯ステータス絞り込み（スマホ: 3列×2行の均等グリッド / PC: 1行展開） -->
+        <div class="grid grid-cols-3 sm:flex sm:overflow-x-auto sm:no-scrollbar gap-1.5 sm:gap-2 text-xs">
+          <button onclick="setAndonFilter('all')" class="andon-filter-btn px-2.5 sm:px-3.5 py-2 sm:py-1.5 rounded-xl border font-bold transition bg-blue-600 text-white border-blue-600 flex items-center justify-center space-x-1 touch-target-btn" data-status="all">
+            <span>すべて</span>
+            <span id="count_all" class="text-[11px] opacity-90">(0)</span>
           </button>
-          <button onclick="setAndonFilter('overdue')" class="andon-filter-btn px-3.5 py-2 sm:py-1.5 rounded-xl border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 touch-target-btn" data-status="overdue">
-            🔴 期日超過 (<span id="count_overdue">0</span>)
+          <button onclick="setAndonFilter('overdue')" class="andon-filter-btn px-2 sm:px-3.5 py-2 sm:py-1.5 rounded-xl border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 flex items-center justify-center space-x-1 touch-target-btn" data-status="overdue">
+            <span>🔴 超過</span>
+            <span id="count_overdue" class="text-[11px] opacity-90">(0)</span>
           </button>
-          <button onclick="setAndonFilter('review')" class="andon-filter-btn px-3.5 py-2 sm:py-1.5 rounded-xl border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 touch-target-btn" data-status="review">
-            🟡 運営確認中 (<span id="count_review">0</span>)
+          <button onclick="setAndonFilter('review')" class="andon-filter-btn px-2 sm:px-3.5 py-2 sm:py-1.5 rounded-xl border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 flex items-center justify-center space-x-1 touch-target-btn" data-status="review">
+            <span>🟡 確認中</span>
+            <span id="count_review" class="text-[11px] opacity-90">(0)</span>
           </button>
-          <button onclick="setAndonFilter('working')" class="andon-filter-btn px-3.5 py-2 sm:py-1.5 rounded-xl border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 touch-target-btn" data-status="working">
-            🔵 作業中 (<span id="count_working">0</span>)
+          <button onclick="setAndonFilter('working')" class="andon-filter-btn px-2 sm:px-3.5 py-2 sm:py-1.5 rounded-xl border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 flex items-center justify-center space-x-1 touch-target-btn" data-status="working">
+            <span>🔵 作業中</span>
+            <span id="count_working" class="text-[11px] opacity-90">(0)</span>
           </button>
-          <button onclick="setAndonFilter('unstarted')" class="andon-filter-btn px-3.5 py-2 sm:py-1.5 rounded-xl border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 touch-target-btn" data-status="unstarted">
-            ⚫️ 未着手 (<span id="count_unstarted">0</span>)
+          <button onclick="setAndonFilter('unstarted')" class="andon-filter-btn px-2 sm:px-3.5 py-2 sm:py-1.5 rounded-xl border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 flex items-center justify-center space-x-1 touch-target-btn" data-status="unstarted">
+            <span>⚫️ 未着手</span>
+            <span id="count_unstarted" class="text-[11px] opacity-90">(0)</span>
           </button>
-          <button onclick="setAndonFilter('completed')" class="andon-filter-btn px-3.5 py-2 sm:py-1.5 rounded-xl border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 touch-target-btn" data-status="completed">
-            🟢 完了 (<span id="count_completed">0</span>)
+          <button onclick="setAndonFilter('completed')" class="andon-filter-btn px-2 sm:px-3.5 py-2 sm:py-1.5 rounded-xl border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 flex items-center justify-center space-x-1 touch-target-btn" data-status="completed">
+            <span>🟢 完了</span>
+            <span id="count_completed" class="text-[11px] opacity-90">(0)</span>
           </button>
         </div>
 
@@ -342,6 +356,9 @@
           <div id="chatModalRelatedLink" class="mt-1 flex flex-wrap items-center gap-1.5"></div>
         </div>
         <div class="flex items-center space-x-1.5 flex-shrink-0">
+          <button id="chatModalFinancialBtn" class="hidden px-2.5 py-1 text-xs rounded bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-bold border border-purple-200 dark:border-purple-800 touch-target-btn">
+            💰 財務
+          </button>
           <button id="chatModalDeleteBtn" onclick="deleteCurrentProject()" class="hidden px-2.5 py-1 text-xs rounded bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-400 font-bold border border-red-200 dark:border-red-800 hover:bg-red-100 transition touch-target-btn">
             🗑️ 削除
           </button>
@@ -572,6 +589,67 @@
       <div class="flex justify-end space-x-2 pt-2">
         <button onclick="closeModal('addRelatedModal')" class="px-3.5 py-2 border dark:border-slate-700 rounded-lg text-xs touch-target-btn">キャンセル</button>
         <button onclick="submitCreateRelatedProject()" class="px-5 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold touch-target-btn">ペア起票 ➔</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 【Master限定】財務事項ログモーダル -->
+  <div id="financialModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2.5 sm:p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full p-4 sm:p-6 border border-purple-200 dark:border-purple-900/60 max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="flex items-start justify-between border-b dark:border-slate-800 pb-3 flex-shrink-0 gap-2">
+        <div>
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300">👑 Master限定・秘匿情報</span>
+          <h3 id="financialModalTitle" class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 mt-1">財務事項・請求書管理</h3>
+        </div>
+        <button onclick="closeModal('financialModal')" class="text-slate-400 hover:text-slate-600 text-lg p-2 touch-target-btn">✕</button>
+      </div>
+
+      <div class="bg-purple-50/50 dark:bg-purple-950/20 p-3 sm:p-4 rounded-xl border border-purple-100 dark:border-purple-900/40 space-y-2.5 mt-3 flex-shrink-0">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">項目・用途 *</label>
+            <input type="text" id="fnInputTitle" placeholder="例: クリエイター報酬、請求書発行" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">金額 (円)</label>
+            <input type="number" id="fnInputAmount" placeholder="例: 50000" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500">
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">期日 (支払 / 入金)</label>
+            <input type="date" id="fnInputDueDate" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">ステータス</label>
+            <select id="fnInputStatus" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500">
+              <option value="未対応">🔴 未対応</option>
+              <option value="対応済">🟢 対応済</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">請求書URL (Google Drive / クラウド等)</label>
+          <input type="url" id="fnInputInvoiceUrl" placeholder="https://drive.google.com/..." class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">メモ (任意)</label>
+          <input type="text" id="fnInputMemo" placeholder="振込先や備考" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500">
+        </div>
+        <div class="text-right pt-1">
+          <button onclick="submitFinancialLog()" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold transition shadow-sm touch-target-btn">
+            財務ログを記録
+          </button>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto min-h-[140px] space-y-2 pt-3 pr-1">
+        <h4 class="text-xs font-bold text-slate-500 sticky top-0 bg-white dark:bg-slate-900 py-0.5 z-10">記録済み財務ログ</h4>
+        <div id="financialTimeline" class="space-y-2 text-xs"></div>
+      </div>
+
+      <div class="flex justify-end pt-3 border-t dark:border-slate-800 flex-shrink-0">
+        <button onclick="closeModal('financialModal')" class="w-full sm:w-auto px-5 py-2.5 border dark:border-slate-700 rounded-lg text-xs font-medium touch-target-btn">閉じる</button>
       </div>
     </div>
   </div>
@@ -1244,8 +1322,8 @@
       document.querySelectorAll('.andon-filter-btn').forEach(btn => {
         const isMatch = btn.dataset.status === key;
         btn.className = isMatch
-          ? 'andon-filter-btn px-3.5 py-2 sm:py-1.5 rounded-xl border font-bold transition bg-blue-600 text-white border-blue-600 touch-target-btn'
-          : 'andon-filter-btn px-3.5 py-2 sm:py-1.5 rounded-xl border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 touch-target-btn';
+          ? 'andon-filter-btn px-2.5 sm:px-3.5 py-2 sm:py-1.5 rounded-xl border font-bold transition bg-blue-600 text-white border-blue-600 flex items-center justify-center space-x-1 touch-target-btn'
+          : 'andon-filter-btn px-2 sm:px-3.5 py-2 sm:py-1.5 rounded-xl border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 flex items-center justify-center space-x-1 touch-target-btn';
       });
       renderCreativeProjectsList();
     }
@@ -1273,7 +1351,7 @@
 
       ['all', 'overdue', 'review', 'working', 'unstarted', 'completed'].forEach(k => {
         const el = document.getElementById('count_' + k);
-        if (el) el.innerText = counts[k] || 0;
+        if (el) el.innerText = `(${counts[k] || 0})`;
       });
 
       const filtered = targetProjects.filter(p => {
@@ -2011,7 +2089,6 @@
         if (storageErr) throw new Error('ストレージ削除エラー: ' + storageErr.message);
 
         // 各プロジェクトの tasks の logs と deliverable_url の参照をクリーニング
-        const deletePathSet = new Set(pathsToDelete);
         for (const prj of cachedCreativeProjects) {
           const tasks = prj.tasks || [];
 
@@ -3481,36 +3558,6 @@
       const sheet = document.getElementById('mobileMoreSheet');
       if (sheet) sheet.classList.add('hidden');
     }
-    // ====================================================
-    // キーボードショートカット (Escキーで閉じる)
-    // ====================================================
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' || e.key === 'Esc') {
-        // 1. スマホボトムシートが開いていれば閉じる
-        const moreSheet = document.getElementById('mobileMoreSheet');
-        if (moreSheet && !moreSheet.classList.contains('hidden')) {
-          closeMobileMoreSheet();
-          return;
-        }
-
-        // 2. チャット内の進行設定パネルが開いていれば閉じる
-        const taskPanel = document.getElementById('taskControlPanel');
-        if (taskPanel && !taskPanel.classList.contains('hidden')) {
-          toggleTaskControlPanel(false);
-          return;
-        }
-
-        // 3. 表示中のモーダルがあれば手前のものを閉じる
-        const openModals = Array.from(document.querySelectorAll('[id$="Modal"]'))
-          .filter(m => !m.classList.contains('hidden'));
-
-        if (openModals.length > 0) {
-          // 最前面（配列の末尾）のモーダルを閉じる
-          const topModal = openModals[openModals.length - 1];
-          closeModal(topModal.id);
-        }
-      }
-    });
 
     init();
   </script>
