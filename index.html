@@ -335,21 +335,21 @@
         </div>
       </div>
 
-      <!-- 【改革案②】すっきりした縦型タイムラインリスト -->
-      <div class="py-2 border-b dark:border-slate-800 flex-shrink-0 space-y-1">
-        <div class="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400 px-1">
-          <span>進行タイムライン（タップして下部で編集）</span>
+      <!-- 【差別化①：縦の一本線ステップツリー（背景引き締め＆ボックス枠全廃）】 -->
+      <div class="bg-slate-100/70 dark:bg-slate-950/40 -mx-4 sm:-mx-5 px-4 sm:px-5 py-2.5 border-b dark:border-slate-800 flex-shrink-0 space-y-1.5">
+        <div class="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400">
+          <span class="tracking-wider uppercase text-[10px]">ROADMAP / 進行パイプライン</span>
           <button id="btnOpenAddTaskBar" onclick="openAddTaskModal()" class="text-blue-600 dark:text-blue-400 hover:underline">
             ＋ 工程追加
           </button>
         </div>
-        <div id="chatModalTaskListContainer" class="space-y-1 max-h-36 overflow-y-auto pr-1"></div>
+        <div id="chatModalTaskListContainer" class="max-h-36 overflow-y-auto pr-1"></div>
       </div>
 
-      <!-- チャットタイムライン -->
-      <div class="flex-1 overflow-y-auto min-h-[140px] space-y-2 py-3 pr-1" id="chatModalTimeline"></div>
+      <!-- 【差別化②：メッセージバブル（会話UI）タイムライン】 -->
+      <div class="flex-1 overflow-y-auto min-h-[160px] space-y-3 py-3 pr-1 bg-white dark:bg-slate-900" id="chatModalTimeline"></div>
 
-      <!-- 【改革案③】普段はスッキリ・開閉式チャット＆ステータスフォーム -->
+      <!-- 開閉式チャット＆ステータスフォーム -->
       <div id="chatDropZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleFileDrop(event)" class="bg-slate-50 dark:bg-slate-800/50 p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 transition space-y-2 flex-shrink-0 relative">
         
         <div id="dropOverlay" class="hidden absolute inset-0 bg-blue-600/90 text-white rounded-xl flex flex-col items-center justify-center font-bold text-xs pointer-events-none z-20 space-y-1">
@@ -896,7 +896,6 @@
       return { prefix, nextNumStr };
     }
 
-    // ボール保持先表記（スリム化）
     function getBallHolderShortText(ballKey) {
       if (ballKey === 'admin') return '🛡️ 運営確認中';
       if (ballKey === 'client') return '🏢 先方確認中';
@@ -1028,7 +1027,6 @@
       document.getElementById('attachedFilePreview').classList.add('hidden');
     }
 
-    // 折りたたみコントロールパネルのトグル
     function toggleTaskControlPanel(forceOpen = false) {
       const panel = document.getElementById('taskControlPanel');
       if (!panel) return;
@@ -1225,9 +1223,6 @@
       renderCreativeProjectsList();
     }
 
-    // ====================================================
-    // 【改革案①】カード表面：ノイズを極限まで削いだスマートカード
-    // ====================================================
     function renderCreativeProjectsList() {
       const container = document.getElementById('projectList');
       if (!container) return;
@@ -1307,7 +1302,6 @@
           </button>`;
         }
 
-        // スマート1行ステータスサマリー
         let activeSummaryHtml = '';
         if (andon.statusKey === 'completed') {
           activeSummaryHtml = '<div class="text-xs text-emerald-600 dark:text-emerald-400 font-bold">✓ 全工程完了</div>';
@@ -1334,7 +1328,6 @@
 
         return `<div onclick="openProjectChatModal('${p.id}')" class="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 cursor-pointer transition space-y-2.5 relative group">
           
-          <!-- 上段: コード + カテゴリ + タイトル + 状態バッジ -->
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center space-x-1.5 min-w-0">
               ${unreadDot}
@@ -1348,12 +1341,10 @@
             </div>
           </div>
 
-          <!-- 中段: 洗練された手番・工程要約 -->
           <div class="bg-slate-50 dark:bg-slate-800/40 p-2 sm:p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 space-y-1">
             ${activeSummaryHtml}
           </div>
 
-          <!-- 下段: 1行ログプレビュー -->
           <div class="text-[11px] text-slate-500 flex items-center space-x-1.5 min-w-0 truncate pt-0.5">
             <span class="text-xs flex-shrink-0">💬</span>
             <div class="truncate">${latestLogHtml}</div>
@@ -1364,7 +1355,7 @@
     }
 
     // ----------------------------------------------------
-    // 【案件チャットモーダル（改革案②＋③適用）】
+    // 【案件チャットモーダル（差別化デザイン適用）】
     // ----------------------------------------------------
     function openProjectChatModal(projectId) {
       selectedProjectForChat = cachedCreativeProjects.find(p => p.id === projectId);
@@ -1432,40 +1423,54 @@
       const todayStr = new Date().toISOString().split('T')[0];
 
       // ====================================================
-      // 【改革案②】プルダウンを排した美しい縦型ステップ表
+      // 【差別化①】縦の一本線ステップツリー（カード枠完全排除）
       // ====================================================
       const taskListContainer = document.getElementById('chatModalTaskListContainer');
-      taskListContainer.innerHTML = tasks.map(t => {
-        const isDone = t.status === '完了';
-        const isOverdue = t.deadline && t.deadline < todayStr && !isDone;
-        const assignee = allProfiles.find(u => u.id === t.assignee_id);
-        const assigneeName = assignee ? getDisplayName(assignee) : '未設定';
+      taskListContainer.innerHTML = `<div class="relative pl-3 space-y-2 border-l-2 border-slate-300 dark:border-slate-700 my-1">`
+        + tasks.map((t, index) => {
+            const isDone = t.status === '完了';
+            const isOverdue = t.deadline && t.deadline < todayStr && !isDone;
+            const assignee = allProfiles.find(u => u.id === t.assignee_id);
+            const assigneeName = assignee ? getDisplayName(assignee) : '未設定';
 
-        let dot = '⚪';
-        let statusStyle = 'text-slate-400';
-        if (isDone) { dot = '🟢'; statusStyle = 'text-emerald-600 dark:text-emerald-400 font-bold'; }
-        else if (isOverdue) { dot = '🔴'; statusStyle = 'text-red-600 dark:text-red-400 font-bold'; }
-        else if (t.status === '提出・確認待ち') { dot = '🟡'; statusStyle = 'text-amber-600 dark:text-amber-400 font-bold'; }
-        else if (t.status === '作業中' || t.status === 'リテイク') { dot = '🔵'; statusStyle = 'text-blue-600 dark:text-blue-400 font-bold'; }
+            let dotColor = 'bg-slate-300 dark:bg-slate-600 ring-slate-100 dark:ring-slate-900';
+            let titleColor = 'text-slate-600 dark:text-slate-400';
+            if (isDone) {
+              dotColor = 'bg-emerald-500 ring-emerald-100 dark:ring-emerald-950';
+              titleColor = 'text-emerald-700 dark:text-emerald-300 line-through opacity-80';
+            } else if (isOverdue) {
+              dotColor = 'bg-red-500 ring-red-100 dark:ring-red-950';
+              titleColor = 'text-red-600 dark:text-red-400 font-bold';
+            } else if (t.status === '提出・確認待ち') {
+              dotColor = 'bg-amber-500 ring-amber-100 dark:ring-amber-950';
+              titleColor = 'text-amber-700 dark:text-amber-300 font-bold';
+            } else if (t.status === '作業中' || t.status === 'リテイク') {
+              dotColor = 'bg-blue-500 ring-blue-100 dark:ring-blue-950 animate-pulse';
+              titleColor = 'text-blue-700 dark:text-blue-300 font-bold';
+            }
 
-        const ballTag = getBallHolderTag(t.ball_holder || 'creator');
+            const ballTag = getBallHolderTag(t.ball_holder || 'creator');
 
-        return `<div onclick="selectTaskForControl('${t.id}')" class="flex items-center justify-between p-1.5 px-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-xs hover:border-blue-400 cursor-pointer transition">
-          <div class="flex items-center space-x-2 truncate">
-            <span>${dot}</span>
-            <span class="font-bold text-slate-800 dark:text-slate-100">${t.title}</span>
-            <span class="text-slate-300 dark:text-slate-700">|</span>
-            <span class="text-slate-600 dark:text-slate-300 font-medium">${assigneeName}</span>
-            ${ballTag}
-          </div>
-          <div class="flex items-center space-x-2 text-[11px] flex-shrink-0 font-mono">
-            <span class="${isOverdue ? 'text-red-500 font-bold' : 'text-slate-400'}">${formatDeadlineStr(t.deadline)}</span>
-            <span class="${statusStyle}">${t.status}</span>
-          </div>
-        </div>`;
-      }).join('');
+            return `<div onclick="selectTaskForControl('${t.id}')" class="relative group cursor-pointer flex items-center justify-between text-xs py-0.5 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 -ml-3 pl-3 pr-1.5 rounded transition">
+              <!-- 左側ステップドット -->
+              <span class="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full ring-2 ${dotColor}"></span>
+              
+              <div class="flex items-center space-x-1.5 truncate">
+                <span class="${titleColor}">${t.title}</span>
+                <span class="text-slate-400 text-[10px]">·</span>
+                <span class="text-slate-600 dark:text-slate-300 font-medium text-[11px] truncate">${assigneeName}</span>
+                ${ballTag}
+              </div>
 
-      // 工程選択プルダウン（工程名のみ）
+              <div class="flex items-center space-x-1.5 text-[11px] font-mono flex-shrink-0">
+                <span class="${isOverdue ? 'text-red-500 font-bold' : 'text-slate-400'}">${formatDeadlineStr(t.deadline)}</span>
+                <span class="text-[10px] text-slate-400">(${t.status})</span>
+              </div>
+            </div>`;
+          }).join('')
+        + `</div>`;
+
+      // 工程選択プルダウン
       const taskSelect = document.getElementById('chatInputTaskId');
       taskSelect.innerHTML = tasks.map(t => {
         return `<option value="${t.id}">${t.title}</option>`;
@@ -1474,7 +1479,6 @@
       renderAssigneeDropdown();
       syncSelectedTaskDetails();
 
-      // パネルを閉じた状態にリセット
       document.getElementById('taskControlPanel').classList.add('hidden');
       updateControlPanelActiveState();
 
@@ -1496,7 +1500,6 @@
       }).join('');
     }
 
-    // リストタップで下部コントロールに吸い込み＆展開
     function selectTaskForControl(taskId) {
       const taskSelect = document.getElementById('chatInputTaskId');
       if (taskSelect) {
@@ -1547,6 +1550,9 @@
       });
     }
 
+    // ====================================================
+    // 【差別化②】メッセージバブル（会話UI）タイムライン描画
+    // ====================================================
     function renderProjectChatTimeline(project) {
       const timelineContainer = document.getElementById('chatModalTimeline');
       if (!timelineContainer) return;
@@ -1562,7 +1568,7 @@
       allLogs.sort((a,b) => new Date(b.at) - new Date(a.at));
 
       if (allLogs.length === 0) {
-        timelineContainer.innerHTML = '<div class="text-center py-8 text-slate-400 text-xs bg-slate-50 dark:bg-slate-800/40 rounded-xl">ログはありません</div>';
+        timelineContainer.innerHTML = '<div class="text-center py-8 text-slate-400 text-xs italic">まだメッセージログはありません</div>';
         return;
       }
 
@@ -1570,13 +1576,14 @@
         const isUnread = isLogItemUnread(l);
         const dateStr = new Date(l.at).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
         const isMyPost = (l.user === getCurrentUserIdentifier());
+        const userInitial = (l.user || 'U').charAt(0).toUpperCase();
 
-        let badgeColor = 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
-        if (l.type === '提出') badgeColor = 'bg-blue-100 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300';
-        else if (l.type === 'リテイク指示') badgeColor = 'bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300';
-        else if (l.type === '承認・完了') badgeColor = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300';
+        let badgeStyle = 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300';
+        if (l.type === '提出') badgeStyle = 'bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300';
+        else if (l.type === 'リテイク指示') badgeStyle = 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300';
+        else if (l.type === '承認・完了') badgeStyle = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300';
 
-        const unreadTag = isUnread ? '<span class="px-1 py-0.2 rounded text-[9px] font-bold bg-red-500 text-white animate-pulse">NEW</span>' : '';
+        const unreadTag = isUnread ? '<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse inline-block ml-1"></span>' : '';
 
         let formattedComment = formatMessageWithLinksAndMedia(l.comment || '');
         let separateUrlHtml = '';
@@ -1587,25 +1594,50 @@
         const readMembers = (l.read_by || []).filter(name => name !== l.user);
         let readStatusHtml = '';
         if (readMembers.length > 0) {
-          readStatusHtml = `<div class="text-[10px] text-slate-400 pt-1 flex items-center space-x-1">
-            <span class="text-blue-500 dark:text-blue-400 font-bold">✓ 既読 ${readMembers.length}人:</span>
-            <span class="truncate max-w-[260px] sm:max-w-md">${readMembers.join(', ')}</span>
+          readStatusHtml = `<div class="text-[9px] text-slate-400 mt-1 text-right">
+            <span>✓ 既読 ${readMembers.length}人</span>
           </div>`;
         }
 
-        return `<div class="p-2.5 sm:p-3 rounded-xl border text-xs space-y-1.5 transition ${isMyPost ? 'bg-blue-50/40 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900/60' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'}">
-          <div class="flex items-center justify-between text-[11px]">
-            <div class="flex items-center space-x-1.5 font-bold">
-              <span class="px-1.5 py-0.5 rounded ${badgeColor}">[${l.taskTitle}] ${l.type}</span>
-              <span class="text-slate-800 dark:text-slate-200">${l.user || '不明'}</span>
-              ${unreadTag}
+        // バブルスタイル（右寄せ: 自分の発言 / 左寄せ: 相手の発言）
+        if (isMyPost) {
+          return `<div class="flex justify-end space-x-2 pl-8">
+            <div class="max-w-[85%] flex flex-col items-end">
+              <div class="flex items-center space-x-1.5 text-[10px] text-slate-400 mb-1">
+                <span class="font-mono">${dateStr}</span>
+                <span class="font-bold text-slate-700 dark:text-slate-300">自分</span>
+                <span class="px-1.5 py-0.2 rounded font-semibold ${badgeStyle}">[${l.taskTitle}]</span>
+              </div>
+              <div class="p-2.5 sm:p-3 rounded-2xl rounded-tr-none bg-blue-600 text-white shadow-xs text-xs space-y-1">
+                ${formattedComment ? `<div class="font-normal whitespace-pre-wrap break-words leading-relaxed selection:bg-blue-800">${formattedComment}</div>` : ''}
+                ${separateUrlHtml}
+              </div>
+              ${readStatusHtml}
             </div>
-            <span class="text-slate-400 text-[10px] font-mono">${dateStr}</span>
-          </div>
-          ${formattedComment ? `<div class="text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-pre-wrap break-words leading-relaxed pl-1 mt-1">${formattedComment}</div>` : ''}
-          ${separateUrlHtml}
-          ${readStatusHtml}
-        </div>`;
+            <div class="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-4">
+              ${userInitial}
+            </div>
+          </div>`;
+        } else {
+          return `<div class="flex justify-start space-x-2 pr-8">
+            <div class="w-6 h-6 rounded-full bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-4">
+              ${userInitial}
+            </div>
+            <div class="max-w-[85%] flex flex-col items-start">
+              <div class="flex items-center space-x-1.5 text-[10px] text-slate-400 mb-1">
+                <span class="px-1.5 py-0.2 rounded font-semibold ${badgeStyle}">[${l.taskTitle}]</span>
+                <span class="font-bold text-slate-700 dark:text-slate-300">${l.user || '担当者'}</span>
+                <span class="font-mono">${dateStr}</span>
+                ${unreadTag}
+              </div>
+              <div class="p-2.5 sm:p-3 rounded-2xl rounded-tl-none bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-xs text-xs space-y-1 border border-slate-200/60 dark:border-slate-700/60">
+                ${formattedComment ? `<div class="font-normal whitespace-pre-wrap break-words leading-relaxed">${formattedComment}</div>` : ''}
+                ${separateUrlHtml}
+              </div>
+              ${readStatusHtml}
+            </div>
+          </div>`;
+        }
       }).join('');
     }
 
