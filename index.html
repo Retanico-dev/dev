@@ -335,21 +335,21 @@
         </div>
       </div>
 
-      <!-- 縦並びの工程進行・担当布陣リスト -->
+      <!-- 縦並びの工程進行・担当布陣リスト（リスト上で直接担当者変更可能） -->
       <div class="py-2.5 border-b dark:border-slate-800 flex-shrink-0 space-y-1.5">
         <div class="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
-          <span>📋 工程・担当布陣一覧</span>
+          <span>📋 工程・担当布陣一覧（担当者・期日・状態）</span>
           <button id="btnOpenAddTaskBar" onclick="openAddTaskModal()" class="text-[11px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-blue-600 hover:text-white text-slate-600 dark:text-slate-300 font-semibold transition">
             ＋ 工程追加
           </button>
         </div>
-        <div id="chatModalTaskListContainer" class="space-y-1 max-h-36 overflow-y-auto pr-1"></div>
+        <div id="chatModalTaskListContainer" class="space-y-1.5 max-h-40 overflow-y-auto pr-1"></div>
       </div>
 
       <!-- チャットタイムライン -->
       <div class="flex-1 overflow-y-auto min-h-[140px] space-y-2.5 py-3 pr-1" id="chatModalTimeline"></div>
 
-      <!-- ドラッグ＆ドロップ対応 チャット統合フォーム -->
+      <!-- ドラッグ＆ドロップ対応 チャット統合フォーム（担当プルダウンを撤廃してスッキリ化） -->
       <div id="chatDropZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleFileDrop(event)" class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 transition space-y-2 flex-shrink-0 relative">
         
         <div id="dropOverlay" class="hidden absolute inset-0 bg-blue-600/90 text-white rounded-xl flex flex-col items-center justify-center font-bold text-xs pointer-events-none z-20 space-y-1">
@@ -358,19 +358,15 @@
           <span class="text-[10px] text-blue-100 font-normal">（音声: mp3/m4a ｜ 画像: 自動で軽量JPEG化）</span>
         </div>
 
-        <!-- 【新設計】工程・担当・ボール保持先・期日・状態 設定バー -->
-        <div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5 text-xs">
+        <!-- 対象工程・ボール保持先・期日・状態 設定バー -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-xs">
           <div class="flex items-center space-x-1">
             <span class="text-slate-500 whitespace-nowrap font-medium text-[10px]">工程:</span>
             <select id="chatInputTaskId" onchange="syncSelectedTaskDetails()" class="w-full px-1.5 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs text-slate-800 dark:text-slate-200 font-bold truncate"></select>
           </div>
           <div class="flex items-center space-x-1">
-            <span class="text-slate-500 whitespace-nowrap font-medium text-[10px]">担当:</span>
-            <select id="chatInputAssigneeId" class="w-full px-1 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs font-semibold truncate"></select>
-          </div>
-          <div class="flex items-center space-x-1">
             <span class="text-slate-500 whitespace-nowrap font-medium text-[10px]">ボール:</span>
-            <select id="chatInputBallHolder" class="w-full px-1 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs font-bold text-indigo-600 dark:text-indigo-400 truncate">
+            <select id="chatInputBallHolder" class="w-full px-1.5 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs font-bold text-indigo-600 dark:text-indigo-400 truncate">
               <option value="creator">👤 担当クリエイター</option>
               <option value="admin">🛡️ 運営・ディレクター</option>
               <option value="client">🏢 クライアント (先方)</option>
@@ -379,11 +375,11 @@
           </div>
           <div class="flex items-center space-x-1">
             <span class="text-slate-500 whitespace-nowrap font-medium text-[10px]">期日:</span>
-            <input type="date" id="chatInputDeadline" class="w-full px-1 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs">
+            <input type="date" id="chatInputDeadline" class="w-full px-1.5 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs">
           </div>
-          <div class="flex items-center space-x-1 col-span-2 sm:col-span-1">
+          <div class="flex items-center space-x-1">
             <span class="text-slate-500 whitespace-nowrap font-medium text-[10px]">状態:</span>
-            <select id="chatInputStatus" onchange="handleStatusAutoAssist()" class="w-full px-1 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs font-semibold truncate">
+            <select id="chatInputStatus" onchange="handleStatusAutoAssist()" class="w-full px-1.5 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs font-semibold truncate">
               <option value="">(変更なし)</option>
               <option value="作業中">🔵 作業中</option>
               <option value="提出・確認待ち">🟡 提出・確認待ち</option>
@@ -884,7 +880,6 @@
       return { prefix, nextNumStr };
     }
 
-    // ボール保持先バッジ・名称ヘルパー
     function getBallHolderLabel(ballKey) {
       if (ballKey === 'admin') return '🛡️ 運営・ディレクター (検収中)';
       if (ballKey === 'client') return '🏢 クライアント (先方確認)';
@@ -1016,18 +1011,17 @@
       document.getElementById('attachedFilePreview').classList.add('hidden');
     }
 
-    // ステータス選択に応じたボール保持先の半自動アシスト
     function handleStatusAutoAssist() {
       const status = document.getElementById('chatInputStatus').value;
       const ballSelect = document.getElementById('chatInputBallHolder');
       if (!ballSelect) return;
 
       if (status === '提出・確認待ち') {
-        ballSelect.value = 'admin'; // 運営チェックへ
+        ballSelect.value = 'admin';
       } else if (status === 'リテイク' || status === '作業中') {
-        ballSelect.value = 'creator'; // クリエイターへ
+        ballSelect.value = 'creator';
       } else if (status === '完了') {
-        ballSelect.value = 'none'; // ボールなし
+        ballSelect.value = 'none';
       }
     }
 
@@ -1185,9 +1179,6 @@
       return cachedCreativeProjects.find(p => p.group_id === project.group_id && p.id !== project.id);
     }
 
-    // ----------------------------------------------------
-    // 【制作案件一覧描画（主担当 ⇄ ボール所在 明確化仕様）】
-    // ----------------------------------------------------
     function setAndonFilter(key) {
       currentAndonFilter = key;
       document.querySelectorAll('.andon-filter-btn').forEach(btn => {
@@ -1285,7 +1276,6 @@
             + '</button>';
         }
 
-        // 主担当 ＆ ボール所在の明示化
         let activeTasksHtml = '';
         if (andon.statusKey === 'completed') {
           activeTasksHtml = '<div class="text-xs text-emerald-600 dark:text-emerald-400 font-bold">✓ すべての工程が完了しました</div>';
@@ -1311,7 +1301,6 @@
 
         return '<div onclick="openProjectChatModal(\'' + p.id + '\')" class="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-blue-500 cursor-pointer transition space-y-2.5 relative group ' + (hasUnread ? 'ring-1 ring-red-400' : '') + '">'
           
-          <!-- 通し番号 + タイトル + カテゴリバッジ + 行灯バッジ -->
           + '<div class="flex flex-wrap items-start justify-between gap-2">'
           + '<div class="flex items-center space-x-1.5 flex-1 min-w-0">'
           + codeBadge
@@ -1324,15 +1313,12 @@
           + '</div>'
           + '</div>'
 
-          <!-- 関連チケットリンク / 追加ボタン -->
           + (relatedLinkHtml ? '<div class="flex items-center space-x-1.5 pt-0.5">' + relatedLinkHtml + '</div>' : '')
 
-          <!-- 主担当 ＆ ボール所在ボックス -->
           + '<div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80">'
           + activeTasksHtml
           + '</div>'
 
-          <!-- 最新ログプレビュー（全幅表示） -->
           + '<div class="text-xs text-slate-500 pt-1 border-t border-slate-100 dark:border-slate-800">'
           + '<div class="flex items-center space-x-1.5 min-w-0 w-full truncate">'
           + '<span class="text-sm flex-shrink-0">💬</span>'
@@ -1345,7 +1331,7 @@
     }
 
     // ----------------------------------------------------
-    // 【案件チャットモーダル】
+    // 【案件チャットモーダル（上部リストで直接アサイン変更対応）】
     // ----------------------------------------------------
     function openProjectChatModal(projectId) {
       selectedProjectForChat = cachedCreativeProjects.find(p => p.id === projectId);
@@ -1414,15 +1400,15 @@
       const tasks = getFilteredTasksForProject(p).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
       const todayStr = new Date().toISOString().split('T')[0];
 
-      // 縦並びの工程進行・担当布陣リスト描画（ボール保持バッジ付き）
+      // ====================================================
+      // 【改修】縦並びの工程進行・担当布陣リスト（各行で担当者を直接即時変更可能）
+      // ====================================================
       const taskListContainer = document.getElementById('chatModalTaskListContainer');
       taskListContainer.innerHTML = tasks.map(t => {
         const isDone = t.status === '完了';
         const isOverdue = t.deadline && t.deadline < todayStr && !isDone;
         const isReview = t.status === '提出・確認待ち';
         const isWorking = t.status === '作業中' || t.status === 'リテイク';
-        const assignee = allProfiles.find(u => u.id === t.assignee_id);
-        const assigneeName = assignee ? getDisplayName(assignee) : '未設定';
 
         let dot = '⚪';
         let badgeColor = 'text-slate-400';
@@ -1433,28 +1419,35 @@
 
         const ballBadge = getBallHolderBadge(t.ball_holder || 'creator');
 
-        return `<div onclick="selectTaskForQuickAction('${t.id}')" class="flex items-center justify-between p-1.5 px-2 rounded-lg bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-800 text-xs hover:border-blue-400 cursor-pointer transition">
-          <div class="flex items-center space-x-1.5 truncate">
+        // 各行用のアサイン選択肢プルダウン
+        const assigneeOptions = '<option value="">未割当</option>' + allProfiles.map(u => {
+          const isSel = (u.id === t.assignee_id) ? 'selected' : '';
+          return `<option value="${u.id}" ${isSel}>${getDisplayName(u)}</option>`;
+        }).join('');
+
+        return `<div onclick="selectTaskForQuickAction('${t.id}')" class="flex items-center justify-between p-1.5 px-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-800 text-xs hover:border-blue-400 cursor-pointer transition gap-2">
+          <div class="flex items-center space-x-1.5 min-w-0 flex-1">
             <span>${dot}</span>
-            <span class="font-bold text-slate-800 dark:text-slate-100">${t.title}</span>
+            <span class="font-bold text-slate-800 dark:text-slate-100 flex-shrink-0">${t.title}</span>
             <span class="text-slate-400 text-[10px]">|</span>
-            <span class="text-slate-600 dark:text-slate-300 truncate">${assigneeName}</span>
+            <select onclick="event.stopPropagation()" onchange="quickUpdateTaskAssignee('${t.id}', this.value)" class="text-[11px] font-semibold px-1 py-0.5 rounded border dark:border-slate-700 bg-white dark:bg-slate-800 max-w-[130px] sm:max-w-[160px] truncate outline-none focus:ring-1 focus:ring-blue-500">
+              ${assigneeOptions}
+            </select>
             ${ballBadge}
           </div>
           <div class="flex items-center space-x-2 text-[11px] flex-shrink-0">
-            <span class="${isOverdue ? 'text-red-500 font-bold' : 'text-slate-400'}">${formatDeadlineStr(t.deadline)}</span>
+            <span class="${isOverdue ? 'text-red-500 font-bold' : 'text-slate-400'} font-mono">${formatDeadlineStr(t.deadline)}</span>
             <span class="${badgeColor}">${t.status}</span>
           </div>
         </div>`;
       }).join('');
 
-      // 工程選択プルダウン
+      // 工程選択プルダウン（工程名のみ）
       const taskSelect = document.getElementById('chatInputTaskId');
       taskSelect.innerHTML = tasks.map(t => {
         return '<option value="' + t.id + '">' + t.title + '</option>';
       }).join('');
 
-      renderAssigneeDropdown();
       syncSelectedTaskDetails();
 
       renderProjectChatTimeline(p);
@@ -1467,12 +1460,42 @@
       autoMarkProjectTasksAsRead(p);
     }
 
-    function renderAssigneeDropdown() {
-      const select = document.getElementById('chatInputAssigneeId');
-      if (!select) return;
-      select.innerHTML = '<option value="">-- 未割当 --</option>' + allProfiles.map(u => {
-        return '<option value="' + u.id + '">' + getDisplayName(u) + '</option>';
-      }).join('');
+    // リスト側での担当クリエイター即時更新
+    async function quickUpdateTaskAssignee(taskId, newAssigneeId) {
+      if (!selectedProjectForChat) return;
+
+      const targetTask = (selectedProjectForChat.tasks || []).find(t => t.id === taskId);
+      if (!targetTask) return;
+
+      const valToSave = newAssigneeId || null;
+      targetTask.assignee_id = valToSave;
+
+      const newAssigneeObj = allProfiles.find(u => u.id === valToSave);
+      const assigneeName = getDisplayName(newAssigneeObj);
+
+      const logs = targetTask.logs || [];
+      const currentUserName = getCurrentUserIdentifier() || '担当者';
+      logs.unshift({
+        type: '担当アサイン',
+        user: currentUserName,
+        comment: `リスト上で主担当者を「${assigneeName}」に変更しました。`,
+        read_by: [currentUserName],
+        at: new Date().toISOString()
+      });
+
+      const { error } = await supabaseClient
+        .from('tasks')
+        .update({ assignee_id: valToSave, logs: logs })
+        .eq('id', taskId);
+
+      if (error) {
+        alert('担当者変更エラー: ' + error.message);
+        return;
+      }
+
+      await loadCreativeProjects();
+      openProjectChatModal(selectedProjectForChat.id);
+      renderAllUpdatesLogs();
     }
 
     function selectTaskForQuickAction(taskId) {
@@ -1483,18 +1506,16 @@
       }
     }
 
-    // 選択された工程の「担当者」「ボール保持先」「期日」を下部バーに同期
+    // 選択された工程の「ボール保持先」「期日」を下部バーに同期
     function syncSelectedTaskDetails() {
       if (!selectedProjectForChat) return;
       const taskId = document.getElementById('chatInputTaskId').value;
       const targetTask = (selectedProjectForChat.tasks || []).find(t => t.id === taskId);
       
-      const assigneeSelect = document.getElementById('chatInputAssigneeId');
       const ballSelect = document.getElementById('chatInputBallHolder');
       const deadlineInput = document.getElementById('chatInputDeadline');
 
       if (targetTask) {
-        if (assigneeSelect) assigneeSelect.value = targetTask.assignee_id || '';
         if (ballSelect) ballSelect.value = targetTask.ball_holder || 'creator';
         if (deadlineInput) deadlineInput.value = targetTask.deadline || '';
       }
@@ -1650,7 +1671,7 @@
     }
 
     // ====================================================
-    // 【統合送信処理実行（ボール保持先 ball_holder 保存対応）】
+    // 【統合送信処理実行（進行・手番・期日・チャット連動）】
     // ====================================================
     async function executeFinalChatSubmission(shouldShiftSubsequent) {
       closeModal('deadlineShiftModal');
@@ -1658,7 +1679,6 @@
       const btn = document.getElementById('btnSubmitChat');
       const taskId = document.getElementById('chatInputTaskId').value;
       const newStatus = document.getElementById('chatInputStatus').value;
-      const newAssigneeId = document.getElementById('chatInputAssigneeId').value || null;
       const newBallHolder = document.getElementById('chatInputBallHolder').value || 'creator';
       const newDeadline = document.getElementById('chatInputDeadline').value || null;
       let comment = document.getElementById('chatInputComment').value.trim();
@@ -1666,12 +1686,11 @@
       const targetTask = (selectedProjectForChat.tasks || []).find(t => t.id === taskId);
       if (!targetTask) return;
 
-      const isAssigneeChanged = (targetTask.assignee_id || null) !== newAssigneeId;
       const isBallChanged = (targetTask.ball_holder || 'creator') !== newBallHolder;
       const isDeadlineChanged = (targetTask.deadline || null) !== newDeadline;
 
-      if (!comment && !pendingUploadFile && !newStatus && !isAssigneeChanged && !isBallChanged && !isDeadlineChanged) {
-        alert('メッセージを入力するか、ファイルを添付、または担当者・手番・期日・ステータスを変更してください');
+      if (!comment && !pendingUploadFile && !newStatus && !isBallChanged && !isDeadlineChanged) {
+        alert('メッセージを入力するか、ファイルを添付、または手番・期日・ステータスを変更してください');
         return;
       }
 
@@ -1726,10 +1745,6 @@
         } else if (isDeadlineChanged && !comment) {
           logType = '期日変更';
           comment = `締切期日を「${newDeadline || '未設定'}」に変更しました。`;
-        } else if (isAssigneeChanged && !comment) {
-          const newAssigneeObj = allProfiles.find(u => u.id === newAssigneeId);
-          logType = '担当アサイン';
-          comment = `主担当者を「${getDisplayName(newAssigneeObj)}」に設定しました。`;
         }
 
         const logs = targetTask.logs || [];
@@ -1747,7 +1762,6 @@
         const updateData = { logs: logs };
         if (detectedUrl) updateData.deliverable_url = detectedUrl;
         if (newStatus) updateData.status = newStatus;
-        if (isAssigneeChanged) updateData.assignee_id = newAssigneeId;
         if (isBallChanged) updateData.ball_holder = newBallHolder;
         if (isDeadlineChanged) updateData.deadline = newDeadline;
 
@@ -1756,7 +1770,6 @@
 
         if (detectedUrl) targetTask.deliverable_url = detectedUrl;
         if (newStatus) targetTask.status = newStatus;
-        if (isAssigneeChanged) targetTask.assignee_id = newAssigneeId;
         if (isBallChanged) targetTask.ball_holder = newBallHolder;
         if (isDeadlineChanged) targetTask.deadline = newDeadline;
         targetTask.logs = logs;
