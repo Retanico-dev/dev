@@ -335,7 +335,7 @@
         </div>
       </div>
 
-      <!-- 【案1採用】縦並びの工程進行・担当布陣リスト -->
+      <!-- 【案1】縦並びの工程進行・担当布陣リスト -->
       <div class="py-2.5 border-b dark:border-slate-800 flex-shrink-0 space-y-1.5">
         <div class="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
           <span>📋 工程・担当布陣一覧</span>
@@ -405,7 +405,7 @@
           </div>
 
           <div class="absolute bottom-2 right-2">
-            <button onclick="submitProjectChat()" id="btnSubmitChat" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-sm whitespace-nowrap">
+            <button onclick="handleChatSubmitClick()" id="btnSubmitChat" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-sm whitespace-nowrap">
               送信・更新 ➔
             </button>
           </div>
@@ -413,6 +413,36 @@
 
       </div>
 
+    </div>
+  </div>
+
+  <!-- ==================== 【新機能】後続工程の連動シフト確認モーダル ==================== -->
+  <div id="deadlineShiftModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-5 space-y-4 border border-slate-200 dark:border-slate-800 shadow-2xl animate-in fade-in zoom-in-95">
+      <div class="border-b dark:border-slate-800 pb-2.5">
+        <div class="flex items-center space-x-2 text-amber-500 text-sm font-bold">
+          <span>📅</span>
+          <span>締切期日の変更を検知しました</span>
+        </div>
+        <p id="shiftModalLeadText" class="text-xs text-slate-600 dark:text-slate-300 mt-1 font-semibold"></p>
+      </div>
+
+      <div class="space-y-2">
+        <div class="flex items-center justify-between text-[11px] text-slate-500 font-bold">
+          <span>連動してスライドする後続工程:</span>
+          <span class="text-[10px] text-slate-400">※不要な工程はチェックを解除</span>
+        </div>
+        <div id="shiftCandidatesList" class="space-y-1.5 max-h-44 overflow-y-auto p-2 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800 text-xs"></div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-center justify-end gap-2 pt-2 border-t dark:border-slate-800">
+        <button onclick="executeFinalChatSubmission(false)" class="w-full sm:w-auto px-3.5 py-2 rounded-lg border dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+          この工程のみ変更
+        </button>
+        <button onclick="executeFinalChatSubmission(true)" class="w-full sm:w-auto px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-sm">
+          チェック工程も連動して一括更新 ➔
+        </button>
+      </div>
     </div>
   </div>
 
@@ -758,6 +788,9 @@
     let pendingUploadFile = null;
 
     let targetProjectForRelated = null;
+
+    // 後続スライド保留用コンテキスト
+    let pendingDeadlineShiftContext = null;
 
     function getCurrentUserIdentifier() {
       if (!userProfile) return '';
@@ -1254,7 +1287,7 @@
           <!-- 関連チケットリンク / 追加ボタン -->
           + (relatedLinkHtml ? '<div class="flex items-center space-x-1.5 pt-0.5">' + relatedLinkHtml + '</div>' : '')
 
-          <!-- 現在のボール保持者（作業中・期日超過タスクのみの引き算表示） -->
+          <!-- 現在のボール保持者（引き算表示） -->
           + '<div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80">'
           + activeTasksHtml
           + '</div>'
@@ -1341,9 +1374,7 @@
       const tasks = getFilteredTasksForProject(p).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
       const todayStr = new Date().toISOString().split('T')[0];
 
-      // ====================================================
-      // 【案1】縦並びの工程進行・担当布陣リスト描画
-      // ====================================================
+      // 縦並びの工程進行・担当布陣リスト描画
       const taskListContainer = document.getElementById('chatModalTaskListContainer');
       taskListContainer.innerHTML = tasks.map(t => {
         const isDone = t.status === '完了';
@@ -1374,7 +1405,7 @@
         </div>`;
       }).join('');
 
-      // 工程選択プルダウン（カッコのステータス表記を全廃し、工程名のみに統一）
+      // 工程選択プルダウン
       const taskSelect = document.getElementById('chatInputTaskId');
       taskSelect.innerHTML = tasks.map(t => {
         return '<option value="' + t.id + '">' + t.title + '</option>';
@@ -1401,7 +1432,6 @@
       }).join('');
     }
 
-    // 縦リスト行タップ時に該当タスクを下部操作バーに同期
     function selectTaskForQuickAction(taskId) {
       const taskSelect = document.getElementById('chatInputTaskId');
       if (taskSelect) {
@@ -1410,7 +1440,6 @@
       }
     }
 
-    // 選択された工程の「担当者」「期日」を下部バーに同期
     function syncSelectedTaskDetails() {
       if (!selectedProjectForChat) return;
       const taskId = document.getElementById('chatInputTaskId').value;
@@ -1512,10 +1541,81 @@
     }
 
     // ====================================================
-    // 【統合送信処理】期日変更・アサイン変更・ステータス・メッセージ連動
+    // 【新機能】期日変更検知 ＆ 連動シミュレーション判定
     // ====================================================
-    async function submitProjectChat() {
+    function handleChatSubmitClick() {
       if (!selectedProjectForChat) return;
+
+      const taskId = document.getElementById('chatInputTaskId').value;
+      const newDeadline = document.getElementById('chatInputDeadline').value || null;
+      const targetTask = (selectedProjectForChat.tasks || []).find(t => t.id === taskId);
+      if (!targetTask) return;
+
+      const oldDeadline = targetTask.deadline || null;
+
+      // 期日変更があり、かつ新旧両方の日付が揃っている場合
+      if (newDeadline && oldDeadline && newDeadline !== oldDeadline) {
+        const oldTime = new Date(oldDeadline).getTime();
+        const newTime = new Date(newDeadline).getTime();
+        const diffDays = Math.round((newTime - oldTime) / (1000 * 60 * 60 * 24));
+
+        if (diffDays !== 0) {
+          // 後続工程（sort_orderがより大きい工程）を抽出
+          const validTasks = getFilteredTasksForProject(selectedProjectForChat).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
+          const currentOrder = targetTask.sort_order || 0;
+          const subsequentTasks = validTasks.filter(t => (t.sort_order || 0) > currentOrder && t.deadline);
+
+          if (subsequentTasks.length > 0) {
+            // シミュレーションモーダルを表示
+            openDeadlineShiftModal(targetTask, oldDeadline, newDeadline, diffDays, subsequentTasks);
+            return;
+          }
+        }
+      }
+
+      // 期日変更がない、または後続工程がない場合はそのまま送信
+      executeFinalChatSubmission(false);
+    }
+
+    // 連動シフト確認モーダルを開く
+    function openDeadlineShiftModal(targetTask, oldDeadline, newDeadline, diffDays, subsequentTasks) {
+      pendingDeadlineShiftContext = {
+        diffDays: diffDays,
+        subsequentTasks: subsequentTasks
+      };
+
+      const signStr = diffDays > 0 ? `+${diffDays}日 (後ろ倒し)` : `${diffDays}日 (前倒し)`;
+      document.getElementById('shiftModalLeadText').innerHTML = 
+        `「<span class="text-blue-600 dark:text-blue-400">${targetTask.title}</span>」の締切が <strong>${signStr}</strong> 変更されます。<br>` +
+        `<span class="text-[11px] font-normal text-slate-500">（${oldDeadline} ➔ ${newDeadline}）</span>`;
+
+      const listContainer = document.getElementById('shiftCandidatesList');
+      listContainer.innerHTML = subsequentTasks.map(t => {
+        const curDate = new Date(t.deadline);
+        curDate.setDate(curDate.getDate() + diffDays);
+        const shiftedDateStr = curDate.toISOString().split('T')[0];
+
+        return `<label class="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-slate-800 border dark:border-slate-700 cursor-pointer hover:border-blue-400 transition">
+          <div class="flex items-center space-x-2 truncate">
+            <input type="checkbox" value="${t.id}" data-shifted="${shiftedDateStr}" checked class="shift-task-checkbox rounded text-blue-600">
+            <span class="font-bold text-slate-800 dark:text-slate-100">${t.title}</span>
+          </div>
+          <div class="text-[11px] text-slate-500 font-mono">
+            <span>${formatDeadlineStr(t.deadline)}</span>
+            <span class="mx-1 text-slate-400">➔</span>
+            <span class="font-bold text-blue-600 dark:text-blue-400">${formatDeadlineStr(shiftedDateStr)}</span>
+          </div>
+        </label>`;
+      }).join('');
+
+      openModal('deadlineShiftModal');
+    }
+
+    // ====================================================
+    // 【統合送信処理実行】
+    // ====================================================
+    async function executeFinalChatSubmission(shouldShiftSubsequent) {
+      closeModal('deadlineShiftModal');
 
       const btn = document.getElementById('btnSubmitChat');
       const taskId = document.getElementById('chatInputTaskId').value;
@@ -1607,6 +1707,7 @@
         if (isAssigneeChanged) updateData.assignee_id = newAssigneeId;
         if (isDeadlineChanged) updateData.deadline = newDeadline;
 
+        // 1. 対象タスクの更新
         const { error: dbErr } = await supabaseClient.from('tasks').update(updateData).eq('id', taskId);
         if (dbErr) throw dbErr;
 
@@ -1616,6 +1717,22 @@
         if (isDeadlineChanged) targetTask.deadline = newDeadline;
         targetTask.logs = logs;
 
+        // 2. 後続工程の連動一括更新（チェックが入っている工程）
+        if (shouldShiftSubsequent && pendingDeadlineShiftContext) {
+          const checkedBoxes = Array.from(document.querySelectorAll('.shift-task-checkbox:checked'));
+          const updatePromises = checkedBoxes.map(cb => {
+            const shiftTaskId = cb.value;
+            const shiftedDate = cb.getAttribute('data-shifted');
+            const targetSubTask = (selectedProjectForChat.tasks || []).find(t => t.id === shiftTaskId);
+            if (targetSubTask) targetSubTask.deadline = shiftedDate;
+            return supabaseClient.from('tasks').update({ deadline: shiftedDate }).eq('id', shiftTaskId);
+          });
+          if (updatePromises.length > 0) {
+            await Promise.all(updatePromises);
+          }
+        }
+
+        pendingDeadlineShiftContext = null;
         removeAttachedFile();
         document.getElementById('chatInputComment').value = '';
         document.getElementById('chatInputStatus').value = '';
