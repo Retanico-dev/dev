@@ -316,6 +316,7 @@
       <div class="flex items-start justify-between border-b dark:border-slate-800 pb-3 flex-shrink-0 gap-2">
         <div class="min-w-0 flex-1">
           <div class="flex flex-wrap items-center gap-1.5">
+            <span id="chatModalCodeBadge" class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border dark:border-slate-700"></span>
             <span id="chatModalCategoryBadge" class="text-xs font-bold px-2 py-0.5 rounded"></span>
             <h3 id="chatModalTitle" class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 truncate"></h3>
             <span id="chatModalDriveLink"></span>
@@ -405,7 +406,7 @@
     </div>
   </div>
 
-  <!-- ==================== モーダル: 途中工程追加 ==================== -->
+  <!-- モーダル: 途中工程追加 -->
   <div id="addTaskModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full p-5 space-y-3.5 border border-slate-200 dark:border-slate-800 shadow-xl">
       <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100 flex items-center space-x-1.5">
@@ -426,7 +427,7 @@
     </div>
   </div>
 
-  <!-- ==================== モーダル: 関連チケット後から追加 ==================== -->
+  <!-- モーダル: 関連チケット後から追加 -->
   <div id="addRelatedModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full p-5 space-y-3.5 border border-slate-200 dark:border-slate-800 shadow-xl">
       <h3 id="addRelatedModalTitle" class="font-bold text-sm text-slate-800 dark:text-slate-100">関連チケットの追加</h3>
@@ -742,7 +743,6 @@
     let cachedCreativeProjects = [];
     let pendingUploadFile = null;
 
-    // 関連チケット追加対象
     let targetProjectForRelated = null;
 
     function getCurrentUserIdentifier() {
@@ -794,7 +794,8 @@
     }
 
     function getProjectUnreadStatus(project) {
-      return (project.tasks || []).some(t => getTaskUnreadStatus(t));
+      const validTasks = getFilteredTasksForProject(project);
+      return validTasks.some(t => getTaskUnreadStatus(t));
     }
 
     async function updateHeartbeat() {
@@ -806,6 +807,31 @@
       } catch (e) {
         console.error("Heartbeat error:", e);
       }
+    }
+
+    // ====================================================
+    // 【通し番号 採番ロジック】YYMM-XX(M/V)
+    // ====================================================
+    function getNextTicketNumber(startDateStr) {
+      const d = new Date(startDateStr || new Date());
+      const yy = String(d.getFullYear()).slice(-2);
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const prefix = `${yy}${mm}`;
+
+      let maxNum = 0;
+      cachedCreativeProjects.forEach(p => {
+        if (p.ticket_code && p.ticket_code.startsWith(prefix)) {
+          // 例: "2610-03M" -> "03"
+          const match = p.ticket_code.match(new RegExp(`^${prefix}-(\\d+)`));
+          if (match) {
+            const num = parseInt(match[1], 10);
+            if (num > maxNum) maxNum = num;
+          }
+        }
+      });
+
+      const nextNumStr = String(maxNum + 1).padStart(2, '0');
+      return { prefix, nextNumStr };
     }
 
     // 画像自動軽量化（Canvas変換）
@@ -921,26 +947,23 @@
     }
 
     // ====================================================
-    // 【新設計】作曲 ➔ (作詞 ∥ 編曲) ➔ Rec ➔ Mix ➔ Mas 先行判定
+    // 作曲 ➔ (作詞 ∥ 編曲) ➔ Rec ➔ Mix ➔ Mas 先行判定
     // ====================================================
     function getActiveBallTasks(tasks) {
       const taskMap = new Map();
       tasks.forEach(t => taskMap.set(t.title, t));
       const activeTasks = [];
 
-      // 上流パス定義（並行ツリーの依存関係）
       const upstreamPaths = {
         'マスタリング': [['ミキシング', 'レコーディング', '編曲', '作曲']],
         'ミキシング': [
           ['レコーディング', '編曲', '作曲'],
           ['レコーディング', '作詞', '作曲']
         ],
-        // レコーディングは、作詞と編曲の両方に依存（実在する直前の上流を探索）
         'レコーディング': [
           ['編曲', '作曲'],
           ['作詞', '作曲']
         ],
-        // 編曲と作詞は、どちらも作曲に依存（並行分岐）
         '編曲': [['作曲']],
         '作詞': [['作曲']],
         '作曲': [],
@@ -950,7 +973,6 @@
 
       tasks.forEach(t => {
         if (t.status === '完了') return;
-        // 手動オーバーライド最優先
         if (t.status === '作業中' || t.status === '提出・確認待ち' || t.status === 'リテイク') {
           activeTasks.push(t);
           return;
@@ -967,7 +989,6 @@
               break;
             }
           }
-          // 直近に実在する親タスクが存在し、完了していないなら着手不可
           if (nearestParent && nearestParent.status !== '完了') {
             isReady = false;
             break;
@@ -980,7 +1001,6 @@
       return activeTasks;
     }
 
-    // 行灯ステータス & 並行タスク全抽出
     function evaluateProjectAndon(project) {
       const tasks = getFilteredTasksForProject(project);
       const todayStr = new Date().toISOString().split('T')[0];
@@ -1057,7 +1077,6 @@
       };
     }
 
-    // カテゴリ判定
     function getProjectCategory(project) {
       if (project.category) return project.category;
       const titles = (project.tasks || []).map(t => t.title);
@@ -1067,9 +1086,6 @@
       return 'music';
     }
 
-    // ====================================================
-    // 【重要】カテゴリに応じたタスクの完全分離フィルタ
-    // ====================================================
     function getFilteredTasksForProject(project) {
       const cat = getProjectCategory(project);
       const allTasks = project.tasks || [];
@@ -1150,6 +1166,11 @@
         const relatedPrj = getRelatedProject(p);
         const validTasks = getFilteredTasksForProject(p);
 
+        // チケット通し番号バッジ
+        const codeBadge = p.ticket_code 
+          ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border dark:border-slate-700">${p.ticket_code}</span>`
+          : '';
+
         let latestLog = null;
         let latestTaskTitle = '';
         validTasks.forEach(t => {
@@ -1213,9 +1234,10 @@
 
         return '<div onclick="openProjectChatModal(\'' + p.id + '\')" class="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-blue-500 cursor-pointer transition space-y-2.5 relative group ' + (hasUnread ? 'ring-1 ring-red-400' : '') + '">'
           
-          <!-- タイトル + カテゴリバッジ + 行灯バッジ -->
+          <!-- 通し番号 + タイトル + カテゴリバッジ + 行灯バッジ -->
           + '<div class="flex flex-wrap items-start justify-between gap-2">'
           + '<div class="flex items-center space-x-1.5 flex-1 min-w-0">'
+          + codeBadge
           + catBadge
           + '<h3 class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 truncate group-hover:text-blue-600 transition">' + p.title + '</h3>'
           + '</div>'
@@ -1256,6 +1278,15 @@
       const cat = getProjectCategory(p);
       const catEl = document.getElementById('chatModalCategoryBadge');
       
+      // 通し番号
+      const codeEl = document.getElementById('chatModalCodeBadge');
+      if (p.ticket_code) {
+        codeEl.classList.remove('hidden');
+        codeEl.innerText = p.ticket_code;
+      } else {
+        codeEl.classList.add('hidden');
+      }
+
       if (cat === 'mv') {
         catEl.className = "text-xs font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-700 dark:bg-purple-950/70 dark:text-purple-300 border border-purple-200 dark:border-purple-800";
         catEl.innerText = "🎬 [イラスト/MV]";
@@ -1276,7 +1307,8 @@
       const relatedPrj = getRelatedProject(p);
       if (relatedPrj) {
         const relCat = getProjectCategory(relatedPrj);
-        const relLabel = relCat === 'mv' ? '🎬 関連: イラスト/MVチケットを開く' : '🎵 関連: 楽曲チケットを開く';
+        const relCode = relatedPrj.ticket_code ? `[${relatedPrj.ticket_code}] ` : '';
+        const relLabel = relCat === 'mv' ? `🎬 関連: ${relCode}イラスト/MVを開く` : `🎵 関連: ${relCode}楽曲を開く`;
         relatedLinkContainer.innerHTML = '<button onclick="openProjectChatModal(\'' + relatedPrj.id + '\')" class="text-xs px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 transition">'
           + relLabel + ' ➔'
           + '</button>';
@@ -1305,7 +1337,6 @@
         }
       }
 
-      // カテゴリに応じたタスクのみをフィルタリング
       const tasks = getFilteredTasksForProject(p).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
       const todayStr = new Date().toISOString().split('T')[0];
 
@@ -1328,7 +1359,6 @@
           + '</span>';
       }).join('<span class="text-slate-300 dark:text-slate-700">➔</span>');
 
-      // 工程選択プルダウン（該当カテゴリのタスクのみ）
       const taskSelect = document.getElementById('chatInputTaskId');
       taskSelect.innerHTML = tasks.map(t => {
         return '<option value="' + t.id + '">' + t.title + ' (' + t.status + ')</option>';
@@ -1367,6 +1397,9 @@
       });
     }
 
+    // ====================================================
+    // 【新機能】既読者一覧の描画付きチャットタイムライン
+    // ====================================================
     function renderProjectChatTimeline(project) {
       const timelineContainer = document.getElementById('chatModalTimeline');
       if (!timelineContainer) return;
@@ -1404,6 +1437,17 @@
           separateUrlHtml = '<div class="mt-1">' + formatMessageWithLinksAndMedia(l.url) + '</div>';
         }
 
+        // 既読メンバーの集計＆表示（投稿者を除く閲覧者）
+        const readMembers = (l.read_by || []).filter(name => name !== l.user);
+        let readStatusHtml = '';
+        if (readMembers.length > 0) {
+          const namesList = readMembers.join(', ');
+          readStatusHtml = `<div class="text-[10px] text-slate-400 pt-1 flex items-center space-x-1">
+            <span class="text-blue-500 dark:text-blue-400 font-bold">✓ 既読 ${readMembers.length}人:</span>
+            <span class="truncate max-w-[260px] sm:max-w-md">${namesList}</span>
+          </div>`;
+        }
+
         return '<div class="p-3 rounded-xl border text-xs space-y-1.5 transition ' + (isMyPost ? 'bg-blue-50/40 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900/60' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700') + '">'
           + '<div class="flex items-center justify-between text-[11px]">'
           + '<div class="flex items-center space-x-1.5 font-bold">'
@@ -1415,6 +1459,7 @@
           + '</div>'
           + (formattedComment ? '<div class="text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-pre-wrap break-words break-all leading-relaxed pl-1 mt-1">' + formattedComment + '</div>' : '')
           + separateUrlHtml
+          + readStatusHtml
           + '</div>';
       }).join('');
     }
@@ -1517,9 +1562,6 @@
       }
     }
 
-    // ====================================================
-    // 【新機能】あとから工程（タスク）を追加
-    // ====================================================
     function openAddTaskModal() {
       if (!selectedProjectForChat) return;
       const p = selectedProjectForChat;
@@ -1586,9 +1628,6 @@
       alert('工程「' + taskName + '」を追加しました！');
     }
 
-    // ====================================================
-    // 【新機能】あとから関連チケットを追加
-    // ====================================================
     function openAddRelatedModal(projectId) {
       targetProjectForRelated = cachedCreativeProjects.find(p => p.id === projectId);
       if (!targetProjectForRelated) return;
@@ -1611,7 +1650,6 @@
       const startDateStr = document.getElementById('addRelatedStartDate').value;
       const baseDate = new Date(startDateStr || new Date());
 
-      // グループIDがなければ生成して元チケットも更新
       let groupId = p.group_id;
       if (!groupId) {
         groupId = 'grp_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
@@ -1620,11 +1658,21 @@
         p.category = currentCat;
       }
 
-      // 新規チケット作成
+      // 親コードから新コードを生成 (例: "2610-01M" -> "2610-01V")
+      let newTicketCode = null;
+      if (p.ticket_code) {
+        const baseNum = p.ticket_code.replace(/[MV]$/, '');
+        newTicketCode = `${baseNum}${newCat === 'mv' ? 'V' : 'M'}`;
+      } else {
+        const { prefix, nextNumStr } = getNextTicketNumber(startDateStr);
+        newTicketCode = `${prefix}-${nextNumStr}${newCat === 'mv' ? 'V' : 'M'}`;
+      }
+
       const { data: newPrj, error: prjErr } = await supabaseClient.from('projects').insert({
         type: 'creative',
         title: p.title,
         category: newCat,
+        ticket_code: newTicketCode,
         group_id: groupId,
         drive_url: p.drive_url || null,
         status: '進行中'
@@ -1632,7 +1680,6 @@
 
       if (prjErr) return alert('チケット作成エラー: ' + prjErr.message);
 
-      // 自動納期計算
       const addDays = (d, n) => {
         const res = new Date(d);
         res.setDate(res.getDate() + n);
@@ -1676,12 +1723,9 @@
 
       closeModal('addRelatedModal');
       await loadCreativeProjects();
-      alert('関連チケットを作成し、ペアとしてリンクしました！');
+      alert(`関連チケット [${newTicketCode}] を作成し、ペアとしてリンクしました！`);
     }
 
-    // ====================================================
-    // 【新機能】案件削除（案B：選択式）
-    // ====================================================
     async function deleteCurrentProject() {
       if (!selectedProjectForChat) return;
       if (!isAdminOrMaster()) return alert('案件の削除は管理者権限のみ可能です');
@@ -1697,7 +1741,6 @@
         );
 
         if (choice) {
-          // 両方削除
           const doubleConfirm = confirm(`【最終確認】関連チケットを含む両方の案件・全工程ログを完全に削除します。よろしいですか？`);
           if (!doubleConfirm) return;
 
@@ -1708,7 +1751,6 @@
           alert('関連チケットを含めて案件全体を削除しました。');
           return;
         } else {
-          // 単体削除の確認
           const singleConfirm = confirm(`「${p.title}」のみを削除します（相方の関連チケットは残ります）。よろしいですか？`);
           if (!singleConfirm) return;
 
@@ -1720,7 +1762,6 @@
           return;
         }
       } else {
-        // 単体案件の削除
         if (!confirm(`案件「${p.title}」を完全に削除しますか？\n※全タスク・ログ履歴も削除されます。`)) return;
 
         await supabaseClient.from('projects').delete().eq('id', p.id);
@@ -1731,11 +1772,13 @@
       }
     }
 
+    // 閲覧時に既読をつける
     async function autoMarkProjectTasksAsRead(project) {
       const myId = getCurrentUserIdentifier();
       if (!myId || !project) return;
 
-      for (const t of (project.tasks || [])) {
+      const validTasks = getFilteredTasksForProject(project);
+      for (const t of validTasks) {
         if (!t.logs) continue;
         let changed = false;
         const updated = t.logs.map(l => {
@@ -1754,6 +1797,7 @@
         }
       }
       renderCreativeProjectsList();
+      renderProjectChatTimeline(project);
     }
 
     // 財務モーダル
@@ -1868,9 +1912,6 @@
       }
     }
 
-    // ====================================================
-    // 【新設計】標準ワークフロー定義（依存ツリー構造）
-    // ====================================================
     let workflowMasters = [
       { key: 'compose', name: '作曲', days: 7, track: 'music', order: 1, depends: [] },
       { key: 'lyrics', name: '作詞', days: 5, track: 'music', order: 2, depends: ['作曲'] },
@@ -2745,7 +2786,7 @@
     }
 
     // ====================================================
-    // 【新規起票】並行ツリー対応 納期自動計算
+    // 【新規起票】通し番号 (YYMM-XXM / YYMM-XXV) 自動採番
     // ====================================================
     async function createCreativeProject() {
       const baseTitle = document.getElementById('newPrjTitle').value.trim();
@@ -2773,28 +2814,32 @@
         return found ? found.days : 0;
       };
 
-      // 楽曲トラックの並行ツリー日程計算: 作曲 ➔ (作詞 ∥ 編曲) ➔ Rec ➔ Mix ➔ Mas
+      // 日程順算
       const dates = {};
       dates.compose = addDays(baseDate, getD('compose'));
       dates.lyrics = addDays(dates.compose, getD('lyrics'));
       dates.arrange = addDays(dates.compose, getD('arrange'));
-      // Recは作詞と編曲の遅い方から開始
       const recStart = (dates.lyrics > dates.arrange) ? dates.lyrics : dates.arrange;
       dates.rec = addDays(recStart, getD('rec'));
       dates.mix = addDays(dates.rec, getD('mix'));
       dates.mastering = addDays(dates.mix, getD('mastering'));
 
-      // MVトラックの日程計算: イラスト ➔ 映像
       dates.illust = addDays(baseDate, getD('illust'));
       dates.movie = addDays(dates.illust, getD('movie'));
 
+      // 共通グループIDと、共通ベース番号の自動採番
       const groupId = 'grp_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+      const { prefix, nextNumStr } = getNextTicketNumber(startDateStr);
+
+      const musicCode = `${prefix}-${nextNumStr}M`;
+      const mvCode = `${prefix}-${nextNumStr}V`;
 
       if (createMusic) {
         const { data: prjMusic, error: errM } = await supabaseClient.from('projects').insert({
           type: 'creative',
           title: baseTitle,
           category: 'music',
+          ticket_code: musicCode,
           group_id: (createMusic && createMv) ? groupId : null,
           drive_url: drive || null,
           status: '進行中'
@@ -2825,6 +2870,7 @@
           type: 'creative',
           title: baseTitle,
           category: 'mv',
+          ticket_code: mvCode,
           group_id: (createMusic && createMv) ? groupId : null,
           drive_url: drive || null,
           status: '進行中'
