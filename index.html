@@ -335,7 +335,7 @@
         </div>
       </div>
 
-      <!-- 【案1】縦並びの工程進行・担当布陣リスト -->
+      <!-- 縦並びの工程進行・担当布陣リスト -->
       <div class="py-2.5 border-b dark:border-slate-800 flex-shrink-0 space-y-1.5">
         <div class="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
           <span>📋 工程・担当布陣一覧</span>
@@ -358,23 +358,32 @@
           <span class="text-[10px] text-blue-100 font-normal">（音声: mp3/m4a ｜ 画像: 自動で軽量JPEG化）</span>
         </div>
 
-        <!-- 対象工程・担当者・期日・ステータス設定バー（一元操作） -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+        <!-- 【新設計】工程・担当・ボール保持先・期日・状態 設定バー -->
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5 text-xs">
           <div class="flex items-center space-x-1">
-            <span class="text-slate-500 whitespace-nowrap font-medium text-[11px]">工程:</span>
-            <select id="chatInputTaskId" onchange="syncSelectedTaskDetails()" class="w-full px-2 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs text-slate-800 dark:text-slate-200 font-bold"></select>
+            <span class="text-slate-500 whitespace-nowrap font-medium text-[10px]">工程:</span>
+            <select id="chatInputTaskId" onchange="syncSelectedTaskDetails()" class="w-full px-1.5 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs text-slate-800 dark:text-slate-200 font-bold truncate"></select>
           </div>
           <div class="flex items-center space-x-1">
-            <span class="text-slate-500 whitespace-nowrap font-medium text-[11px]">担当:</span>
-            <select id="chatInputAssigneeId" class="w-full px-1.5 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs font-semibold"></select>
+            <span class="text-slate-500 whitespace-nowrap font-medium text-[10px]">担当:</span>
+            <select id="chatInputAssigneeId" class="w-full px-1 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs font-semibold truncate"></select>
           </div>
           <div class="flex items-center space-x-1">
-            <span class="text-slate-500 whitespace-nowrap font-medium text-[11px]">期日:</span>
-            <input type="date" id="chatInputDeadline" class="w-full px-1.5 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs">
+            <span class="text-slate-500 whitespace-nowrap font-medium text-[10px]">ボール:</span>
+            <select id="chatInputBallHolder" class="w-full px-1 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs font-bold text-indigo-600 dark:text-indigo-400 truncate">
+              <option value="creator">👤 担当クリエイター</option>
+              <option value="admin">🛡️ 運営・ディレクター</option>
+              <option value="client">🏢 クライアント (先方)</option>
+              <option value="none">⚪ なし / 完了</option>
+            </select>
           </div>
           <div class="flex items-center space-x-1">
-            <span class="text-slate-500 whitespace-nowrap font-medium text-[11px]">状態:</span>
-            <select id="chatInputStatus" class="w-full px-1.5 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs font-semibold">
+            <span class="text-slate-500 whitespace-nowrap font-medium text-[10px]">期日:</span>
+            <input type="date" id="chatInputDeadline" class="w-full px-1 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs">
+          </div>
+          <div class="flex items-center space-x-1 col-span-2 sm:col-span-1">
+            <span class="text-slate-500 whitespace-nowrap font-medium text-[10px]">状態:</span>
+            <select id="chatInputStatus" onchange="handleStatusAutoAssist()" class="w-full px-1 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs font-semibold truncate">
               <option value="">(変更なし)</option>
               <option value="作業中">🔵 作業中</option>
               <option value="提出・確認待ち">🟡 提出・確認待ち</option>
@@ -416,7 +425,7 @@
     </div>
   </div>
 
-  <!-- ==================== 【新機能】後続工程の連動シフト確認モーダル ==================== -->
+  <!-- 後続工程の連動シフト確認モーダル -->
   <div id="deadlineShiftModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-5 space-y-4 border border-slate-200 dark:border-slate-800 shadow-2xl animate-in fade-in zoom-in-95">
       <div class="border-b dark:border-slate-800 pb-2.5">
@@ -788,8 +797,6 @@
     let pendingUploadFile = null;
 
     let targetProjectForRelated = null;
-
-    // 後続スライド保留用コンテキスト
     let pendingDeadlineShiftContext = null;
 
     function getCurrentUserIdentifier() {
@@ -875,6 +882,27 @@
 
       const nextNumStr = String(maxNum + 1).padStart(2, '0');
       return { prefix, nextNumStr };
+    }
+
+    // ボール保持先バッジ・名称ヘルパー
+    function getBallHolderLabel(ballKey) {
+      if (ballKey === 'admin') return '🛡️ 運営・ディレクター (検収中)';
+      if (ballKey === 'client') return '🏢 クライアント (先方確認)';
+      if (ballKey === 'none') return '⚪ なし / 完了';
+      return '👤 担当クリエイター (作業中)';
+    }
+
+    function getBallHolderBadge(ballKey) {
+      if (ballKey === 'admin') {
+        return '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300">🏐 運営</span>';
+      }
+      if (ballKey === 'client') {
+        return '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-950/70 dark:text-purple-300 border border-purple-300">🏐 先方</span>';
+      }
+      if (ballKey === 'none') {
+        return '<span class="px-1.5 py-0.5 rounded text-[10px] text-slate-400 bg-slate-100 dark:bg-slate-800">🏐 完了</span>';
+      }
+      return '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 border border-blue-300">🏐 担当</span>';
     }
 
     async function compressImageToJpeg(file) {
@@ -979,12 +1007,28 @@
       const statusSelect = document.getElementById('chatInputStatus');
       if (statusSelect && !statusSelect.value) {
         statusSelect.value = '提出・確認待ち';
+        handleStatusAutoAssist();
       }
     }
 
     function removeAttachedFile() {
       pendingUploadFile = null;
       document.getElementById('attachedFilePreview').classList.add('hidden');
+    }
+
+    // ステータス選択に応じたボール保持先の半自動アシスト
+    function handleStatusAutoAssist() {
+      const status = document.getElementById('chatInputStatus').value;
+      const ballSelect = document.getElementById('chatInputBallHolder');
+      if (!ballSelect) return;
+
+      if (status === '提出・確認待ち') {
+        ballSelect.value = 'admin'; // 運営チェックへ
+      } else if (status === 'リテイク' || status === '作業中') {
+        ballSelect.value = 'creator'; // クリエイターへ
+      } else if (status === '完了') {
+        ballSelect.value = 'none'; // ボールなし
+      }
     }
 
     function getActiveBallTasks(tasks) {
@@ -1060,21 +1104,17 @@
       const activeItems = activeTasks.map(t => {
         const assignee = allProfiles.find(u => u.id === t.assignee_id);
         const isOverdue = t.deadline && t.deadline < todayStr && t.status !== '完了';
-        
-        let stateNote = t.status;
-        if (isOverdue) stateNote = '期日超過 (' + t.status + ')';
-        else if (t.status === '提出・確認待ち') stateNote = '成果物提出あり・検収待ち';
-        else if (t.status === 'リテイク') stateNote = 'リテイク対応中';
-        else if (t.status === '未着手') stateNote = '着手可能';
+        const ballKey = t.ball_holder || (t.status === '提出・確認待ち' ? 'admin' : 'creator');
 
         return {
           id: t.id,
           taskTitle: t.title,
           assigneeName: getDisplayName(assignee),
+          ballHolderLabel: getBallHolderLabel(ballKey),
+          ballKey: ballKey,
           deadline: formatDeadlineStr(t.deadline),
           isOverdue: isOverdue,
-          status: t.status,
-          stateNote: stateNote
+          status: t.status
         };
       });
 
@@ -1088,7 +1128,7 @@
         label = '期日超過';
         dot = '🔴';
         badgeClass = 'bg-red-100 dark:bg-red-950/70 text-red-700 dark:text-red-300 border border-red-300';
-      } else if (activeItems.some(item => item.status === '提出・確認待ち')) {
+      } else if (activeItems.some(item => item.status === '提出・確認待ち' || item.ballKey === 'admin')) {
         statusKey = 'review';
         label = '運営確認中';
         dot = '🟡';
@@ -1110,8 +1150,7 @@
         label: label,
         dot: dot,
         badgeClass: badgeClass,
-        activeItems: activeItems,
-        remark: activeItems.length > 1 ? `${activeItems.length}工程が並行稼働中` : (activeItems[0]?.stateNote || '前工程待ち')
+        activeItems: activeItems
       };
     }
 
@@ -1147,7 +1186,7 @@
     }
 
     // ----------------------------------------------------
-    // 【制作案件一覧描画（ミニマル引き算仕様）】
+    // 【制作案件一覧描画（主担当 ⇄ ボール所在 明確化仕様）】
     // ----------------------------------------------------
     function setAndonFilter(key) {
       currentAndonFilter = key;
@@ -1246,23 +1285,24 @@
             + '</button>';
         }
 
+        // 主担当 ＆ ボール所在の明示化
         let activeTasksHtml = '';
         if (andon.statusKey === 'completed') {
           activeTasksHtml = '<div class="text-xs text-emerald-600 dark:text-emerald-400 font-bold">✓ すべての工程が完了しました</div>';
         } else if (andon.activeItems.length === 0) {
           activeTasksHtml = '<div class="text-xs text-slate-400">現在、前工程の完了待機中です</div>';
         } else {
-          activeTasksHtml = '<div class="space-y-1.5 divide-y divide-slate-200/60 dark:divide-slate-700/60">'
+          activeTasksHtml = '<div class="space-y-2 divide-y divide-slate-200/60 dark:divide-slate-700/60">'
             + andon.activeItems.map((item) => {
                 const deadlineClass = item.isOverdue ? 'text-red-600 dark:text-red-400 font-extrabold' : 'text-slate-500 dark:text-slate-400';
-                return '<div class="text-xs pt-1 first:pt-0 space-y-0.5">'
+                return '<div class="text-xs pt-1.5 first:pt-0 space-y-1">'
                   + '<div class="flex justify-between items-center font-bold text-slate-800 dark:text-slate-100">'
-                  + '<span>担当: ' + item.assigneeName + '</span>'
+                  + '<span>👤 担当: ' + item.assigneeName + ' <span class="text-blue-600 dark:text-blue-400">(' + item.taskTitle + ')</span></span>'
                   + '<span class="' + deadlineClass + '">期日: ' + item.deadline + (item.isOverdue ? ' ⚠超過' : '') + '</span>'
                   + '</div>'
-                  + '<div class="flex justify-between items-center text-[11px] text-slate-600 dark:text-slate-300">'
-                  + '<span>対応事項: <strong class="text-blue-600 dark:text-blue-400">' + item.taskTitle + '</strong></span>'
-                  + '<span class="text-slate-400 truncate max-w-[180px]">' + item.stateNote + '</span>'
+                  + '<div class="flex items-center space-x-1.5 text-[11px] text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900/60 px-2 py-1 rounded border border-slate-100 dark:border-slate-800">'
+                  + '<span class="text-slate-400">手番:</span>'
+                  + '<span class="font-bold text-indigo-600 dark:text-indigo-400">' + item.ballHolderLabel + '</span>'
                   + '</div>'
                   + '</div>';
               }).join('')
@@ -1287,7 +1327,7 @@
           <!-- 関連チケットリンク / 追加ボタン -->
           + (relatedLinkHtml ? '<div class="flex items-center space-x-1.5 pt-0.5">' + relatedLinkHtml + '</div>' : '')
 
-          <!-- 現在のボール保持者（引き算表示） -->
+          <!-- 主担当 ＆ ボール所在ボックス -->
           + '<div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80">'
           + activeTasksHtml
           + '</div>'
@@ -1305,7 +1345,7 @@
     }
 
     // ----------------------------------------------------
-    // 【案件チャットモーダル（案1：縦型ステップリスト＋期日・アサイン変更）】
+    // 【案件チャットモーダル】
     // ----------------------------------------------------
     function openProjectChatModal(projectId) {
       selectedProjectForChat = cachedCreativeProjects.find(p => p.id === projectId);
@@ -1374,7 +1414,7 @@
       const tasks = getFilteredTasksForProject(p).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
       const todayStr = new Date().toISOString().split('T')[0];
 
-      // 縦並びの工程進行・担当布陣リスト描画
+      // 縦並びの工程進行・担当布陣リスト描画（ボール保持バッジ付き）
       const taskListContainer = document.getElementById('chatModalTaskListContainer');
       taskListContainer.innerHTML = tasks.map(t => {
         const isDone = t.status === '完了';
@@ -1391,12 +1431,15 @@
         else if (isReview) { dot = '🟡'; badgeColor = 'text-amber-600 dark:text-amber-400 font-bold'; }
         else if (isWorking) { dot = '🔵'; badgeColor = 'text-blue-600 dark:text-blue-400 font-bold'; }
 
-        return `<div onclick="selectTaskForQuickAction('${t.id}')" class="flex items-center justify-between p-1.5 px-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-800 text-xs hover:border-blue-400 cursor-pointer transition">
-          <div class="flex items-center space-x-2 truncate">
+        const ballBadge = getBallHolderBadge(t.ball_holder || 'creator');
+
+        return `<div onclick="selectTaskForQuickAction('${t.id}')" class="flex items-center justify-between p-1.5 px-2 rounded-lg bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-800 text-xs hover:border-blue-400 cursor-pointer transition">
+          <div class="flex items-center space-x-1.5 truncate">
             <span>${dot}</span>
             <span class="font-bold text-slate-800 dark:text-slate-100">${t.title}</span>
-            <span class="text-slate-400 text-[11px]">|</span>
+            <span class="text-slate-400 text-[10px]">|</span>
             <span class="text-slate-600 dark:text-slate-300 truncate">${assigneeName}</span>
+            ${ballBadge}
           </div>
           <div class="flex items-center space-x-2 text-[11px] flex-shrink-0">
             <span class="${isOverdue ? 'text-red-500 font-bold' : 'text-slate-400'}">${formatDeadlineStr(t.deadline)}</span>
@@ -1440,16 +1483,19 @@
       }
     }
 
+    // 選択された工程の「担当者」「ボール保持先」「期日」を下部バーに同期
     function syncSelectedTaskDetails() {
       if (!selectedProjectForChat) return;
       const taskId = document.getElementById('chatInputTaskId').value;
       const targetTask = (selectedProjectForChat.tasks || []).find(t => t.id === taskId);
       
       const assigneeSelect = document.getElementById('chatInputAssigneeId');
+      const ballSelect = document.getElementById('chatInputBallHolder');
       const deadlineInput = document.getElementById('chatInputDeadline');
 
       if (targetTask) {
         if (assigneeSelect) assigneeSelect.value = targetTask.assignee_id || '';
+        if (ballSelect) ballSelect.value = targetTask.ball_holder || 'creator';
         if (deadlineInput) deadlineInput.value = targetTask.deadline || '';
       }
     }
@@ -1540,9 +1586,6 @@
       }).join('');
     }
 
-    // ====================================================
-    // 【新機能】期日変更検知 ＆ 連動シミュレーション判定
-    // ====================================================
     function handleChatSubmitClick() {
       if (!selectedProjectForChat) return;
 
@@ -1553,31 +1596,26 @@
 
       const oldDeadline = targetTask.deadline || null;
 
-      // 期日変更があり、かつ新旧両方の日付が揃っている場合
       if (newDeadline && oldDeadline && newDeadline !== oldDeadline) {
         const oldTime = new Date(oldDeadline).getTime();
         const newTime = new Date(newDeadline).getTime();
         const diffDays = Math.round((newTime - oldTime) / (1000 * 60 * 60 * 24));
 
         if (diffDays !== 0) {
-          // 後続工程（sort_orderがより大きい工程）を抽出
           const validTasks = getFilteredTasksForProject(selectedProjectForChat).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
           const currentOrder = targetTask.sort_order || 0;
           const subsequentTasks = validTasks.filter(t => (t.sort_order || 0) > currentOrder && t.deadline);
 
           if (subsequentTasks.length > 0) {
-            // シミュレーションモーダルを表示
             openDeadlineShiftModal(targetTask, oldDeadline, newDeadline, diffDays, subsequentTasks);
             return;
           }
         }
       }
 
-      // 期日変更がない、または後続工程がない場合はそのまま送信
       executeFinalChatSubmission(false);
     }
 
-    // 連動シフト確認モーダルを開く
     function openDeadlineShiftModal(targetTask, oldDeadline, newDeadline, diffDays, subsequentTasks) {
       pendingDeadlineShiftContext = {
         diffDays: diffDays,
@@ -1612,7 +1650,7 @@
     }
 
     // ====================================================
-    // 【統合送信処理実行】
+    // 【統合送信処理実行（ボール保持先 ball_holder 保存対応）】
     // ====================================================
     async function executeFinalChatSubmission(shouldShiftSubsequent) {
       closeModal('deadlineShiftModal');
@@ -1621,6 +1659,7 @@
       const taskId = document.getElementById('chatInputTaskId').value;
       const newStatus = document.getElementById('chatInputStatus').value;
       const newAssigneeId = document.getElementById('chatInputAssigneeId').value || null;
+      const newBallHolder = document.getElementById('chatInputBallHolder').value || 'creator';
       const newDeadline = document.getElementById('chatInputDeadline').value || null;
       let comment = document.getElementById('chatInputComment').value.trim();
 
@@ -1628,10 +1667,11 @@
       if (!targetTask) return;
 
       const isAssigneeChanged = (targetTask.assignee_id || null) !== newAssigneeId;
+      const isBallChanged = (targetTask.ball_holder || 'creator') !== newBallHolder;
       const isDeadlineChanged = (targetTask.deadline || null) !== newDeadline;
 
-      if (!comment && !pendingUploadFile && !newStatus && !isAssigneeChanged && !isDeadlineChanged) {
-        alert('メッセージを入力するか、ファイルを添付、または担当者・期日・ステータスを変更してください');
+      if (!comment && !pendingUploadFile && !newStatus && !isAssigneeChanged && !isBallChanged && !isDeadlineChanged) {
+        alert('メッセージを入力するか、ファイルを添付、または担当者・手番・期日・ステータスを変更してください');
         return;
       }
 
@@ -1680,13 +1720,16 @@
         else if (newStatus === '完了') logType = '承認・完了';
         else if (newStatus === '作業中') logType = '作業着手';
         else if (newStatus === '提出・確認待ち') logType = '提出・確認待ち';
-        else if (isDeadlineChanged && !comment) {
+        else if (isBallChanged && !comment) {
+          logType = '手番変更';
+          comment = `ボールを「${getBallHolderLabel(newBallHolder)}」に渡しました。`;
+        } else if (isDeadlineChanged && !comment) {
           logType = '期日変更';
           comment = `締切期日を「${newDeadline || '未設定'}」に変更しました。`;
         } else if (isAssigneeChanged && !comment) {
           const newAssigneeObj = allProfiles.find(u => u.id === newAssigneeId);
           logType = '担当アサイン';
-          comment = `担当者を「${getDisplayName(newAssigneeObj)}」に設定しました。`;
+          comment = `主担当者を「${getDisplayName(newAssigneeObj)}」に設定しました。`;
         }
 
         const logs = targetTask.logs || [];
@@ -1705,19 +1748,19 @@
         if (detectedUrl) updateData.deliverable_url = detectedUrl;
         if (newStatus) updateData.status = newStatus;
         if (isAssigneeChanged) updateData.assignee_id = newAssigneeId;
+        if (isBallChanged) updateData.ball_holder = newBallHolder;
         if (isDeadlineChanged) updateData.deadline = newDeadline;
 
-        // 1. 対象タスクの更新
         const { error: dbErr } = await supabaseClient.from('tasks').update(updateData).eq('id', taskId);
         if (dbErr) throw dbErr;
 
         if (detectedUrl) targetTask.deliverable_url = detectedUrl;
         if (newStatus) targetTask.status = newStatus;
         if (isAssigneeChanged) targetTask.assignee_id = newAssigneeId;
+        if (isBallChanged) targetTask.ball_holder = newBallHolder;
         if (isDeadlineChanged) targetTask.deadline = newDeadline;
         targetTask.logs = logs;
 
-        // 2. 後続工程の連動一括更新（チェックが入っている工程）
         if (shouldShiftSubsequent && pendingDeadlineShiftContext) {
           const checkedBoxes = Array.from(document.querySelectorAll('.shift-task-checkbox:checked'));
           const updatePromises = checkedBoxes.map(cb => {
@@ -1807,6 +1850,7 @@
         project_id: selectedProjectForChat.id,
         title: taskName,
         assignee_id: assigneeId,
+        ball_holder: 'creator',
         deadline: deadline,
         sort_order: sortOrder,
         status: '未着手',
@@ -1908,6 +1952,7 @@
           deadline: fmt(dates[w.key]),
           sort_order: w.order,
           status: '未着手',
+          ball_holder: 'creator',
           logs: []
         });
       });
@@ -2420,7 +2465,6 @@
       renderCreativeProjectsList();
     }
 
-    // 営業CRM ロジック
     async function loadLeads() {
       const { data } = await supabaseClient.from('leads').select('*').order('created_at', { ascending: false });
       allLeads = data || [];
@@ -3045,6 +3089,7 @@
               deadline: fmt(dates[w.key]),
               sort_order: w.order,
               status: '未着手',
+              ball_holder: 'creator',
               logs: []
             });
           }
@@ -3076,6 +3121,7 @@
               deadline: fmt(dates[w.key]),
               sort_order: w.order,
               status: '未着手',
+              ball_holder: 'creator',
               logs: []
             });
           }
