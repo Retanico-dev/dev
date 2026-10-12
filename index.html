@@ -140,7 +140,7 @@
               <span>制作案件ボード</span>
               <span id="creativeScopeBadge" class="text-[11px] font-semibold px-2 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">全案件</span>
             </h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">行灯で現在ステータスを可視化。タップしてチャット・提出ログを確認</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">行灯で現在ステータスを可視化。タップして工程布陣・チャットを確認</p>
           </div>
           <div class="flex items-center space-x-2">
             <button id="btnNewProjectTop" onclick="openModal('newProjectModal')" class="hidden px-3.5 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-semibold transition shadow-sm whitespace-nowrap">
@@ -335,18 +335,19 @@
         </div>
       </div>
 
-      <!-- パイプライン進捗ストリップ ＆ 工程追加ボタン -->
-      <div class="py-2.5 border-b dark:border-slate-800 flex-shrink-0 overflow-x-auto no-scrollbar">
-        <div class="flex items-center space-x-1.5 text-xs whitespace-nowrap">
-          <div class="flex items-center space-x-1.5" id="chatModalPipelineStrip"></div>
-          <button id="btnOpenAddTaskBar" onclick="openAddTaskModal()" class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 hover:bg-blue-600 hover:text-white text-slate-600 dark:text-slate-300 font-semibold transition ml-2">
+      <!-- 【案1採用】縦並びの工程進行・担当布陣リスト -->
+      <div class="py-2.5 border-b dark:border-slate-800 flex-shrink-0 space-y-1.5">
+        <div class="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+          <span>📋 工程・担当布陣一覧</span>
+          <button id="btnOpenAddTaskBar" onclick="openAddTaskModal()" class="text-[11px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-blue-600 hover:text-white text-slate-600 dark:text-slate-300 font-semibold transition">
             ＋ 工程追加
           </button>
         </div>
+        <div id="chatModalTaskListContainer" class="space-y-1 max-h-36 overflow-y-auto pr-1"></div>
       </div>
 
       <!-- チャットタイムライン -->
-      <div class="flex-1 overflow-y-auto min-h-[160px] space-y-2.5 py-3 pr-1" id="chatModalTimeline"></div>
+      <div class="flex-1 overflow-y-auto min-h-[140px] space-y-2.5 py-3 pr-1" id="chatModalTimeline"></div>
 
       <!-- ドラッグ＆ドロップ対応 チャット統合フォーム -->
       <div id="chatDropZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleFileDrop(event)" class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 transition space-y-2 flex-shrink-0 relative">
@@ -357,19 +358,23 @@
           <span class="text-[10px] text-blue-100 font-normal">（音声: mp3/m4a ｜ 画像: 自動で軽量JPEG化）</span>
         </div>
 
-        <!-- 対象工程・担当者・ステータス設定バー -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-          <div class="flex items-center space-x-1.5">
-            <span class="text-slate-500 whitespace-nowrap font-medium">工程:</span>
-            <select id="chatInputTaskId" onchange="syncSelectedTaskAssignee()" class="w-full px-2 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs text-slate-800 dark:text-slate-200 font-bold"></select>
+        <!-- 対象工程・担当者・期日・ステータス設定バー（一元操作） -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+          <div class="flex items-center space-x-1">
+            <span class="text-slate-500 whitespace-nowrap font-medium text-[11px]">工程:</span>
+            <select id="chatInputTaskId" onchange="syncSelectedTaskDetails()" class="w-full px-2 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs text-slate-800 dark:text-slate-200 font-bold"></select>
           </div>
-          <div class="flex items-center space-x-1.5">
-            <span class="text-slate-500 whitespace-nowrap font-medium">担当:</span>
-            <select id="chatInputAssigneeId" class="w-full px-2 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs font-semibold"></select>
+          <div class="flex items-center space-x-1">
+            <span class="text-slate-500 whitespace-nowrap font-medium text-[11px]">担当:</span>
+            <select id="chatInputAssigneeId" class="w-full px-1.5 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs font-semibold"></select>
           </div>
-          <div class="flex items-center space-x-1.5">
-            <span class="text-slate-500 whitespace-nowrap font-medium">状態:</span>
-            <select id="chatInputStatus" class="w-full px-2 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs font-semibold">
+          <div class="flex items-center space-x-1">
+            <span class="text-slate-500 whitespace-nowrap font-medium text-[11px]">期日:</span>
+            <input type="date" id="chatInputDeadline" class="w-full px-1.5 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs">
+          </div>
+          <div class="flex items-center space-x-1">
+            <span class="text-slate-500 whitespace-nowrap font-medium text-[11px]">状態:</span>
+            <select id="chatInputStatus" class="w-full px-1.5 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs font-semibold">
               <option value="">(変更なし)</option>
               <option value="作業中">🔵 作業中</option>
               <option value="提出・確認待ち">🟡 提出・確認待ち</option>
@@ -1109,7 +1114,7 @@
     }
 
     // ----------------------------------------------------
-    // 【制作案件一覧描画】
+    // 【制作案件一覧描画（ミニマル引き算仕様）】
     // ----------------------------------------------------
     function setAndonFilter(key) {
       currentAndonFilter = key;
@@ -1208,7 +1213,6 @@
             + '</button>';
         }
 
-        // ボール保持タスク
         let activeTasksHtml = '';
         if (andon.statusKey === 'completed') {
           activeTasksHtml = '<div class="text-xs text-emerald-600 dark:text-emerald-400 font-bold">✓ すべての工程が完了しました</div>';
@@ -1232,23 +1236,6 @@
             + '</div>';
         }
 
-        // ====================================================
-        // 【新機能】全工程のアサイン体制布陣（チップ一覧）
-        // ====================================================
-        const teamAssigneesHtml = validTasks.map(t => {
-          const assignee = allProfiles.find(u => u.id === t.assignee_id);
-          const isAssigned = !!assignee;
-          const name = isAssigned ? getDisplayName(assignee) : '未割当';
-          const chipStyle = isAssigned
-            ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'
-            : 'bg-slate-50 dark:bg-slate-900 text-slate-400 border-dashed border-slate-200 dark:border-slate-800';
-
-          return `<span class="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] border ${chipStyle}">
-            <span class="font-bold text-slate-500 dark:text-slate-400">${t.title}:</span>
-            <span class="${isAssigned ? 'font-semibold' : 'italic'}">${name}</span>
-          </span>`;
-        }).join('');
-
         return '<div onclick="openProjectChatModal(\'' + p.id + '\')" class="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-blue-500 cursor-pointer transition space-y-2.5 relative group ' + (hasUnread ? 'ring-1 ring-red-400' : '') + '">'
           
           <!-- 通し番号 + タイトル + カテゴリバッジ + 行灯バッジ -->
@@ -1267,15 +1254,9 @@
           <!-- 関連チケットリンク / 追加ボタン -->
           + (relatedLinkHtml ? '<div class="flex items-center space-x-1.5 pt-0.5">' + relatedLinkHtml + '</div>' : '')
 
-          <!-- 現在のボール保持者（作業中・期日超過タスク） -->
+          <!-- 現在のボール保持者（作業中・期日超過タスクのみの引き算表示） -->
           + '<div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80">'
           + activeTasksHtml
-          + '</div>'
-
-          <!-- 全工程アサイン体制布陣 -->
-          + '<div class="space-y-1 pt-1">'
-          + '<span class="text-[10px] font-bold text-slate-400 block tracking-tight">👤 担当クリエイター布陣:</span>'
-          + '<div class="flex flex-wrap gap-1">' + teamAssigneesHtml + '</div>'
           + '</div>'
 
           <!-- 最新ログプレビュー（全幅表示） -->
@@ -1291,7 +1272,7 @@
     }
 
     // ----------------------------------------------------
-    // 【案件チャットモーダル】
+    // 【案件チャットモーダル（案1：縦型ステップリスト＋期日・アサイン変更）】
     // ----------------------------------------------------
     function openProjectChatModal(projectId) {
       selectedProjectForChat = cachedCreativeProjects.find(p => p.id === projectId);
@@ -1360,9 +1341,11 @@
       const tasks = getFilteredTasksForProject(p).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
       const todayStr = new Date().toISOString().split('T')[0];
 
-      // パイプライン進捗ストリップ
-      const stripContainer = document.getElementById('chatModalPipelineStrip');
-      stripContainer.innerHTML = tasks.map(t => {
+      // ====================================================
+      // 【案1】縦並びの工程進行・担当布陣リスト描画
+      // ====================================================
+      const taskListContainer = document.getElementById('chatModalTaskListContainer');
+      taskListContainer.innerHTML = tasks.map(t => {
         const isDone = t.status === '完了';
         const isOverdue = t.deadline && t.deadline < todayStr && !isDone;
         const isReview = t.status === '提出・確認待ち';
@@ -1370,27 +1353,35 @@
         const assignee = allProfiles.find(u => u.id === t.assignee_id);
         const assigneeName = assignee ? getDisplayName(assignee) : '未設定';
 
-        let badge = 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400';
         let dot = '⚪';
-        if (isDone) { badge = 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 font-bold'; dot = '✓'; }
-        else if (isOverdue) { badge = 'bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300 font-bold'; dot = '🔴'; }
-        else if (isReview) { badge = 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 font-bold'; dot = '🟡'; }
-        else if (isWorking) { badge = 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 font-bold'; dot = '🔵'; }
+        let badgeColor = 'text-slate-400';
+        if (isDone) { dot = '🟢'; badgeColor = 'text-emerald-600 dark:text-emerald-400 font-bold'; }
+        else if (isOverdue) { dot = '🔴'; badgeColor = 'text-red-600 dark:text-red-400 font-bold'; }
+        else if (isReview) { dot = '🟡'; badgeColor = 'text-amber-600 dark:text-amber-400 font-bold'; }
+        else if (isWorking) { dot = '🔵'; badgeColor = 'text-blue-600 dark:text-blue-400 font-bold'; }
 
-        return `<span class="px-2 py-1 rounded-md ${badge} inline-flex items-center space-x-1">
-          <span>${dot}</span><span>${t.title}</span><span class="text-[10px] opacity-75">(${assigneeName})</span>
-        </span>`;
-      }).join('<span class="text-slate-300 dark:text-slate-700">➔</span>');
-
-      // 対象工程選択プルダウン
-      const taskSelect = document.getElementById('chatInputTaskId');
-      taskSelect.innerHTML = tasks.map(t => {
-        return '<option value="' + t.id + '">' + t.title + ' (' + t.status + ')</option>';
+        return `<div onclick="selectTaskForQuickAction('${t.id}')" class="flex items-center justify-between p-1.5 px-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-800 text-xs hover:border-blue-400 cursor-pointer transition">
+          <div class="flex items-center space-x-2 truncate">
+            <span>${dot}</span>
+            <span class="font-bold text-slate-800 dark:text-slate-100">${t.title}</span>
+            <span class="text-slate-400 text-[11px]">|</span>
+            <span class="text-slate-600 dark:text-slate-300 truncate">${assigneeName}</span>
+          </div>
+          <div class="flex items-center space-x-2 text-[11px] flex-shrink-0">
+            <span class="${isOverdue ? 'text-red-500 font-bold' : 'text-slate-400'}">${formatDeadlineStr(t.deadline)}</span>
+            <span class="${badgeColor}">${t.status}</span>
+          </div>
+        </div>`;
       }).join('');
 
-      // 担当クリエイタープルダウンの同期
+      // 工程選択プルダウン（カッコのステータス表記を全廃し、工程名のみに統一）
+      const taskSelect = document.getElementById('chatInputTaskId');
+      taskSelect.innerHTML = tasks.map(t => {
+        return '<option value="' + t.id + '">' + t.title + '</option>';
+      }).join('');
+
       renderAssigneeDropdown();
-      syncSelectedTaskAssignee();
+      syncSelectedTaskDetails();
 
       renderProjectChatTimeline(p);
 
@@ -1402,7 +1393,6 @@
       autoMarkProjectTasksAsRead(p);
     }
 
-    // 担当者プルダウン候補を描画
     function renderAssigneeDropdown() {
       const select = document.getElementById('chatInputAssigneeId');
       if (!select) return;
@@ -1411,14 +1401,27 @@
       }).join('');
     }
 
-    // 選択された工程の現在の担当者をプルダウンに反映
-    function syncSelectedTaskAssignee() {
+    // 縦リスト行タップ時に該当タスクを下部操作バーに同期
+    function selectTaskForQuickAction(taskId) {
+      const taskSelect = document.getElementById('chatInputTaskId');
+      if (taskSelect) {
+        taskSelect.value = taskId;
+        syncSelectedTaskDetails();
+      }
+    }
+
+    // 選択された工程の「担当者」「期日」を下部バーに同期
+    function syncSelectedTaskDetails() {
       if (!selectedProjectForChat) return;
       const taskId = document.getElementById('chatInputTaskId').value;
       const targetTask = (selectedProjectForChat.tasks || []).find(t => t.id === taskId);
+      
       const assigneeSelect = document.getElementById('chatInputAssigneeId');
-      if (targetTask && assigneeSelect) {
-        assigneeSelect.value = targetTask.assignee_id || '';
+      const deadlineInput = document.getElementById('chatInputDeadline');
+
+      if (targetTask) {
+        if (assigneeSelect) assigneeSelect.value = targetTask.assignee_id || '';
+        if (deadlineInput) deadlineInput.value = targetTask.deadline || '';
       }
     }
 
@@ -1508,6 +1511,9 @@
       }).join('');
     }
 
+    // ====================================================
+    // 【統合送信処理】期日変更・アサイン変更・ステータス・メッセージ連動
+    // ====================================================
     async function submitProjectChat() {
       if (!selectedProjectForChat) return;
 
@@ -1515,15 +1521,17 @@
       const taskId = document.getElementById('chatInputTaskId').value;
       const newStatus = document.getElementById('chatInputStatus').value;
       const newAssigneeId = document.getElementById('chatInputAssigneeId').value || null;
+      const newDeadline = document.getElementById('chatInputDeadline').value || null;
       let comment = document.getElementById('chatInputComment').value.trim();
 
       const targetTask = (selectedProjectForChat.tasks || []).find(t => t.id === taskId);
       if (!targetTask) return;
 
       const isAssigneeChanged = (targetTask.assignee_id || null) !== newAssigneeId;
+      const isDeadlineChanged = (targetTask.deadline || null) !== newDeadline;
 
-      if (!comment && !pendingUploadFile && !newStatus && !isAssigneeChanged) {
-        alert('メッセージを入力するか、ファイルを添付、または担当者・ステータスを変更してください');
+      if (!comment && !pendingUploadFile && !newStatus && !isAssigneeChanged && !isDeadlineChanged) {
+        alert('メッセージを入力するか、ファイルを添付、または担当者・期日・ステータスを変更してください');
         return;
       }
 
@@ -1572,7 +1580,10 @@
         else if (newStatus === '完了') logType = '承認・完了';
         else if (newStatus === '作業中') logType = '作業着手';
         else if (newStatus === '提出・確認待ち') logType = '提出・確認待ち';
-        else if (isAssigneeChanged && !comment) {
+        else if (isDeadlineChanged && !comment) {
+          logType = '期日変更';
+          comment = `締切期日を「${newDeadline || '未設定'}」に変更しました。`;
+        } else if (isAssigneeChanged && !comment) {
           const newAssigneeObj = allProfiles.find(u => u.id === newAssigneeId);
           logType = '担当アサイン';
           comment = `担当者を「${getDisplayName(newAssigneeObj)}」に設定しました。`;
@@ -1594,6 +1605,7 @@
         if (detectedUrl) updateData.deliverable_url = detectedUrl;
         if (newStatus) updateData.status = newStatus;
         if (isAssigneeChanged) updateData.assignee_id = newAssigneeId;
+        if (isDeadlineChanged) updateData.deadline = newDeadline;
 
         const { error: dbErr } = await supabaseClient.from('tasks').update(updateData).eq('id', taskId);
         if (dbErr) throw dbErr;
@@ -1601,14 +1613,15 @@
         if (detectedUrl) targetTask.deliverable_url = detectedUrl;
         if (newStatus) targetTask.status = newStatus;
         if (isAssigneeChanged) targetTask.assignee_id = newAssigneeId;
+        if (isDeadlineChanged) targetTask.deadline = newDeadline;
         targetTask.logs = logs;
 
         removeAttachedFile();
         document.getElementById('chatInputComment').value = '';
         document.getElementById('chatInputStatus').value = '';
 
-        renderProjectChatTimeline(selectedProjectForChat);
         await loadCreativeProjects();
+        openProjectChatModal(selectedProjectForChat.id);
         renderAllUpdatesLogs();
 
       } catch (err) {
@@ -1639,7 +1652,6 @@
         }).join('');
       }
 
-      // 担当者候補
       const assigneeSelect = document.getElementById('addTaskAssigneeSelect');
       if (assigneeSelect) {
         assigneeSelect.innerHTML = '<option value="">-- 未割当 --</option>' + allProfiles.map(u => {
