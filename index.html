@@ -65,7 +65,7 @@
       <!-- PCツールバー -->
       <div id="pcUserActions" class="hidden md:flex items-center space-x-2 flex-shrink-0 relative">
         <button onclick="toggleDarkMode()" type="button" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" title="テーマ切り替え">
-          <span class="themeIcon text-xs font-bold">MODE</span>
+          <span class="themeIcon text-sm">🌙</span>
         </button>
 
         <!-- PCドロップダウンメニュー連動ボタン -->
@@ -73,32 +73,32 @@
           <button onclick="togglePcUserMenu()" id="pcUserNameBtn" class="flex items-center space-x-2 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/60 text-xs font-bold text-slate-700 dark:text-slate-200 transition">
             <span class="userInitialAvatar w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">U</span>
             <span id="pcUserDisplayName" class="max-w-[110px] truncate">ユーザー</span>
-            <span class="text-[9px] text-slate-400">▼</span>
+            <span class="text-[10px] text-slate-400">▼</span>
           </button>
 
           <!-- PCアバターメニュー -->
           <div id="pcUserDropdown" class="hidden absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 py-2 z-50 animate-in fade-in zoom-in-95 text-xs">
             <div id="pcAdminMenuSection" class="hidden border-b border-slate-100 dark:border-slate-800 pb-1.5 mb-1.5 px-1 space-y-0.5">
               <button onclick="toggleAdminViewMode(); togglePcUserMenu();" id="pcDropdownViewToggle" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-between">
-                <span>視点切替</span>
+                <span>🔄 視点切替</span>
                 <span id="pcDropdownViewTag" class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 font-semibold">全件</span>
               </button>
-              <button onclick="switchTab('master'); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium">
-                <span>工程マスター設定</span>
+              <button onclick="switchTab('master'); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium flex items-center space-x-2">
+                <span>🛠️ 工程マスター設定</span>
               </button>
-              <button onclick="switchTab('members'); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium">
-                <span>所属メンバー管理</span>
+              <button onclick="switchTab('members'); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium flex items-center space-x-2">
+                <span>👥 所属メンバー管理</span>
               </button>
-              <button onclick="manualTriggerStorageCleanup(); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-medium">
-                <span>ストレージ容量管理</span>
+              <button onclick="manualTriggerStorageCleanup(); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-medium flex items-center space-x-2">
+                <span>📦 ストレージ容量管理</span>
               </button>
             </div>
             <div class="px-1 space-y-0.5">
-              <button onclick="openMyAccountModal(); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium">
-                <span>アカウント設定</span>
+              <button onclick="openMyAccountModal(); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium flex items-center space-x-2">
+                <span>⚙️ アカウント設定</span>
               </button>
-              <button onclick="logout()" class="w-full text-left px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 font-bold">
-                <span>ログアウト</span>
+              <button onclick="logout()" class="w-full text-left px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 font-bold flex items-center space-x-2">
+                <span>🚪 ログアウト</span>
               </button>
             </div>
           </div>
@@ -123,18 +123,19 @@
           <span id="mobileUserMenuRole" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"></span>
         </div>
         <button onclick="toggleDarkMode()" type="button" class="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center space-x-1.5 text-xs font-semibold touch-target-btn">
-          <span>外観切替</span>
+          <span class="themeIcon">🌙</span>
+          <span>外観</span>
         </button>
       </div>
       <div class="py-2 space-y-1.5 text-sm font-medium">
         <button id="mobileViewToggleBtn" onclick="toggleAdminViewMode(); toggleMobileUserMenu();" class="hidden w-full text-left px-3.5 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-between touch-target-btn">
-          <span>視点切替 (全案件 / マイ担当)</span>
+          <span>🔄 視点切替 (全案件 / マイ担当)</span>
         </button>
         <button onclick="openMyAccountModal(); toggleMobileUserMenu();" class="w-full text-left px-3.5 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-between touch-target-btn">
-          <span>マイアカウント設定</span>
+          <span>⚙️ マイアカウント設定</span>
         </button>
         <button onclick="logout()" class="w-full text-left px-3.5 py-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 font-bold flex items-center justify-between touch-target-btn">
-          <span>ログアウト</span>
+          <span>🚪 ログアウト</span>
         </button>
       </div>
     </div>
@@ -185,16 +186,16 @@
           </div>
           
           <div class="flex items-center space-x-2 flex-shrink-0">
-            <!-- 制作ステータス絞り込みプルダウン（絵文字を排したクリーンなラベル） -->
+            <!-- 制作ステータス絞り込みプルダウン -->
             <div class="relative">
               <select id="creativeStatusSelect" onchange="handleCreativeFilterChange(this.value)" class="text-xs font-bold pl-3 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500 appearance-none touch-target-btn cursor-pointer">
-                <option value="active" selected>進行中のみ (未完了)</option>
-                <option value="overdue">遅延・超過</option>
-                <option value="review">確認待ち</option>
-                <option value="working">作業中</option>
-                <option value="unstarted">未着手</option>
-                <option value="completed">完了のみ</option>
-                <option value="all">すべて表示</option>
+                <option value="active" selected>⚡ 進行中のみ (未完了)</option>
+                <option value="overdue">🔴 遅延・超過</option>
+                <option value="review">🟡 確認待ち</option>
+                <option value="working">🔵 作業中</option>
+                <option value="unstarted">⚪ 未着手</option>
+                <option value="completed">🟢 完了のみ</option>
+                <option value="all">📁 すべて表示</option>
               </select>
               <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400 text-xs">▼</div>
             </div>
@@ -220,14 +221,14 @@
           <div class="flex items-center space-x-2 flex-shrink-0">
             <div class="relative">
               <select id="leadStatusSelect" onchange="filterLeads(this.value)" class="text-xs font-bold pl-3 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500 appearance-none touch-target-btn cursor-pointer">
-                <option value="active" selected>対応中のみ (未停止)</option>
-                <option value="未対応（HOT）">未対応 HOT</option>
-                <option value="先方返信あり（要対応）">返信あり</option>
+                <option value="active" selected>🔥 対応中のみ (未停止)</option>
+                <option value="未対応（HOT）">🔥 未対応 HOT</option>
+                <option value="先方返信あり（要対応）">📬 返信あり</option>
                 <option value="再送付">再送付</option>
                 <option value="対応待ち">対応待ち</option>
-                <option value="相談決定">相談決定</option>
+                <option value="相談決定">🎉 相談決定</option>
                 <option value="対応停止">停止のみ</option>
-                <option value="all">すべて表示</option>
+                <option value="all">📁 すべて表示</option>
               </select>
               <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400 text-xs">▼</div>
             </div>
@@ -249,7 +250,7 @@
             <p class="text-xs text-slate-500 dark:text-slate-400">各タスクの提出URLや指示・進行変更を時系列で網羅</p>
           </div>
           <button onclick="renderAllUpdatesLogs()" class="text-xs px-3 py-2 sm:py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded-lg font-medium text-slate-600 dark:text-slate-300 touch-target-btn">
-            更新
+            🔄 最新に更新
           </button>
         </div>
         <div id="allUpdatesLogsContainer" class="space-y-2.5 max-h-[600px] overflow-y-auto pr-1"></div>
@@ -287,7 +288,7 @@
         <div class="flex justify-between items-center gap-2">
           <div>
             <h2 class="text-base sm:text-lg font-bold">所属メンバー一覧</h2>
-            <p id="masterMonitoringNotice" class="hidden text-xs text-purple-600 dark:text-purple-400 font-semibold mt-0.5">Master権限: リアルタイム稼働・最終ログイン監視中</p>
+            <p id="masterMonitoringNotice" class="hidden text-xs text-purple-600 dark:text-purple-400 font-semibold mt-0.5">👑 Master権限: リアルタイム稼働・最終ログイン監視中</p>
           </div>
           <button onclick="openModal('newMemberModal')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-semibold transition shadow-sm whitespace-nowrap touch-target-btn">
             + メンバー追加
@@ -311,22 +312,22 @@
     </div>
   </main>
 
-  <!-- スマホ下部ナビ（絵文字を排し、シンプルなテキスト・アイコン記号に） -->
+  <!-- スマホ下部ナビ -->
   <nav id="mobileBottomNav" class="fixed md:hidden bottom-0 inset-x-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 z-40 px-2 py-1.5 flex items-center justify-around shadow-lg transition-colors">
     <button onclick="switchTab('creative')" id="mobTabCreative" class="flex flex-col items-center justify-center flex-1 py-1 text-blue-600 dark:text-blue-400 font-bold transition touch-target-btn">
-      <span class="text-sm font-extrabold uppercase">PRJ</span>
+      <span class="text-base">📁</span>
       <span class="text-[10px] mt-0.5 tracking-tight">制作進行</span>
     </button>
     <button onclick="switchTab('sales')" id="mobTabSales" class="flex flex-col items-center justify-center flex-1 py-1 text-slate-400 dark:text-slate-500 font-medium transition touch-target-btn">
-      <span class="text-sm font-extrabold uppercase">LEAD</span>
+      <span class="text-base">💼</span>
       <span class="text-[10px] mt-0.5 tracking-tight">営業</span>
     </button>
     <button onclick="switchTab('updates')" id="mobTabUpdates" class="flex flex-col items-center justify-center flex-1 py-1 text-slate-400 dark:text-slate-500 font-medium transition touch-target-btn">
-      <span class="text-sm font-extrabold uppercase">LOG</span>
+      <span class="text-base">🔔</span>
       <span class="text-[10px] mt-0.5 tracking-tight">ログ</span>
     </button>
     <button onclick="openMobileMoreSheet()" id="mobTabMore" class="flex flex-col items-center justify-center flex-1 py-1 text-slate-400 dark:text-slate-500 font-medium transition touch-target-btn">
-      <span class="text-sm font-extrabold uppercase">MENU</span>
+      <span class="text-base">⚙️</span>
       <span class="text-[10px] mt-0.5 tracking-tight">管理など</span>
     </button>
   </nav>
@@ -338,15 +339,15 @@
       <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">管理メニュー</h3>
       <div class="space-y-2 text-sm font-medium">
         <button onclick="manualTriggerStorageCleanup(); closeMobileMoreSheet();" class="w-full text-left p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 flex items-center justify-between touch-target-btn">
-          <span>ストレージ容量管理・整理</span>
+          <span>📦 ストレージ容量管理・整理</span>
           <span>➔</span>
         </button>
         <button onclick="switchTab('master'); closeMobileMoreSheet();" class="w-full text-left p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-between touch-target-btn">
-          <span>工程マスター設定（標準日数）</span>
+          <span>🛠️ 工程マスター設定（標準日数）</span>
           <span>➔</span>
         </button>
         <button onclick="switchTab('members'); closeMobileMoreSheet();" class="w-full text-left p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-between touch-target-btn">
-          <span>所属メンバー管理</span>
+          <span>👥 所属メンバー管理</span>
           <span>➔</span>
         </button>
       </div>
@@ -356,7 +357,7 @@
 
   <!-- ==================== 案件統合チャット＆進捗モーダル ==================== -->
   <div id="projectChatModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl md:max-w-5xl w-full p-3.5 sm:p-5 border border-slate-200 dark:border-slate-800 max-h-[95vh] h-[92vh] sm:h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl md:max-w-5xl w-full p-3.5 sm:p-5 border border-slate-200 dark:border-slate-800 max-h-[95vh] h-[92vh] sm:h-[90vh] flex flex-col shadow-2xl overflow-hidden relative">
       
       <!-- ヘッダー -->
       <div class="flex items-start justify-between border-b dark:border-slate-800 pb-2.5 flex-shrink-0 gap-2">
@@ -371,17 +372,17 @@
         </div>
         <div class="flex items-center space-x-1.5 flex-shrink-0">
           <button id="chatModalDeleteBtn" onclick="deleteCurrentProject()" class="hidden px-2.5 py-1 text-xs rounded bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-400 font-bold border border-red-200 dark:border-red-800 hover:bg-red-100 transition touch-target-btn">
-            削除
+            🗑️ 削除
           </button>
           <button onclick="closeModal('projectChatModal')" class="text-slate-400 hover:text-slate-600 text-lg p-2 touch-target-btn flex items-center justify-center">✕</button>
         </div>
       </div>
 
       <!-- モーダル内部コンテナ -->
-      <div class="flex-1 flex flex-col md:flex-row min-h-0 divide-y md:divide-y-0 md:divide-x dark:divide-slate-800">
+      <div class="flex-1 flex flex-col md:flex-row min-h-0 divide-y md:divide-y-0 md:divide-x dark:divide-slate-800 relative">
 
         <!-- 左ペイン: 進行パイプライン -->
-        <div class="w-full md:w-[36%] flex flex-col flex-shrink-0 bg-slate-50/70 dark:bg-slate-950/40 p-2.5 sm:p-3.5 overflow-hidden">
+        <div class="w-full md:w-[36%] flex flex-col flex-shrink-0 bg-slate-50/70 dark:bg-slate-950/40 p-2.5 sm:p-3.5 overflow-hidden relative">
           <div class="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400 pb-1.5 flex-shrink-0 border-b dark:border-slate-800/80">
             <span class="tracking-wider uppercase text-[10px]">ROADMAP / 進行パイプライン</span>
             <button id="btnOpenAddTaskBar" onclick="openAddTaskModal()" class="text-blue-600 dark:text-blue-400 hover:underline p-1 touch-target-btn">
@@ -389,67 +390,85 @@
             </button>
           </div>
           <div id="chatModalTaskListContainer" class="flex-1 overflow-y-auto py-1.5 pr-1 space-y-0.5"></div>
+
+          <!-- 工程クイック編集用オーバーレイポップアップ -->
+          <div id="taskQuickEditOverlay" class="hidden absolute inset-x-2 top-10 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-3.5 z-30 space-y-3 animate-in fade-in zoom-in-95 text-xs">
+            <div class="flex items-center justify-between border-b dark:border-slate-800 pb-2">
+              <span class="font-bold text-slate-800 dark:text-slate-100 flex items-center space-x-1">
+                <span>⚙️ 工程編集:</span>
+                <span id="quickEditTaskTitle" class="text-blue-600 dark:text-blue-400"></span>
+              </span>
+              <button onclick="closeTaskQuickEditOverlay()" class="text-slate-400 hover:text-slate-600 p-1">✕</button>
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-400 mb-1 font-bold">担当クリエイター</label>
+              <select id="quickEditAssigneeId" class="w-full px-2.5 py-2 border dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 font-semibold outline-none text-xs"></select>
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-400 mb-1 font-bold">締切期日</label>
+              <input type="date" id="quickEditDeadline" class="w-full px-2.5 py-2 border dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-lg text-xs outline-none font-mono">
+            </div>
+            <div class="flex justify-end space-x-2 pt-1 border-t dark:border-slate-800">
+              <button onclick="closeTaskQuickEditOverlay()" class="px-3 py-1.5 border dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-300">キャンセル</button>
+              <button onclick="saveTaskQuickEdit()" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold">保存</button>
+            </div>
+          </div>
+
         </div>
 
-        <!-- 右ペイン: チャットログ ＆ 送信フォーム -->
+        <!-- 右ペイン: チャットログ ＆ 送信フォーム（常設ステータスバー） -->
         <div class="w-full md:w-[64%] flex-1 flex flex-col min-h-0 bg-white dark:bg-slate-900 overflow-hidden pl-0 md:pl-3 pt-1.5 md:pt-0">
           
           <div class="flex-1 overflow-y-auto min-h-0 space-y-3 p-2 sm:p-3" id="chatModalTimeline"></div>
 
-          <div id="chatDropZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleFileDrop(event)" class="bg-slate-50 dark:bg-slate-800/50 p-2 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 transition space-y-2 flex-shrink-0 relative m-1 sm:m-2">
+          <div id="chatDropZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleFileDrop(event)" class="bg-slate-50 dark:bg-slate-800/50 p-2 sm:p-3 rounded-2xl border border-slate-200 dark:border-slate-800 transition space-y-2 flex-shrink-0 relative m-1 sm:m-2">
             
-            <div id="dropOverlay" class="hidden absolute inset-0 bg-blue-600/90 text-white rounded-xl flex flex-col items-center justify-center font-bold text-xs pointer-events-none z-20 space-y-1">
-              <span>ファイルをドロップして自動添付</span>
+            <div id="dropOverlay" class="hidden absolute inset-0 bg-blue-600/90 text-white rounded-2xl flex flex-col items-center justify-center font-bold text-xs pointer-events-none z-20 space-y-1">
+              <span>📥 ファイルをドロップして自動添付</span>
             </div>
 
-            <!-- 折りたたみ展開可能な工程コントロールバー -->
-            <div id="taskControlPanel" class="hidden p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-2.5 text-xs">
-              <div class="flex items-center justify-between border-b dark:border-slate-800 pb-1.5">
-                <span class="font-bold text-slate-700 dark:text-slate-200 flex items-center space-x-1">
-                  <span>進行・ステータス設定</span>
-                  <span id="currentSelectedTaskTag" class="text-blue-600 dark:text-blue-400 font-extrabold ml-1"></span>
+            <!-- 常設進行設定バー（ボール・期日・工程ステータス） -->
+            <div class="bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700 shadow-xs space-y-2 text-xs">
+              <div class="flex items-center justify-between text-[11px] pb-1 border-b dark:border-slate-800">
+                <span class="font-bold text-slate-600 dark:text-slate-300 flex items-center space-x-1.5">
+                  <span class="text-slate-400">対象工程:</span>
+                  <span id="currentSelectedTaskTag" class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 font-extrabold cursor-pointer hover:underline" onclick="openCurrentTaskQuickEdit()" title="クリックして担当者を変更"></span>
                 </span>
-                <button onclick="toggleTaskControlPanel()" type="button" class="text-xs text-slate-400 hover:text-slate-600 p-1 touch-target-btn">閉じる ✕</button>
+                <span id="currentAssigneeDisplay" class="text-[10px] text-slate-400 truncate"></span>
               </div>
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <input type="hidden" id="chatInputTaskId">
+
+              <div class="grid grid-cols-3 gap-1.5 sm:gap-2">
                 <div>
-                  <label class="block text-[10px] text-slate-400 mb-1">対象工程</label>
-                  <select id="chatInputTaskId" onchange="syncSelectedTaskDetails()" class="w-full px-2.5 py-2 border dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 font-bold outline-none text-xs"></select>
-                </div>
-                <div>
-                  <label class="block text-[10px] text-slate-400 mb-1">担当者</label>
-                  <select id="chatInputAssigneeId" class="w-full px-2.5 py-2 border dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 font-medium outline-none text-xs"></select>
-                </div>
-                <div>
-                  <label class="block text-[10px] text-slate-400 mb-1">ボール (手番)</label>
-                  <select id="chatInputBallHolder" class="w-full px-2.5 py-2 border dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 font-bold text-indigo-600 dark:text-indigo-400 outline-none text-xs">
-                    <option value="creator">担当クリエイター</option>
-                    <option value="admin">運営・ディレクター</option>
-                    <option value="client">クライアント (先方)</option>
-                    <option value="none">なし / 完了</option>
+                  <label class="block text-[10px] text-slate-400 mb-0.5 font-bold">工程ステータス</label>
+                  <select id="chatInputStatus" onchange="handleStatusAutoAssist()" class="w-full px-2 py-1.5 border dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 font-bold outline-none text-[11px] truncate cursor-pointer">
+                    <option value="">(変更なし)</option>
+                    <option value="未着手">⚪ 未着手</option>
+                    <option value="作業中">🔵 作業中</option>
+                    <option value="提出・確認待ち">🟡 提出・確認待ち</option>
+                    <option value="リテイク">🟠 リテイク指示</option>
+                    <option value="完了">🟢 承認・完了</option>
                   </select>
                 </div>
                 <div>
-                  <label class="block text-[10px] text-slate-400 mb-1">締切期日</label>
-                  <input type="date" id="chatInputDeadline" class="w-full px-2.5 py-2 border dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs">
+                  <label class="block text-[10px] text-slate-400 mb-0.5 font-bold">ボール (手番)</label>
+                  <select id="chatInputBallHolder" class="w-full px-2 py-1.5 border dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 font-bold text-indigo-600 dark:text-indigo-400 outline-none text-[11px] truncate cursor-pointer">
+                    <option value="creator">👤 担当</option>
+                    <option value="admin">🛡️ 運営</option>
+                    <option value="client">🏢 先方</option>
+                    <option value="none">⚪ なし / 完了</option>
+                  </select>
                 </div>
-              </div>
-              <div>
-                <label class="block text-[10px] text-slate-400 mb-1">工程ステータス</label>
-                <select id="chatInputStatus" onchange="handleStatusAutoAssist()" class="w-full px-2.5 py-2 border dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 font-semibold outline-none text-xs">
-                  <option value="">(変更なし)</option>
-                  <option value="未着手">未着手</option>
-                  <option value="作業中">作業中</option>
-                  <option value="提出・確認待ち">提出・確認待ち</option>
-                  <option value="リテイク">リテイク指示</option>
-                  <option value="完了">承認・完了</option>
-                </select>
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-0.5 font-bold">締切期日</label>
+                  <input type="date" id="chatInputDeadline" class="w-full px-2 py-1.5 border dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-lg text-[11px] font-mono outline-none">
+                </div>
               </div>
             </div>
 
             <div id="attachedFilePreview" class="hidden flex items-center justify-between p-2.5 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg text-xs">
               <div class="flex items-center space-x-2 truncate">
-                <span id="attachedFileIcon">FILE:</span>
+                <span id="attachedFileIcon">📎</span>
                 <span id="attachedFileName" class="font-bold text-blue-700 dark:text-blue-300 truncate"></span>
                 <span id="attachedFileSize" class="text-[10px] text-slate-400"></span>
               </div>
@@ -458,21 +477,17 @@
 
             <!-- テキスト入力エリア -->
             <div class="relative">
-              <textarea id="chatInputComment" rows="2" placeholder="メッセージを入力... (URL共有、音声/画像のドラッグ＆ドロップ対応)" class="w-full p-3 pb-12 sm:pb-9 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl text-xs sm:text-xs outline-none focus:ring-2 focus:ring-blue-500 break-words leading-relaxed"></textarea>
+              <textarea id="chatInputComment" rows="2" placeholder="メッセージを入力... (音源・画像のD&D対応、URL共有)" class="w-full p-3 pb-12 sm:pb-9 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 break-words leading-relaxed"></textarea>
               
               <div class="absolute bottom-2 left-2 flex items-center space-x-2">
-                <button type="button" onclick="toggleTaskControlPanel()" id="btnToggleTaskPanel" class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 hover:bg-slate-100 text-slate-700 dark:text-slate-200 transition shadow-xs touch-target-btn">
-                  <span>進行設定</span>
-                  <span id="panelActiveDot" class="hidden w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                </button>
                 <label class="cursor-pointer inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-200 transition touch-target-btn">
-                  <span>添付</span>
+                  <span>📎 添付</span>
                   <input type="file" id="fileInputPicker" onchange="handleFileInputChange(event)" accept="audio/mp3,audio/m4a,audio/*,image/*" class="hidden">
                 </label>
               </div>
 
               <div class="absolute bottom-2 right-2">
-                <button onclick="handleChatSubmitClick()" id="btnSubmitChat" class="px-5 py-2 sm:py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-xs font-bold transition shadow-sm whitespace-nowrap touch-target-btn flex items-center justify-center">
+                <button onclick="handleChatSubmitClick()" id="btnSubmitChat" class="px-5 py-2 sm:py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-sm whitespace-nowrap touch-target-btn flex items-center justify-center">
                   送信 ➔
                 </button>
               </div>
@@ -491,8 +506,9 @@
   <div id="deadlineShiftModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-5 space-y-4 border border-slate-200 dark:border-slate-800 shadow-2xl animate-in fade-in zoom-in-95">
       <div class="border-b dark:border-slate-800 pb-2.5">
-        <div class="text-amber-600 dark:text-amber-400 text-sm font-bold">
-          締切期日の変更を検知しました
+        <div class="text-amber-600 dark:text-amber-400 text-sm font-bold flex items-center space-x-1">
+          <span>📅</span>
+          <span>締切期日の変更を検知しました</span>
         </div>
         <p id="shiftModalLeadText" class="text-xs text-slate-600 dark:text-slate-300 mt-1 font-semibold"></p>
       </div>
@@ -522,7 +538,7 @@
       
       <div class="border-b dark:border-slate-800 pb-3 flex items-start justify-between">
         <div>
-          <h3 class="font-bold text-base sm:text-lg text-slate-800 dark:text-slate-100">ストレージ容量の管理・クリーンアップ</h3>
+          <h3 class="font-bold text-base sm:text-lg text-slate-800 dark:text-slate-100">📦 ストレージ容量の管理・クリーンアップ</h3>
           <p id="storageWarningStats" class="text-xs text-amber-600 dark:text-amber-400 font-semibold mt-0.5"></p>
         </div>
         <button onclick="closeModal('storageCleanupModal')" class="text-slate-400 hover:text-slate-600 text-lg p-1 touch-target-btn">✕</button>
@@ -550,7 +566,7 @@
           閉じる
         </button>
         <button onclick="executeSelectedFilesCleanup()" id="btnExecuteCleanup" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition shadow-sm touch-target-btn">
-          選択したファイルを完全削除
+          選択したファイルを完全削除 🗑️
         </button>
       </div>
     </div>
@@ -661,7 +677,7 @@
         <div class="relative">
           <textarea id="templateMessageBox" rows="3" class="w-full p-2.5 pb-8 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs font-mono outline-none focus:ring-2 focus:ring-blue-500 break-words" placeholder="定型文を選択するとここに名前が反映されます。"></textarea>
           <button onclick="copyTemplateBox()" type="button" class="absolute bottom-2 right-2 px-3 py-1.5 bg-slate-800 dark:bg-slate-700 text-white rounded-lg text-[11px] font-medium hover:bg-slate-700 transition shadow touch-target-btn">
-            コピー
+            📋 コピー
           </button>
         </div>
       </div>
@@ -701,7 +717,7 @@
           </button>
         </div>
         <button onclick="markLeadConsultation()" class="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition shadow-sm text-center touch-target-btn">
-          相談決定 ➔ 制作起票
+          🎉 相談決定 ➔ 制作起票
         </button>
       </div>
 
@@ -794,11 +810,11 @@
         <div class="grid grid-cols-2 gap-2 text-xs">
           <label class="flex items-center space-x-2 p-2.5 rounded-lg border dark:border-slate-700 bg-blue-50/50 dark:bg-blue-950/20 cursor-pointer touch-target-btn">
             <input type="checkbox" id="checkCreateMusic" checked onchange="toggleTrackCheckboxes()" class="w-4 h-4 rounded text-blue-600">
-            <span class="font-bold text-blue-700 dark:text-blue-300">[楽曲]</span>
+            <span class="font-bold text-blue-700 dark:text-blue-300">🎵 [楽曲]</span>
           </label>
           <label class="flex items-center space-x-2 p-2.5 rounded-lg border dark:border-slate-700 bg-purple-50/50 dark:bg-purple-950/20 cursor-pointer touch-target-btn">
             <input type="checkbox" id="checkCreateMv" checked onchange="toggleTrackCheckboxes()" class="w-4 h-4 rounded text-purple-600">
-            <span class="font-bold text-purple-700 dark:text-purple-300">[MV]</span>
+            <span class="font-bold text-purple-700 dark:text-purple-300">🎬 [MV]</span>
           </label>
         </div>
       </div>
@@ -837,6 +853,7 @@
 
     let targetProjectForRelated = null;
     let pendingDeadlineShiftContext = null;
+    let editingTaskIdForQuickOverlay = null;
 
     const STORAGE_LIMIT_CONFIG = {
       WARNING_SIZE_MB: 800,
@@ -960,18 +977,17 @@
       return '担当制作中';
     }
 
-    // 絵文字を削ぎ落としたクリーンなボールタグ
     function getBallHolderTag(ballKey) {
       if (ballKey === 'admin') {
-        return '<span class="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded">➔ 運営</span>';
+        return '<span class="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded">➔ 🛡️ 運営</span>';
       }
       if (ballKey === 'client') {
-        return '<span class="text-[10px] font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-1.5 py-0.5 rounded">➔ クライアント</span>';
+        return '<span class="text-[10px] font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-1.5 py-0.5 rounded">➔ 🏢 先方</span>';
       }
       if (ballKey === 'none') {
         return '';
       }
-      return '<span class="text-[10px] font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">作業中</span>';
+      return '<span class="text-[10px] font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">👤 制作中</span>';
     }
 
     async function compressImageToJpeg(file) {
@@ -1068,7 +1084,7 @@
       const isAudio = finalFile.type.startsWith('audio/') || finalFile.name.endsWith('.mp3') || finalFile.name.endsWith('.m4a');
       const isImg = finalFile.type === 'image/jpeg' || finalFile.type.startsWith('image/');
 
-      iconEl.innerText = isAudio ? 'AUDIO:' : (isImg ? 'IMAGE:' : 'FILE:');
+      iconEl.innerText = isAudio ? '🎵' : (isImg ? '🖼️' : '📎');
       nameEl.innerText = finalFile.name;
       sizeEl.innerText = '(' + (finalFile.size / (1024 * 1024)).toFixed(2) + ' MB)';
       previewBox.classList.remove('hidden');
@@ -1083,25 +1099,6 @@
     function removeAttachedFile() {
       pendingUploadFile = null;
       document.getElementById('attachedFilePreview').classList.add('hidden');
-    }
-
-    function toggleTaskControlPanel(forceOpen = false) {
-      const panel = document.getElementById('taskControlPanel');
-      if (!panel) return;
-      if (forceOpen) {
-        panel.classList.remove('hidden');
-      } else {
-        panel.classList.toggle('hidden');
-      }
-      updateControlPanelActiveState();
-    }
-
-    function updateControlPanelActiveState() {
-      const panel = document.getElementById('taskControlPanel');
-      const dot = document.getElementById('panelActiveDot');
-      if (panel && dot) {
-        dot.classList.toggle('hidden', panel.classList.contains('hidden'));
-      }
     }
 
     function handleStatusAutoAssist() {
@@ -1170,7 +1167,6 @@
       return activeTasks;
     }
 
-    // 絵文字を排したカラーハイライト付きAndon判定
     function evaluateProjectAndon(project) {
       const tasks = getFilteredTasksForProject(project);
       const todayStr = new Date().toISOString().split('T')[0];
@@ -1179,6 +1175,7 @@
         return {
           statusKey: 'completed',
           label: '完了',
+          dot: '🟢',
           badgeClass: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800',
           activeItems: []
         };
@@ -1205,29 +1202,35 @@
 
       let statusKey = 'unstarted';
       let label = '未着手';
+      let dot = '⚪';
       let badgeClass = 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700';
 
       if (activeItems.some(item => item.isOverdue)) {
         statusKey = 'overdue';
         label = '遅延';
+        dot = '🔴';
         badgeClass = 'bg-red-50 text-red-700 dark:bg-red-950/60 dark:text-red-300 border border-red-200 dark:border-red-900';
       } else if (activeItems.some(item => item.status === '提出・確認待ち' || item.ballKey === 'admin')) {
         statusKey = 'review';
         label = '確認中';
+        dot = '🟡';
         badgeClass = 'bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-900';
       } else if (activeItems.some(item => item.status === '作業中' || item.status === 'リテイク')) {
         statusKey = 'working';
         label = '作業中';
+        dot = '🔵';
         badgeClass = 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-900';
       } else if (activeItems.length === 0) {
         statusKey = 'unstarted';
         label = '未着手';
+        dot = '⚪';
         badgeClass = 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700';
       }
 
       return {
         statusKey: statusKey,
         label: label,
+        dot: dot,
         badgeClass: badgeClass,
         activeItems: activeItems
       };
@@ -1252,12 +1255,11 @@
       }
     }
 
-    // 絵文字なしの洗練されたカテゴリバッジ
     function getCategoryBadgeHtml(cat) {
       if (cat === 'mv') {
-        return '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800">MV</span>';
+        return '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800">🎬 MV</span>';
       }
-      return '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800">楽曲</span>';
+      return '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800">🎵 楽曲</span>';
     }
 
     function getRelatedProject(project) {
@@ -1338,7 +1340,7 @@
         let relatedLinkHtml = '';
         if (relatedPrj) {
           const relCat = getProjectCategory(relatedPrj);
-          const relLabel = relCat === 'mv' ? 'MVへ' : '楽曲へ';
+          const relLabel = relCat === 'mv' ? '🎬 MVへ' : '🎵 楽曲へ';
           relatedLinkHtml = `<button onclick="event.stopPropagation(); openProjectChatModal('${relatedPrj.id}')" class="text-[10px] px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 font-semibold transition touch-target-btn">
             ${relLabel} ➔
           </button>`;
@@ -1379,7 +1381,7 @@
               </div>
               <div class="flex items-center space-x-1.5 flex-shrink-0">
                 ${relatedLinkHtml}
-                <span class="px-2 py-0.5 rounded text-[11px] font-bold ${andon.badgeClass}">${andon.label}</span>
+                <span class="px-2 py-0.5 rounded text-[11px] font-bold ${andon.badgeClass}">${andon.dot} ${andon.label}</span>
               </div>
             </div>
 
@@ -1389,7 +1391,7 @@
           </div>
 
           <div class="text-[11px] text-slate-500 flex items-center space-x-1.5 min-w-0 truncate pt-2 border-t border-slate-100 dark:border-slate-800/60">
-            <span class="text-xs font-bold text-slate-400 flex-shrink-0">LOG:</span>
+            <span class="text-xs flex-shrink-0">💬</span>
             <div class="truncate">${latestLogHtml}</div>
           </div>
         </div>`;
@@ -1447,9 +1449,9 @@
         let relatedLinkHtml = '';
         if (relatedPrj) {
           const relCat = getProjectCategory(relatedPrj);
-          const relLabel = relCat === 'mv' ? 'MV' : '楽曲';
+          const relLabel = relCat === 'mv' ? '🎬 MV' : '🎵 楽曲';
           relatedLinkHtml = `<button onclick="event.stopPropagation(); openProjectChatModal('${relatedPrj.id}')" class="text-[10px] px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 transition ml-1 flex-shrink-0" title="ペアチケットを開く">
-            ${relLabel}
+            🔗 ${relLabel}
           </button>`;
         }
 
@@ -1459,7 +1461,7 @@
         if (andon.statusKey === 'completed') {
           statusCombinedHtml = `
             <div class="flex items-center space-x-1.5">
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">完了</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">🟢 完了</span>
               <span class="text-emerald-600 dark:text-emerald-400 font-bold">全工程完了</span>
             </div>
           `;
@@ -1467,7 +1469,7 @@
         } else if (andon.activeItems.length === 0) {
           statusCombinedHtml = `
             <div class="flex items-center space-x-1.5">
-              <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">未着手</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">⚪ 未着手</span>
               <span class="text-slate-400">待機中</span>
             </div>
           `;
@@ -1479,7 +1481,7 @@
               <div class="space-y-1">
                 <div class="flex items-center space-x-1.5">
                   <span class="px-1.5 py-0.2 rounded text-[10px] font-bold ${andon.badgeClass} flex-shrink-0">
-                    ${andon.label}
+                    ${andon.dot} ${andon.label}
                   </span>
                   <span class="font-bold text-slate-800 dark:text-slate-100">${item.taskTitle}</span>
                 </div>
@@ -1543,18 +1545,18 @@
 
     function getLeadStatusBadge(lead) {
       const st = lead.status;
-      if (st === '未対応（HOT）') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-700 dark:bg-red-950/60 dark:text-red-300 border border-red-200 dark:border-red-900">未対応HOT</span>';
+      if (st === '未対応（HOT）') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-700 dark:bg-red-950/60 dark:text-red-300 border border-red-200 dark:border-red-900">🔥 未対応HOT</span>';
       if (st === '再送付') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-900">再送付</span>';
       if (st === '対応待ち') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-900">対応待ち</span>';
-      if (st === '先方返信あり（要対応）') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">返信あり</span>';
-      if (st === '相談決定') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-900">相談決定</span>';
+      if (st === '先方返信あり（要対応）') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">📬 返信あり</span>';
+      if (st === '相談決定') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-900">🎉 相談決定</span>';
       if (st === '対応停止') return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">停止 (${lead.stop_reason || ''})</span>`;
       return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">${st}</span>`;
     }
 
     function getLeadPhaseBadge(lead) {
       if (lead.status === '先方返信あり（要対応）') {
-        return '<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">ラリー中</span>';
+        return '<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">💬 ラリー中</span>';
       }
       if (lead.status === '相談決定') {
         return '<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">相談中</span>';
@@ -1606,7 +1608,6 @@
       }).join('');
     }
 
-    // パイプラインステータスの動的判定ヘルパー（未着手・作業中・遅延・確認中・完了）
     function getTaskStatusAppearance(task, todayStr) {
       const isDone = task.status === '完了';
       const isOverdue = task.deadline && task.deadline < todayStr && !isDone;
@@ -1645,7 +1646,6 @@
         };
       }
 
-      // デフォルト: 未着手
       return {
         dotColor: 'bg-slate-300 dark:bg-slate-600 ring-slate-100 dark:ring-slate-900',
         titleColor: 'text-slate-600 dark:text-slate-400',
@@ -1673,10 +1673,10 @@
 
       if (cat === 'mv') {
         catEl.className = "text-[11px] font-bold px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 dark:bg-purple-950/70 dark:text-purple-300 border border-purple-200 dark:border-purple-800";
-        catEl.innerText = "MV";
+        catEl.innerText = "🎬 MV";
       } else {
         catEl.className = "text-[11px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 border border-blue-200 dark:border-blue-800";
-        catEl.innerText = "楽曲";
+        catEl.innerText = "🎵 楽曲";
       }
 
       document.getElementById('chatModalTitle').innerText = p.title;
@@ -1691,12 +1691,12 @@
       if (relatedPrj) {
         const relCat = getProjectCategory(relatedPrj);
         const relCode = relatedPrj.ticket_code ? `[${relatedPrj.ticket_code}] ` : '';
-        const relLabel = relCat === 'mv' ? `関連: ${relCode}MVを開く` : `関連: ${relCode}楽曲を開く`;
+        const relLabel = relCat === 'mv' ? `🎬 関連: ${relCode}MVを開く` : `🎵 関連: ${relCode}楽曲を開く`;
         relatedLinkContainer.innerHTML = `<button onclick="openProjectChatModal('${relatedPrj.id}')" class="text-xs px-2.5 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 transition touch-target-btn">
           ${relLabel} ➔
         </button>`;
       } else if (isAdminOrMaster()) {
-        const addLabel = cat === 'music' ? '＋ 関連MVを追加' : '＋ 関連楽曲を追加';
+        const addLabel = cat === 'music' ? '＋ 🎬 関連MVを追加' : '＋ 🎵 関連楽曲を追加';
         relatedLinkContainer.innerHTML = `<button onclick="openAddRelatedModal('${p.id}')" class="text-xs px-2.5 py-1.5 rounded-lg border border-dashed border-indigo-300 dark:border-indigo-800 bg-indigo-50/60 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 font-semibold transition touch-target-btn">
           ${addLabel}
         </button>`;
@@ -1707,10 +1707,31 @@
       const delBtn = document.getElementById('chatModalDeleteBtn');
       if (delBtn) delBtn.classList.toggle('hidden', !isAdminOrMaster());
 
+      renderPipelineTree(p);
+
+      const tasks = getFilteredTasksForProject(p).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
+      if (tasks.length > 0) {
+        selectTaskForControl(tasks[0].id);
+      }
+
+      renderProjectChatTimeline(p);
+
+      removeAttachedFile();
+      document.getElementById('chatInputStatus').value = '';
+      document.getElementById('chatInputComment').value = '';
+      closeTaskQuickEditOverlay();
+
+      openModal('projectChatModal');
+      autoMarkProjectTasksAsRead(p);
+      
+      setTimeout(scrollToLatestMessage, 60);
+    }
+
+    // パイプラインツリーの描画
+    function renderPipelineTree(p) {
       const tasks = getFilteredTasksForProject(p).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
       const todayStr = new Date().toISOString().split('T')[0];
 
-      // パイプライン（動的ステータス判定 ＆ 絵文字なしのカラーハイライト）
       const taskListContainer = document.getElementById('chatModalTaskListContainer');
       taskListContainer.innerHTML = `<div class="relative ml-2.5 pl-4 sm:pl-4 space-y-1 sm:space-y-2 border-l-2 border-slate-300 dark:border-slate-700 my-1 py-1">`
         + tasks.map((t) => {
@@ -1719,10 +1740,10 @@
             const assigneeName = assignee ? getDisplayName(assignee) : '未設定';
 
             let ballHint = '';
-            if (t.ball_holder === 'admin') ballHint = '<span class="text-[10px] font-bold text-amber-600 dark:text-amber-400">➔ 運営</span>';
-            else if (t.ball_holder === 'client') ballHint = '<span class="text-[10px] font-bold text-purple-600 dark:text-purple-400">➔ クライアント</span>';
+            if (t.ball_holder === 'admin') ballHint = '<span class="text-[10px] font-bold text-amber-600 dark:text-amber-400">➔ 🛡️ 運営</span>';
+            else if (t.ball_holder === 'client') ballHint = '<span class="text-[10px] font-bold text-purple-600 dark:text-purple-400">➔ 🏢 先方</span>';
 
-            return `<div onclick="selectTaskForControl('${t.id}')" class="relative group cursor-pointer flex items-center justify-between text-xs py-2 sm:py-1 px-2 rounded-lg hover:bg-white/80 dark:hover:bg-slate-800/80 transition -ml-2 touch-target-row active:bg-blue-50 dark:active:bg-blue-950/40">
+            return `<div onclick="handlePipelineTaskClick('${t.id}')" class="relative group cursor-pointer flex items-center justify-between text-xs py-2 sm:py-1 px-2 rounded-lg hover:bg-white/80 dark:hover:bg-slate-800/80 transition -ml-2 touch-target-row active:bg-blue-50 dark:active:bg-blue-950/40">
               <span class="absolute -left-[14px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full ring-2 ${appearance.dotColor} z-10"></span>
               
               <div class="flex items-center space-x-1.5 truncate pl-2">
@@ -1742,63 +1763,120 @@
             </div>`;
           }).join('')
         + `</div>`;
-
-      const taskSelect = document.getElementById('chatInputTaskId');
-      taskSelect.innerHTML = tasks.map(t => {
-        return `<option value="${t.id}">${t.title}</option>`;
-      }).join('');
-
-      renderAssigneeDropdown();
-      syncSelectedTaskDetails();
-
-      document.getElementById('taskControlPanel').classList.add('hidden');
-      updateControlPanelActiveState();
-
-      renderProjectChatTimeline(p);
-
-      removeAttachedFile();
-      document.getElementById('chatInputStatus').value = '';
-      document.getElementById('chatInputComment').value = '';
-
-      openModal('projectChatModal');
-      autoMarkProjectTasksAsRead(p);
-      
-      setTimeout(scrollToLatestMessage, 60);
     }
 
-    function renderAssigneeDropdown() {
-      const select = document.getElementById('chatInputAssigneeId');
-      if (!select) return;
-      select.innerHTML = '<option value="">-- 未割当 --</option>' + allProfiles.map(u => {
-        return `<option value="${u.id}">${getDisplayName(u)}</option>`;
-      }).join('');
+    // パイプライン行タップ時：入力欄の対象工程を切り替え ＆ クイック編集オーバーレイを表示
+    function handlePipelineTaskClick(taskId) {
+      selectTaskForControl(taskId);
+      openTaskQuickEditOverlay(taskId);
     }
 
     function selectTaskForControl(taskId) {
-      const taskSelect = document.getElementById('chatInputTaskId');
-      if (taskSelect) {
-        taskSelect.value = taskId;
-        syncSelectedTaskDetails();
-      }
-      toggleTaskControlPanel(true);
+      if (!selectedProjectForChat) return;
+      const targetTask = (selectedProjectForChat.tasks || []).find(t => t.id === taskId);
+      if (!targetTask) return;
+
+      document.getElementById('chatInputTaskId').value = taskId;
+      document.getElementById('currentSelectedTaskTag').innerText = `[${targetTask.title}]`;
+      
+      const assigneeObj = allProfiles.find(u => u.id === targetTask.assignee_id);
+      document.getElementById('currentAssigneeDisplay').innerText = `担当: ${getDisplayName(assigneeObj)}`;
+
+      document.getElementById('chatInputBallHolder').value = targetTask.ball_holder || 'creator';
+      document.getElementById('chatInputDeadline').value = targetTask.deadline || '';
+      document.getElementById('chatInputStatus').value = '';
     }
 
-    function syncSelectedTaskDetails() {
-      if (!selectedProjectForChat) return;
+    function openCurrentTaskQuickEdit() {
       const taskId = document.getElementById('chatInputTaskId').value;
-      const targetTask = (selectedProjectForChat.tasks || []).find(t => t.id === taskId);
-      
-      const assigneeSelect = document.getElementById('chatInputAssigneeId');
-      const ballSelect = document.getElementById('chatInputBallHolder');
-      const deadlineInput = document.getElementById('chatInputDeadline');
-      const tagEl = document.getElementById('currentSelectedTaskTag');
+      if (taskId) openTaskQuickEditOverlay(taskId);
+    }
 
-      if (targetTask) {
-        if (assigneeSelect) assigneeSelect.value = targetTask.assignee_id || '';
-        if (ballSelect) ballSelect.value = targetTask.ball_holder || 'creator';
-        if (deadlineInput) deadlineInput.value = targetTask.deadline || '';
-        if (tagEl) tagEl.innerText = `[${targetTask.title}]`;
+    // オーバーレイポップアップ開閉＆保存
+    function openTaskQuickEditOverlay(taskId) {
+      if (!selectedProjectForChat) return;
+      const targetTask = (selectedProjectForChat.tasks || []).find(t => t.id === taskId);
+      if (!targetTask) return;
+
+      editingTaskIdForQuickOverlay = taskId;
+      document.getElementById('quickEditTaskTitle').innerText = targetTask.title;
+
+      const assigneeSelect = document.getElementById('quickEditAssigneeId');
+      assigneeSelect.innerHTML = '<option value="">-- 未割当 --</option>' + allProfiles.map(u => {
+        return `<option value="${u.id}">${getDisplayName(u)}</option>`;
+      }).join('');
+      assigneeSelect.value = targetTask.assignee_id || '';
+
+      document.getElementById('quickEditDeadline').value = targetTask.deadline || '';
+      document.getElementById('taskQuickEditOverlay').classList.remove('hidden');
+    }
+
+    function closeTaskQuickEditOverlay() {
+      editingTaskIdForQuickOverlay = null;
+      const overlay = document.getElementById('taskQuickEditOverlay');
+      if (overlay) overlay.classList.add('hidden');
+    }
+
+    async function saveTaskQuickEdit() {
+      if (!selectedProjectForChat || !editingTaskIdForQuickOverlay) return;
+      const taskId = editingTaskIdForQuickOverlay;
+      const newAssigneeId = document.getElementById('quickEditAssigneeId').value || null;
+      const newDeadline = document.getElementById('quickEditDeadline').value || null;
+
+      const targetTask = (selectedProjectForChat.tasks || []).find(t => t.id === taskId);
+      if (!targetTask) return;
+
+      const isAssigneeChanged = (targetTask.assignee_id || null) !== newAssigneeId;
+      const isDeadlineChanged = (targetTask.deadline || null) !== newDeadline;
+
+      if (!isAssigneeChanged && !isDeadlineChanged) {
+        closeTaskQuickEditOverlay();
+        return;
       }
+
+      const updateData = {};
+      if (isAssigneeChanged) updateData.assignee_id = newAssigneeId;
+      if (isDeadlineChanged) updateData.deadline = newDeadline;
+
+      const logs = targetTask.logs || [];
+      const currentUserName = getCurrentUserIdentifier() || '担当者';
+
+      if (isAssigneeChanged) {
+        const newAssigneeObj = allProfiles.find(u => u.id === newAssigneeId);
+        logs.unshift({
+          type: '担当アサイン',
+          user: currentUserName,
+          comment: `担当者を「${getDisplayName(newAssigneeObj)}」に設定しました。`,
+          read_by: [currentUserName],
+          at: new Date().toISOString()
+        });
+      }
+      if (isDeadlineChanged) {
+        logs.unshift({
+          type: '期日変更',
+          user: currentUserName,
+          comment: `締切期日を「${newDeadline || '未設定'}」に変更しました。`,
+          read_by: [currentUserName],
+          at: new Date().toISOString()
+        });
+      }
+      updateData.logs = logs;
+
+      const { error } = await supabaseClient.from('tasks').update(updateData).eq('id', taskId);
+      if (error) {
+        alert('更新エラー: ' + error.message);
+        return;
+      }
+
+      targetTask.assignee_id = newAssigneeId;
+      targetTask.deadline = newDeadline;
+      targetTask.logs = logs;
+
+      closeTaskQuickEditOverlay();
+      selectTaskForControl(taskId);
+      renderPipelineTree(selectedProjectForChat);
+      renderProjectChatTimeline(selectedProjectForChat);
+      await loadCreativeProjects();
     }
 
     function formatMessageWithLinksAndMedia(text) {
@@ -1987,7 +2065,6 @@
       const btn = document.getElementById('btnSubmitChat');
       const taskId = document.getElementById('chatInputTaskId').value;
       const newStatus = document.getElementById('chatInputStatus').value;
-      const newAssigneeId = document.getElementById('chatInputAssigneeId').value || null;
       const newBallHolder = document.getElementById('chatInputBallHolder').value || 'creator';
       const newDeadline = document.getElementById('chatInputDeadline').value || null;
       let comment = document.getElementById('chatInputComment').value.trim();
@@ -1995,11 +2072,10 @@
       const targetTask = (selectedProjectForChat.tasks || []).find(t => t.id === taskId);
       if (!targetTask) return;
 
-      const isAssigneeChanged = (targetTask.assignee_id || null) !== newAssigneeId;
       const isBallChanged = (targetTask.ball_holder || 'creator') !== newBallHolder;
       const isDeadlineChanged = (targetTask.deadline || null) !== newDeadline;
 
-      if (!comment && !pendingUploadFile && !newStatus && !isAssigneeChanged && !isBallChanged && !isDeadlineChanged) {
+      if (!comment && !pendingUploadFile && !newStatus && !isBallChanged && !isDeadlineChanged) {
         alert('メッセージを入力するか、添付ファイル、または進行設定を変更してください');
         return;
       }
@@ -2056,10 +2132,6 @@
         } else if (isDeadlineChanged && !comment) {
           logType = '期日変更';
           comment = `締切期日を「${newDeadline || '未設定'}」に変更しました。`;
-        } else if (isAssigneeChanged && !comment) {
-          const newAssigneeObj = allProfiles.find(u => u.id === newAssigneeId);
-          logType = '担当アサイン';
-          comment = `担当者を「${getDisplayName(newAssigneeObj)}」に設定しました。`;
         }
 
         const logs = targetTask.logs || [];
@@ -2077,7 +2149,6 @@
         const updateData = { logs: logs };
         if (detectedUrl) updateData.deliverable_url = detectedUrl;
         if (newStatus) updateData.status = newStatus;
-        if (isAssigneeChanged) updateData.assignee_id = newAssigneeId;
         if (isBallChanged) updateData.ball_holder = newBallHolder;
         if (isDeadlineChanged) updateData.deadline = newDeadline;
 
@@ -2086,7 +2157,6 @@
 
         if (detectedUrl) targetTask.deliverable_url = detectedUrl;
         if (newStatus) targetTask.status = newStatus;
-        if (isAssigneeChanged) targetTask.assignee_id = newAssigneeId;
         if (isBallChanged) targetTask.ball_holder = newBallHolder;
         if (isDeadlineChanged) targetTask.deadline = newDeadline;
         targetTask.logs = logs;
@@ -2109,11 +2179,11 @@
         removeAttachedFile();
         document.getElementById('chatInputComment').value = '';
         document.getElementById('chatInputStatus').value = '';
-        document.getElementById('taskControlPanel').classList.add('hidden');
-        updateControlPanelActiveState();
 
         await loadCreativeProjects();
-        openProjectChatModal(selectedProjectForChat.id);
+        renderPipelineTree(selectedProjectForChat);
+        selectTaskForControl(taskId);
+        renderProjectChatTimeline(selectedProjectForChat);
         renderAllUpdatesLogs();
 
         setTimeout(scrollToLatestMessage, 100);
@@ -2379,7 +2449,7 @@
       if (!targetProjectForRelated) return;
 
       const currentCat = getProjectCategory(targetProjectForRelated);
-      const targetLabel = (currentCat === 'music') ? '[イラスト/MV] チケット' : '[楽曲] チケット';
+      const targetLabel = (currentCat === 'music') ? '🎬 [イラスト/MV] チケット' : '🎵 [楽曲] チケット';
       document.getElementById('addRelatedModalTitle').innerText = '関連チケット追加: ' + targetLabel;
 
       const today = new Date();
@@ -2687,7 +2757,7 @@
         let roleText = 'User';
         let roleClass = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300';
         if (isMaster()) {
-          roleText = 'Master';
+          roleText = '👑 Master';
           roleClass = 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 ring-1 ring-purple-300 dark:ring-purple-700';
         } else if (userProfile.role === 'admin') {
           roleText = '管理者';
@@ -2768,14 +2838,14 @@
           tag.innerText = 'マイ担当';
           tag.className = 'text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300';
         }
-        if (mobBtn) mobBtn.innerHTML = '<span>視点切替 (現在: マイ担当)</span>';
+        if (mobBtn) mobBtn.innerHTML = '<span>🔄 視点切替 (現在: マイ担当)</span>';
         if (scopeBadge) scopeBadge.innerText = 'マイ担当のみ';
       } else {
         if (tag) {
           tag.innerText = '全案件';
           tag.className = 'text-[10px] px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300';
         }
-        if (mobBtn) mobBtn.innerHTML = '<span>視点切替 (現在: 全案件)</span>';
+        if (mobBtn) mobBtn.innerHTML = '<span>🔄 視点切替 (現在: 全案件)</span>';
         if (scopeBadge) scopeBadge.innerText = '全案件';
       }
       renderCreativeProjectsList();
@@ -2947,7 +3017,7 @@
       document.getElementById('detailStatusBadge').innerHTML = getLeadStatusBadge(selectedLead);
       
       if (isReplied) {
-        document.getElementById('detailSendCount').innerHTML = '<span class="text-emerald-600 font-bold">商談ラリー中</span>';
+        document.getElementById('detailSendCount').innerHTML = '<span class="text-emerald-600 font-bold">💬 商談ラリー中</span>';
         document.getElementById('phaseGuideText').innerText = '※返信後のラリー中';
         document.getElementById('btnRecordSend').innerText = 'メッセージ送信';
       } else {
@@ -3167,8 +3237,8 @@
       if (!tbody) return;
       tbody.innerHTML = workflowMasters.map(w => {
         const trackBadge = w.track === 'music' 
-          ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-900">楽曲</span>' 
-          : '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-900">MV</span>';
+          ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-900">🎵 楽曲</span>' 
+          : '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-900">🎬 MV</span>';
         const dependsText = w.depends.length > 0 ? w.depends.join(' ＋ ') : '着手日';
 
         return `<tr class="border-b border-slate-100 dark:border-slate-800/60 last:border-b-0 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
@@ -3247,7 +3317,7 @@
 
       checkContainer.innerHTML = workflowMasters.map(w => {
         const isMusic = w.track === 'music';
-        const tag = isMusic ? '[楽曲]' : '[イラスト/MV]';
+        const tag = isMusic ? '🎵 [楽曲]' : '🎬 [イラスト/MV]';
         const isHidden = (isMusic && !createMusic) || (!isMusic && !createMv);
 
         return `<label class="flex items-center space-x-2.5 cursor-pointer py-1 ${isHidden ? 'opacity-30 pointer-events-none' : ''} touch-target-row">
@@ -3282,7 +3352,7 @@
         let roleName = 'クリエイター';
         if (u.role === 'master') {
           badgeClass = 'bg-purple-50 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300 font-bold border border-purple-200 dark:border-purple-800';
-          roleName = 'Master';
+          roleName = '👑 Master';
         } else if (u.role === 'admin') {
           badgeClass = 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300 font-bold border border-indigo-200 dark:border-indigo-800';
           roleName = '管理者';
@@ -3527,11 +3597,17 @@
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       const isDark = (savedTheme === 'dark' || (!savedTheme && prefersDark));
       document.documentElement.classList.toggle('dark', isDark);
+      document.querySelectorAll('.themeIcon').forEach(el => {
+        el.innerText = isDark ? '☀️' : '🌙';
+      });
     }
 
     function toggleDarkMode() {
       const isDark = document.documentElement.classList.toggle('dark');
       localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      document.querySelectorAll('.themeIcon').forEach(el => {
+        el.innerText = isDark ? '☀️' : '🌙';
+      });
     }
 
     function toggleMobileUserMenu() {
