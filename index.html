@@ -206,7 +206,7 @@
           </div>
         </div>
 
-        <!-- 案件コンテナ（PCは1行リストテーブル / スマホはスマートカード） -->
+        <!-- 案件コンテナ（PC: 1行リストテーブル / スマホ: スマートカード） -->
         <div id="projectList"></div>
       </div>
 
@@ -1269,7 +1269,7 @@
       renderCreativeProjectsList();
     }
 
-    // 制作案件一覧描画（PC: 1行リストテーブル / スマホ: スマートカード）
+    // 制作案件一覧描画（PC: 統合ステータス列＆見切れ防止テーブル / スマホ: スマートカード）
     function renderCreativeProjectsList() {
       const container = document.getElementById('projectList');
       if (!container) return;
@@ -1394,19 +1394,18 @@
         </div>`;
       }).join('') + `</div>`;
 
-      // ==================== PC向け1行リストテーブルHTML ====================
+      // ==================== PC向け1行リストテーブルHTML（ステータス列統合 ＆ 右端見切れ解消） ====================
       const pcTableHtml = `
       <div class="hidden md:block bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
-        <table class="w-full text-xs text-left border-collapse">
+        <table class="w-full text-xs text-left border-collapse table-fixed">
           <thead>
             <tr class="bg-slate-50/75 dark:bg-slate-800/40 text-slate-400 font-semibold border-b border-slate-100 dark:border-slate-800">
-              <th class="py-3 px-4 w-28">状態</th>
-              <th class="py-3 px-3 w-36">チケット / 種別</th>
-              <th class="py-3 px-3 min-w-[200px]">案件名</th>
-              <th class="py-3 px-3 w-64">現在工程 ｜ 担当 ➔ ボール</th>
-              <th class="py-3 px-3 w-24">期日</th>
-              <th class="py-3 px-3 min-w-[200px]">最新ログ</th>
-              <th class="py-3 px-4 text-right w-20">操作</th>
+              <th class="py-3 px-3.5 w-32">チケット / 種別</th>
+              <th class="py-3 px-3">案件名</th>
+              <th class="py-3 px-3 w-56 lg:w-64">ステータス (工程 ｜ 担当 ➔ ボール)</th>
+              <th class="py-3 px-3 w-20 text-center">期日</th>
+              <th class="hidden xl:table-cell py-3 px-3 w-64">最新ログ</th>
+              <th class="py-3 px-3.5 text-right w-16"></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -1419,7 +1418,7 @@
         const validTasks = getFilteredTasksForProject(p).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
 
         const codeBadge = p.ticket_code 
-          ? `<span class="font-mono font-bold text-slate-600 dark:text-slate-300">${p.ticket_code}</span>`
+          ? `<span class="font-mono font-bold text-slate-600 dark:text-slate-300 text-[11px] truncate">${p.ticket_code}</span>`
           : '<span class="text-slate-400">-</span>';
 
         let latestLog = null;
@@ -1441,75 +1440,88 @@
         }
 
         const unreadDot = hasUnread 
-          ? '<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse inline-block mr-1 flex-shrink-0"></span>'
+          ? '<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse inline-block mr-1.5 flex-shrink-0"></span>'
           : '';
 
         let relatedLinkHtml = '';
         if (relatedPrj) {
           const relCat = getProjectCategory(relatedPrj);
           const relLabel = relCat === 'mv' ? '🎬 MV' : '🎵 楽曲';
-          relatedLinkHtml = `<button onclick="event.stopPropagation(); openProjectChatModal('${relatedPrj.id}')" class="text-[10px] px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 transition" title="ペアチケットを開く">
+          relatedLinkHtml = `<button onclick="event.stopPropagation(); openProjectChatModal('${relatedPrj.id}')" class="text-[10px] px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 transition ml-1 flex-shrink-0" title="ペアチケットを開く">
             🔗 ${relLabel}
           </button>`;
         }
 
-        let stageLineHtml = '';
+        // 統合ステータス列のHTML組み立て
+        let statusCombinedHtml = '';
         let deadlineLineHtml = '';
 
         if (andon.statusKey === 'completed') {
-          stageLineHtml = '<span class="text-emerald-600 dark:text-emerald-400 font-bold">✓ 全工程完了</span>';
+          statusCombinedHtml = `
+            <div class="flex items-center space-x-1.5">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">🟢 完了</span>
+              <span class="text-emerald-600 dark:text-emerald-400 font-bold">全工程完了</span>
+            </div>
+          `;
           deadlineLineHtml = '<span class="text-slate-400">-</span>';
         } else if (andon.activeItems.length === 0) {
-          stageLineHtml = '<span class="text-slate-400">前工程の完了待機中</span>';
+          statusCombinedHtml = `
+            <div class="flex items-center space-x-1.5">
+              <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">⚪ 待機中</span>
+              <span class="text-slate-400">前工程の完了待機中</span>
+            </div>
+          `;
           deadlineLineHtml = '<span class="text-slate-400">-</span>';
         } else {
-          stageLineHtml = andon.activeItems.map(item => {
+          statusCombinedHtml = andon.activeItems.map(item => {
             const ballTag = getBallHolderTag(item.ballKey);
-            return `<div class="truncate flex items-center space-x-1.5">
-              <span class="font-bold text-slate-800 dark:text-slate-100">${item.taskTitle}</span>
-              <span class="text-slate-400">|</span>
-              <span class="text-slate-600 dark:text-slate-300">${item.assigneeName}</span>
-              ${ballTag}
-            </div>`;
+            return `
+              <div class="space-y-1">
+                <div class="flex items-center space-x-1.5">
+                  <span class="px-1.5 py-0.2 rounded text-[10px] font-bold ${andon.badgeClass} flex-shrink-0">
+                    ${andon.dot} ${andon.label}
+                  </span>
+                  <span class="font-bold text-slate-800 dark:text-slate-100">${item.taskTitle}</span>
+                </div>
+                <div class="text-[11px] text-slate-500 flex items-center space-x-1 truncate pl-0.5">
+                  <span>${item.assigneeName}</span>
+                  ${ballTag}
+                </div>
+              </div>
+            `;
           }).join('');
 
           deadlineLineHtml = andon.activeItems.map(item => {
             const deadlineClass = item.isOverdue ? 'text-red-600 dark:text-red-400 font-bold' : 'text-slate-500 dark:text-slate-400';
-            return `<div class="${deadlineClass} font-mono">${item.deadline}</div>`;
+            return `<div class="${deadlineClass} font-mono text-center">${item.deadline}</div>`;
           }).join('');
         }
 
         return `
           <tr onclick="openProjectChatModal('${p.id}')" class="hover:bg-blue-50/40 dark:hover:bg-slate-800/60 cursor-pointer transition group">
-            <td class="py-3 px-4 whitespace-nowrap">
-              <span class="px-2 py-0.5 rounded text-[11px] font-bold ${andon.badgeClass} inline-flex items-center space-x-1">
-                <span>${andon.dot}</span>
-                <span>${andon.label}</span>
-              </span>
-            </td>
-            <td class="py-3 px-3 whitespace-nowrap">
-              <div class="flex items-center space-x-1.5">
+            <td class="py-3 px-3.5 whitespace-nowrap">
+              <div class="flex items-center space-x-1.5 truncate">
                 ${catBadge}
                 ${codeBadge}
               </div>
             </td>
             <td class="py-3 px-3">
-              <div class="flex items-center space-x-2">
+              <div class="flex items-center min-w-0 pr-2">
                 ${unreadDot}
-                <span class="font-bold text-sm text-slate-800 dark:text-slate-100 group-hover:text-blue-600 transition truncate max-w-xs">${p.title}</span>
+                <span class="font-bold text-sm text-slate-800 dark:text-slate-100 group-hover:text-blue-600 transition truncate">${p.title}</span>
                 ${relatedLinkHtml}
               </div>
             </td>
             <td class="py-3 px-3">
-              <div class="space-y-0.5">${stageLineHtml}</div>
+              <div class="min-w-0">${statusCombinedHtml}</div>
             </td>
             <td class="py-3 px-3 whitespace-nowrap">
-              <div class="space-y-0.5">${deadlineLineHtml}</div>
+              ${deadlineLineHtml}
             </td>
-            <td class="py-3 px-3 text-slate-500 max-w-sm">
-              <div class="truncate">${latestLogHtml}</div>
+            <td class="hidden xl:table-cell py-3 px-3 text-slate-500">
+              <div class="truncate text-[11px]">${latestLogHtml}</div>
             </td>
-            <td class="py-3 px-4 text-right whitespace-nowrap">
+            <td class="py-3 px-3.5 text-right whitespace-nowrap">
               <span class="text-blue-600 dark:text-blue-400 font-bold text-xs group-hover:underline">開く ➔</span>
             </td>
           </tr>
