@@ -308,7 +308,7 @@
     </div>
   </div>
 
-  <!-- ==================== 【新設計】案件統合チャット＆進捗モーダル ==================== -->
+  <!-- ==================== 案件統合チャット＆進捗モーダル ==================== -->
   <div id="projectChatModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2.5 sm:p-4 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full p-4 sm:p-6 border border-slate-200 dark:border-slate-800 max-h-[94vh] flex flex-col shadow-2xl overflow-hidden">
       
@@ -316,10 +316,9 @@
       <div class="flex items-start justify-between border-b dark:border-slate-800 pb-3 flex-shrink-0 gap-2">
         <div class="min-w-0 flex-1">
           <div class="flex items-center space-x-2">
-            <span id="chatModalClientBadge" class="text-xs text-slate-400 font-medium block truncate"></span>
+            <h3 id="chatModalTitle" class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 truncate"></h3>
             <span id="chatModalDriveLink"></span>
           </div>
-          <h3 id="chatModalTitle" class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 truncate mt-0.5"></h3>
         </div>
         <div class="flex items-center space-x-1.5 flex-shrink-0">
           <button id="chatModalFinancialBtn" class="hidden px-2 py-1 text-xs rounded bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-bold border border-purple-200 dark:border-purple-800">
@@ -340,7 +339,6 @@
       <!-- ドラッグ＆ドロップ対応 チャット統合フォーム -->
       <div id="chatDropZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleFileDrop(event)" class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 transition space-y-2 flex-shrink-0 relative">
         
-        <!-- D&Dオーバーレイ表示 -->
         <div id="dropOverlay" class="hidden absolute inset-0 bg-blue-600/90 text-white rounded-xl flex flex-col items-center justify-center font-bold text-xs pointer-events-none z-20 space-y-1">
           <span class="text-2xl">📥</span>
           <span>ファイルをドロップして自動添付</span>
@@ -348,12 +346,10 @@
         </div>
 
         <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
-          <!-- 対象工程の選択 -->
           <div class="flex items-center space-x-1.5 flex-1 min-w-[180px]">
             <span class="text-slate-500 whitespace-nowrap font-medium">工程:</span>
             <select id="chatInputTaskId" class="w-full px-2 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs text-slate-800 dark:text-slate-200 font-bold"></select>
           </div>
-          <!-- ステータス変更 -->
           <div class="flex items-center space-x-1.5">
             <span class="text-slate-500 whitespace-nowrap font-medium">状態:</span>
             <select id="chatInputStatus" class="px-2 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-xs font-semibold">
@@ -366,7 +362,6 @@
           </div>
         </div>
 
-        <!-- 添付ファイルプレビューバッジ -->
         <div id="attachedFilePreview" class="hidden flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg text-xs">
           <div class="flex items-center space-x-2 truncate">
             <span id="attachedFileIcon">📎</span>
@@ -376,11 +371,9 @@
           <button onclick="removeAttachedFile()" type="button" class="text-red-500 hover:text-red-700 text-xs font-bold px-1.5">✕ 削除</button>
         </div>
 
-        <!-- 統合メッセージ入力欄 -->
         <div class="relative">
           <textarea id="chatInputComment" rows="2" placeholder="メッセージを入力... (URL貼り付け、音声/画像のドラッグ＆ドロップ対応)" class="w-full p-2.5 pb-8 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500 break-words leading-relaxed"></textarea>
           
-          <!-- クリップ添付ボタン（ファイル選択ダイアログ） -->
           <div class="absolute bottom-2 left-2 flex items-center space-x-2">
             <label class="cursor-pointer inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-200 transition">
               <span>📎 ファイル添付</span>
@@ -637,20 +630,16 @@
     </div>
   </div>
 
-  <!-- モーダル: 新規案件起票 -->
+  <!-- モーダル: 新規案件起票（案件名に完全統合） -->
   <div id="newProjectModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-5 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto border border-slate-200 dark:border-slate-800">
       <h3 class="font-bold text-base sm:text-lg">新規制作案件起票</h3>
       <div>
-        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">案件・曲名 *</label>
-        <input type="text" id="newPrjTitle" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="例: 2nd Single 制作">
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">案件名 *</label>
+        <input type="text" id="newPrjTitle" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="例: 【〇〇様】2nd Single 制作">
       </div>
       <div>
-        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">クライアント名</label>
-        <input type="text" id="newPrjClient" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm">
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">共有ドライブURL</label>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">共有ドライブURL (任意)</label>
         <input type="url" id="newPrjDrive" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="https://drive.google.com/...">
       </div>
 
@@ -685,8 +674,6 @@
     let selectedProjectForChat = null;
     let selectedProjectForFinancial = null;
     let cachedCreativeProjects = [];
-
-    // アップロード保留中のファイル管理
     let pendingUploadFile = null;
 
     function getCurrentUserIdentifier() {
@@ -752,17 +739,15 @@
       }
     }
 
-    // ----------------------------------------------------
-    // 【画像自動軽量化（Canvas変換）ユーティリティ】
-    // ----------------------------------------------------
+    // 画像自動軽量化（Canvas変換）
     async function compressImageToJpeg(file) {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = function(e) {
           const img = new Image();
           img.onload = function() {
             const canvas = document.createElement('canvas');
-            const maxDimension = 1600; // 長辺1600pxにリサイズ
+            const maxDimension = 1600;
             let width = img.width;
             let height = img.height;
 
@@ -781,7 +766,6 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
 
-            // 画質0.8の軽量JPEG Blobに変換 (通常200~400KB程度)
             canvas.toBlob((blob) => {
               if (blob) {
                 const newFileName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
@@ -800,9 +784,7 @@
       });
     }
 
-    // ----------------------------------------------------
-    // 【ドラッグ＆ドロップ ＆ 添付ファイル処理】
-    // ----------------------------------------------------
+    // ドラッグ＆ドロップ ＆ 添付ファイル処理
     function handleDragOver(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -839,8 +821,6 @@
 
     async function processSelectedFile(file) {
       let finalFile = file;
-
-      // 画像ファイルならブラウザで即座に軽量JPEGに自動変換
       if (file.type.startsWith('image/')) {
         finalFile = await compressImageToJpeg(file);
       }
@@ -860,7 +840,6 @@
       sizeEl.innerText = '(' + (finalFile.size / (1024 * 1024)).toFixed(2) + ' MB)';
       previewBox.classList.remove('hidden');
 
-      // 添付されたらステータスを自動で「提出・確認待ち」にアシスト
       const statusSelect = document.getElementById('chatInputStatus');
       if (statusSelect && !statusSelect.value) {
         statusSelect.value = '提出・確認待ち';
@@ -872,9 +851,7 @@
       document.getElementById('attachedFilePreview').classList.add('hidden');
     }
 
-    // ----------------------------------------------------
-    // 【先行判定 & 行灯判定】
-    // ----------------------------------------------------
+    // 先行判定 & 行灯判定
     function getActiveBallTasks(tasks) {
       const taskMap = new Map();
       tasks.forEach(t => taskMap.set(t.title, t));
@@ -1023,9 +1000,7 @@
       };
     }
 
-    // ----------------------------------------------------
-    // 【制作案件一覧描画】
-    // ----------------------------------------------------
+    // 制作案件一覧描画（案件名1本表示）
     function setAndonFilter(key) {
       currentAndonFilter = key;
       document.querySelectorAll('.andon-filter-btn').forEach(btn => {
@@ -1101,11 +1076,10 @@
           : '';
 
         return '<div onclick="openProjectChatModal(\'' + p.id + '\')" class="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-blue-500 cursor-pointer transition space-y-2.5 relative group ' + (hasUnread ? 'ring-1 ring-red-400' : '') + '">'
+          
+          <!-- 案件名と行灯バッジ（クライアント名表記を撤廃して1本化） -->
           + '<div class="flex justify-between items-start gap-2">'
-          + '<div class="min-w-0 flex-1">'
-          + '<span class="text-[11px] text-slate-400 font-medium block truncate">' + (p.client_name || 'クライアント未設定') + '</span>'
-          + '<h3 class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 truncate group-hover:text-blue-600 transition">' + p.title + '</h3>'
-          + '</div>'
+          + '<h3 class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 truncate group-hover:text-blue-600 transition flex-1 min-w-0">' + p.title + '</h3>'
           + '<div class="flex items-center space-x-1.5 flex-shrink-0">'
           + unreadBadge
           + '<span class="px-2.5 py-1 rounded-full text-xs font-bold ' + andon.badgeClass + '">' + andon.dot + ' ' + andon.label + '</span>'
@@ -1135,16 +1109,13 @@
       }).join('');
     }
 
-    // ----------------------------------------------------
-    // 【新設計】案件チャットモーダル ＆ インラインメディア再生
-    // ----------------------------------------------------
+    // 案件チャットモーダル
     function openProjectChatModal(projectId) {
       selectedProjectForChat = cachedCreativeProjects.find(p => p.id === projectId);
       if (!selectedProjectForChat) return;
 
       const p = selectedProjectForChat;
       document.getElementById('chatModalTitle').innerText = p.title;
-      document.getElementById('chatModalClientBadge').innerText = p.client_name || 'クライアント未設定';
 
       const driveEl = document.getElementById('chatModalDriveLink');
       driveEl.innerHTML = p.drive_url 
@@ -1161,7 +1132,6 @@
         }
       }
 
-      // 進捗ストリップ
       const stripContainer = document.getElementById('chatModalPipelineStrip');
       const tasks = (p.tasks || []).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
       const todayStr = new Date().toISOString().split('T')[0];
@@ -1184,16 +1154,13 @@
           + '</span>';
       }).join('<span class="text-slate-300 dark:text-slate-700">➔</span>');
 
-      // 対象タスク選択
       const taskSelect = document.getElementById('chatInputTaskId');
       taskSelect.innerHTML = tasks.map(t => {
         return '<option value="' + t.id + '">' + t.title + ' (' + t.status + ')</option>';
       }).join('');
 
-      // タイムライン描画
       renderProjectChatTimeline(p);
 
-      // リセット
       removeAttachedFile();
       document.getElementById('chatInputStatus').value = '';
       document.getElementById('chatInputComment').value = '';
@@ -1202,7 +1169,6 @@
       autoMarkProjectTasksAsRead(p);
     }
 
-    // 本文内のURLを検出してリンク＆メディア展開用HTMLを生成
     function formatMessageWithLinksAndMedia(text) {
       if (!text) return '';
       const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -1212,14 +1178,11 @@
         const lower = cleanUrl.toLowerCase();
         
         let mediaHtml = '';
-        // 1. 音声ファイル (.mp3, .m4a, .wav)
         if (lower.includes('.mp3') || lower.includes('.m4a') || lower.includes('.wav')) {
           mediaHtml = '<div class="mt-2 p-2 bg-slate-100 dark:bg-slate-900/80 rounded-xl border border-slate-200 dark:border-slate-700">'
             + '<audio controls class="w-full h-8 outline-none" src="' + cleanUrl + '"></audio>'
             + '</div>';
-        }
-        // 2. 画像ファイル (.jpg, .jpeg, .png, .webp)
-        else if (lower.includes('.jpg') || lower.includes('.jpeg') || lower.includes('.png') || lower.includes('.webp')) {
+        } else if (lower.includes('.jpg') || lower.includes('.jpeg') || lower.includes('.png') || lower.includes('.webp')) {
           mediaHtml = '<div class="mt-2"><a href="' + cleanUrl + '" target="_blank">'
             + '<img src="' + cleanUrl + '" class="max-h-48 rounded-lg object-contain border dark:border-slate-700 hover:opacity-90 transition shadow-sm">'
             + '</a></div>';
@@ -1259,10 +1222,7 @@
 
         const unreadTag = isUnread ? '<span class="px-1 py-0.2 rounded text-[9px] font-bold bg-red-500 text-white animate-pulse">NEW</span>' : '';
 
-        // コメント本文内のURLをリンク＆音声/画像プレイヤーに変換
         let formattedComment = formatMessageWithLinksAndMedia(l.comment || '');
-
-        // 過去ログ等の単体URLフィールドがある場合もメディア化
         let separateUrlHtml = '';
         if (l.url && !(l.comment && l.comment.includes(l.url))) {
           separateUrlHtml = '<div class="mt-1">' + formatMessageWithLinksAndMedia(l.url) + '</div>';
@@ -1283,9 +1243,6 @@
       }).join('');
     }
 
-    // ----------------------------------------------------
-    // 【統合送信処理（ストレージアップロード ＆ チャット記録）】
-    // ----------------------------------------------------
     async function submitProjectChat() {
       if (!selectedProjectForChat) return;
 
@@ -1305,7 +1262,6 @@
       let uploadedFileUrl = null;
 
       try {
-        // 1. 保留中の添付ファイルがある場合はSupabase Storageへアップロード
         if (pendingUploadFile) {
           const fileExt = pendingUploadFile.name.split('.').pop();
           const cleanBase = pendingUploadFile.name.replace(/[^a-zA-Z0-9_-]/g, '_');
@@ -1320,9 +1276,7 @@
               upsert: false
             });
 
-          if (uploadErr) {
-            throw new Error('ファイルアップロード失敗: ' + uploadErr.message);
-          }
+          if (uploadErr) throw new Error('ファイルアップロード失敗: ' + uploadErr.message);
 
           const { data: publicUrlData } = supabaseClient
             .storage
@@ -1331,13 +1285,11 @@
 
           uploadedFileUrl = publicUrlData ? publicUrlData.publicUrl : null;
 
-          // 本文にアップロードURLを付与
           if (uploadedFileUrl) {
             comment = comment ? (comment + '\n' + uploadedFileUrl) : uploadedFileUrl;
           }
         }
 
-        // 2. 本文または添付から最新URLを抽出
         const urlMatch = comment.match(/(https?:\/\/[^\s]+)/);
         const detectedUrl = urlMatch ? urlMatch[0] : null;
 
@@ -1373,7 +1325,6 @@
         if (newStatus) targetTask.status = newStatus;
         targetTask.logs = logs;
 
-        // UIリセット
         removeAttachedFile();
         document.getElementById('chatInputComment').value = '';
         document.getElementById('chatInputStatus').value = '';
@@ -1415,9 +1366,7 @@
       renderCreativeProjectsList();
     }
 
-    // ----------------------------------------------------
-    // Master限定：財務事項ログ機能
-    // ----------------------------------------------------
+    // 財務モーダル
     async function openFinancialModal(projectId) {
       if (!isMaster()) return alert('この機能はMaster権限専用です');
       const targetPrj = cachedCreativeProjects.find(p => p.id === projectId);
@@ -1843,9 +1792,7 @@
       renderCreativeProjectsList();
     }
 
-    // ----------------------------------------------------
-    // 営業・商談チケット CRM ロジック
-    // ----------------------------------------------------
+    // 営業CRM ロジック
     async function loadLeads() {
       const { data } = await supabaseClient.from('leads').select('*').order('created_at', { ascending: false });
       allLeads = data || [];
@@ -1930,10 +1877,7 @@
 
         return '<div onclick="openLeadDetail(\'' + l.id + '\')" class="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-blue-500 cursor-pointer transition space-y-2.5 relative">'
           + '<div class="flex justify-between items-start gap-2">'
-          + '<div class="min-w-0">'
-          + '<h4 class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100 truncate">' + l.client_name + '</h4>'
-          + (l.twitter_id ? '<span class="text-xs text-blue-500 dark:text-blue-400 truncate block">@' + l.twitter_id + '</span>' : '')
-          + '</div>'
+          + '<h4 class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100 truncate flex-1 min-w-0">' + l.client_name + '</h4>'
           + '<div class="text-right space-y-1 flex-shrink-0">'
           + getLeadStatusBadge(l)
           + '<div>' + phaseBadge + '</div>'
@@ -2145,8 +2089,8 @@
       closeModal('leadDetailModal');
       loadLeads();
 
-      document.getElementById('newPrjTitle').value = selectedLead.client_name + ' 様 制作案件';
-      document.getElementById('newPrjClient').value = selectedLead.client_name;
+      // 案件名に自動入力（CL名と案件名を統合）
+      document.getElementById('newPrjTitle').value = '【' + selectedLead.client_name + ' 様】制作案件';
       openModal('newProjectModal');
     }
 
@@ -2161,7 +2105,6 @@
             allTaskLogs.push({
               ...l,
               projectTitle: p.title,
-              clientName: p.client_name,
               taskTitle: t.title,
               taskId: t.id,
               projectId: p.id
@@ -2394,17 +2337,20 @@
       renderMembersTable();
     }
 
+    // 新規案件起票（案件名1本化）
     async function createCreativeProject() {
-      const title = document.getElementById('newPrjTitle').value;
-      const client = document.getElementById('newPrjClient').value;
-      const drive = document.getElementById('newPrjDrive').value;
+      const title = document.getElementById('newPrjTitle').value.trim();
+      const drive = document.getElementById('newPrjDrive').value.trim();
       const startDateStr = document.getElementById('autoCalcStartDate').value;
 
       if (!title) return alert('案件名を入力してください');
 
       const { data: prj, error: prjErr } = await supabaseClient.from('projects').insert({
         type: 'creative',
-        title, client_name: client, drive_url: drive, status: '進行中'
+        title: title,
+        client_name: null,
+        drive_url: drive || null,
+        status: '進行中'
       }).select().single();
 
       if (prjErr) return alert(prjErr.message);
