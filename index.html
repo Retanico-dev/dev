@@ -10,6 +10,16 @@
       darkMode: 'class'
     }
   </script>
+  <style>
+    /* タッチデバイス向けの最小タップターゲット保証 */
+    .is-touch-device .touch-target-btn {
+      min-height: 42px;
+      min-width: 42px;
+    }
+    .is-touch-device .touch-target-row {
+      min-height: 40px;
+    }
+  </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     window.onerror = function(msg, url, line) {
@@ -64,9 +74,9 @@
 
       <!-- スマホメニューボタン -->
       <div id="mobileHeaderActions" class="flex md:hidden items-center space-x-2 flex-shrink-0">
-        <button onclick="toggleMobileUserMenu()" type="button" class="relative p-1 rounded-full border border-slate-200 dark:border-slate-700 focus:outline-none">
+        <button onclick="toggleMobileUserMenu()" type="button" class="relative p-1.5 rounded-full border border-slate-200 dark:border-slate-700 focus:outline-none touch-target-btn flex items-center justify-center">
           <div class="userInitialAvatar w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">U</div>
-          <span id="mobileUnreadDot" class="hidden absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 border-2 border-white dark:border-slate-900 rounded-full"></span>
+          <span id="mobileUnreadDot" class="hidden absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white dark:border-slate-900 rounded-full"></span>
         </button>
       </div>
 
@@ -79,19 +89,19 @@
           <h4 id="mobileUserMenuName" class="font-bold text-sm text-slate-800 dark:text-slate-100"></h4>
           <span id="mobileUserMenuRole" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"></span>
         </div>
-        <button onclick="toggleDarkMode()" type="button" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center space-x-1.5 text-xs font-semibold">
+        <button onclick="toggleDarkMode()" type="button" class="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center space-x-1.5 text-xs font-semibold touch-target-btn">
           <span class="themeIcon">🌙</span>
           <span>外観</span>
         </button>
       </div>
-      <div class="py-2 space-y-1 text-sm font-medium">
-        <button id="mobileViewToggleBtn" onclick="toggleAdminViewMode(); toggleMobileUserMenu();" class="hidden w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-between">
+      <div class="py-2 space-y-1.5 text-sm font-medium">
+        <button id="mobileViewToggleBtn" onclick="toggleAdminViewMode(); toggleMobileUserMenu();" class="hidden w-full text-left px-3.5 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-between touch-target-btn">
           <span>🔄 視点切替 (全案件 / マイ担当)</span>
         </button>
-        <button onclick="openMyAccountModal(); toggleMobileUserMenu();" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-between">
+        <button onclick="openMyAccountModal(); toggleMobileUserMenu();" class="w-full text-left px-3.5 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-between touch-target-btn">
           <span>⚙️ マイアカウント設定</span>
         </button>
-        <button onclick="logout()" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 font-bold flex items-center justify-between">
+        <button onclick="logout()" class="w-full text-left px-3.5 py-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 font-bold flex items-center justify-between touch-target-btn">
           <span>🚪 ログアウト</span>
         </button>
       </div>
@@ -111,13 +121,13 @@
       <form onsubmit="handleFormSubmit(event);" class="space-y-4">
         <div>
           <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">ユーザーID または メールアドレス</label>
-          <input type="text" id="loginIdentifier" required class="w-full px-3.5 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="ユーザーID または user@example.com">
+          <input type="text" id="loginIdentifier" required class="w-full px-3.5 py-3 sm:py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="ユーザーID または user@example.com">
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">パスワード</label>
-          <input type="password" id="loginPassword" required class="w-full px-3.5 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="••••••••">
+          <input type="password" id="loginPassword" required class="w-full px-3.5 py-3 sm:py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="••••••••">
         </div>
-        <button type="submit" id="btnPwLogin" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition shadow-sm">
+        <button type="submit" id="btnPwLogin" class="w-full py-3.5 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition shadow-sm touch-target-btn">
           ログイン
         </button>
       </form>
@@ -143,30 +153,30 @@
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">行灯で現在ステータスを可視化。タップして工程布陣・チャットを確認</p>
           </div>
           <div class="flex items-center space-x-2">
-            <button id="btnNewProjectTop" onclick="openModal('newProjectModal')" class="hidden px-3.5 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-semibold transition shadow-sm whitespace-nowrap">
+            <button id="btnNewProjectTop" onclick="openModal('newProjectModal')" class="hidden px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-semibold transition shadow-sm whitespace-nowrap touch-target-btn">
               + 新規起票
             </button>
           </div>
         </div>
 
-        <!-- 行灯ステータス絞り込みチップバー -->
-        <div class="flex overflow-x-auto no-scrollbar gap-1.5 pb-1 text-xs whitespace-nowrap">
-          <button onclick="setAndonFilter('all')" class="andon-filter-btn px-3 py-1.5 rounded-lg border font-bold transition bg-blue-600 text-white border-blue-600" data-status="all">
+        <!-- 行灯ステータス絞り込みチップバー（スマホでタップしやすい高さ40pxを確保） -->
+        <div class="flex overflow-x-auto no-scrollbar gap-2 pb-1 text-xs whitespace-nowrap py-1">
+          <button onclick="setAndonFilter('all')" class="andon-filter-btn px-3.5 py-2 sm:py-1.5 rounded-xl border font-bold transition bg-blue-600 text-white border-blue-600 touch-target-btn" data-status="all">
             すべて (<span id="count_all">0</span>)
           </button>
-          <button onclick="setAndonFilter('overdue')" class="andon-filter-btn px-3 py-1.5 rounded-lg border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700" data-status="overdue">
+          <button onclick="setAndonFilter('overdue')" class="andon-filter-btn px-3.5 py-2 sm:py-1.5 rounded-xl border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 touch-target-btn" data-status="overdue">
             🔴 期日超過 (<span id="count_overdue">0</span>)
           </button>
-          <button onclick="setAndonFilter('review')" class="andon-filter-btn px-3 py-1.5 rounded-lg border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700" data-status="review">
+          <button onclick="setAndonFilter('review')" class="andon-filter-btn px-3.5 py-2 sm:py-1.5 rounded-xl border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 touch-target-btn" data-status="review">
             🟡 運営確認中 (<span id="count_review">0</span>)
           </button>
-          <button onclick="setAndonFilter('working')" class="andon-filter-btn px-3 py-1.5 rounded-lg border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700" data-status="working">
+          <button onclick="setAndonFilter('working')" class="andon-filter-btn px-3.5 py-2 sm:py-1.5 rounded-xl border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 touch-target-btn" data-status="working">
             🔵 作業中 (<span id="count_working">0</span>)
           </button>
-          <button onclick="setAndonFilter('unstarted')" class="andon-filter-btn px-3 py-1.5 rounded-lg border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700" data-status="unstarted">
+          <button onclick="setAndonFilter('unstarted')" class="andon-filter-btn px-3.5 py-2 sm:py-1.5 rounded-xl border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 touch-target-btn" data-status="unstarted">
             ⚫️ 未着手 (<span id="count_unstarted">0</span>)
           </button>
-          <button onclick="setAndonFilter('completed')" class="andon-filter-btn px-3 py-1.5 rounded-lg border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700" data-status="completed">
+          <button onclick="setAndonFilter('completed')" class="andon-filter-btn px-3.5 py-2 sm:py-1.5 rounded-xl border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 touch-target-btn" data-status="completed">
             🟢 完了 (<span id="count_completed">0</span>)
           </button>
         </div>
@@ -182,19 +192,19 @@
             <h2 class="text-base sm:text-lg font-bold">営業・商談チケットプール</h2>
             <p class="text-[11px] text-slate-500 dark:text-slate-400">タップして詳細・記録を確認</p>
           </div>
-          <button onclick="openModal('newLeadModal')" class="px-3.5 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-semibold transition shadow-sm whitespace-nowrap">
+          <button onclick="openModal('newLeadModal')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-semibold transition shadow-sm whitespace-nowrap touch-target-btn">
             + チケット起票
           </button>
         </div>
 
-        <div class="flex overflow-x-auto no-scrollbar gap-1.5 pb-1 text-xs whitespace-nowrap">
-          <button onclick="filterLeads('all')" class="lead-filter-btn px-2.5 py-1 rounded-lg border dark:border-slate-700 bg-blue-600 text-white font-medium" data-status="all">すべて</button>
-          <button onclick="filterLeads('未対応（HOT）')" class="lead-filter-btn px-2.5 py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300" data-status="未対応（HOT）">未対応HOT</button>
-          <button onclick="filterLeads('再送付')" class="lead-filter-btn px-2.5 py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300" data-status="再送付">再送付</button>
-          <button onclick="filterLeads('対応待ち')" class="lead-filter-btn px-2.5 py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300" data-status="対応待ち">対応待ち</button>
-          <button onclick="filterLeads('先方返信あり（要対応）')" class="lead-filter-btn px-2.5 py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300" data-status="先方返信あり（要対応）">返信あり</button>
-          <button onclick="filterLeads('相談決定')" class="lead-filter-btn px-2.5 py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300" data-status="相談決定">相談決定</button>
-          <button onclick="filterLeads('対応停止')" class="lead-filter-btn px-2.5 py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300" data-status="対応停止">対応停止</button>
+        <div class="flex overflow-x-auto no-scrollbar gap-1.5 pb-1 text-xs whitespace-nowrap py-1">
+          <button onclick="filterLeads('all')" class="lead-filter-btn px-3 py-2 sm:py-1 rounded-lg border dark:border-slate-700 bg-blue-600 text-white font-medium touch-target-btn" data-status="all">すべて</button>
+          <button onclick="filterLeads('未対応（HOT）')" class="lead-filter-btn px-3 py-2 sm:py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 touch-target-btn" data-status="未対応（HOT）">未対応HOT</button>
+          <button onclick="filterLeads('再送付')" class="lead-filter-btn px-3 py-2 sm:py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 touch-target-btn" data-status="再送付">再送付</button>
+          <button onclick="filterLeads('対応待ち')" class="lead-filter-btn px-3 py-2 sm:py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 touch-target-btn" data-status="対応待ち">対応待ち</button>
+          <button onclick="filterLeads('先方返信あり（要対応）')" class="lead-filter-btn px-3 py-2 sm:py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 touch-target-btn" data-status="先方返信あり（要対応）">返信あり</button>
+          <button onclick="filterLeads('相談決定')" class="lead-filter-btn px-3 py-2 sm:py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 touch-target-btn" data-status="相談決定">相談決定</button>
+          <button onclick="filterLeads('対応停止')" class="lead-filter-btn px-3 py-2 sm:py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 touch-target-btn" data-status="対応停止">対応停止</button>
         </div>
 
         <div id="leadsList" class="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div>
@@ -207,7 +217,7 @@
             <h2 class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100">更新ログ（制作アクティビティ）</h2>
             <p class="text-xs text-slate-500 dark:text-slate-400">各案件・タスクで提出されたURLやフィードバック・指示を時系列で網羅</p>
           </div>
-          <button onclick="renderAllUpdatesLogs()" class="text-xs px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded-lg font-medium text-slate-600 dark:text-slate-300">
+          <button onclick="renderAllUpdatesLogs()" class="text-xs px-3 py-2 sm:py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded-lg font-medium text-slate-600 dark:text-slate-300 touch-target-btn">
             最新に更新 🔄
           </button>
         </div>
@@ -221,7 +231,7 @@
             <h2 class="text-base sm:text-lg font-bold">標準工程・仕掛日数設定</h2>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">新規案件起票時の自動納期順算に連動します</p>
           </div>
-          <button onclick="saveAllMasterDays()" class="px-3.5 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-semibold transition shadow-sm whitespace-nowrap">
+          <button onclick="saveAllMasterDays()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-semibold transition shadow-sm whitespace-nowrap touch-target-btn">
             一括保存
           </button>
         </div>
@@ -248,7 +258,7 @@
             <h2 class="text-base sm:text-lg font-bold">所属メンバー一覧</h2>
             <p id="masterMonitoringNotice" class="hidden text-xs text-purple-600 dark:text-purple-400 font-semibold mt-0.5">👑 Master権限: リアルタイム稼働・最終ログイン監視中</p>
           </div>
-          <button onclick="openModal('newMemberModal')" class="px-3.5 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-semibold transition shadow-sm whitespace-nowrap">
+          <button onclick="openModal('newMemberModal')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-semibold transition shadow-sm whitespace-nowrap touch-target-btn">
             + メンバー追加
           </button>
         </div>
@@ -272,46 +282,46 @@
 
   <!-- スマホ下部ナビ -->
   <nav id="mobileBottomNav" class="fixed md:hidden bottom-0 inset-x-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 z-40 px-2 py-1.5 flex items-center justify-around shadow-lg transition-colors">
-    <button onclick="switchTab('creative')" id="mobTabCreative" class="flex flex-col items-center justify-center flex-1 py-1 text-blue-600 dark:text-blue-400 font-bold transition">
-      <span class="text-lg">📁</span>
+    <button onclick="switchTab('creative')" id="mobTabCreative" class="flex flex-col items-center justify-center flex-1 py-1.5 text-blue-600 dark:text-blue-400 font-bold transition touch-target-btn">
+      <span class="text-xl">📁</span>
       <span class="text-[10px] mt-0.5 tracking-tight">制作進行</span>
     </button>
-    <button onclick="switchTab('sales')" id="mobTabSales" class="flex flex-col items-center justify-center flex-1 py-1 text-slate-400 dark:text-slate-500 font-medium transition">
-      <span class="text-lg">💼</span>
+    <button onclick="switchTab('sales')" id="mobTabSales" class="flex flex-col items-center justify-center flex-1 py-1.5 text-slate-400 dark:text-slate-500 font-medium transition touch-target-btn">
+      <span class="text-xl">💼</span>
       <span class="text-[10px] mt-0.5 tracking-tight">営業</span>
     </button>
-    <button onclick="switchTab('updates')" id="mobTabUpdates" class="flex flex-col items-center justify-center flex-1 py-1 text-slate-400 dark:text-slate-500 font-medium transition">
-      <span class="text-lg">🔔</span>
+    <button onclick="switchTab('updates')" id="mobTabUpdates" class="flex flex-col items-center justify-center flex-1 py-1.5 text-slate-400 dark:text-slate-500 font-medium transition touch-target-btn">
+      <span class="text-xl">🔔</span>
       <span class="text-[10px] mt-0.5 tracking-tight">ログ</span>
     </button>
-    <button onclick="openMobileMoreSheet()" id="mobTabMore" class="flex flex-col items-center justify-center flex-1 py-1 text-slate-400 dark:text-slate-500 font-medium transition">
-      <span class="text-lg">⚙️</span>
+    <button onclick="openMobileMoreSheet()" id="mobTabMore" class="flex flex-col items-center justify-center flex-1 py-1.5 text-slate-400 dark:text-slate-500 font-medium transition touch-target-btn">
+      <span class="text-xl">⚙️</span>
       <span class="text-[10px] mt-0.5 tracking-tight">設定など</span>
     </button>
   </nav>
 
   <!-- スマホ管理シート -->
   <div id="mobileMoreSheet" class="hidden md:hidden fixed inset-0 bg-black/60 z-50 flex items-end justify-center backdrop-blur-sm" onclick="closeMobileMoreSheet()">
-    <div class="bg-white dark:bg-slate-900 w-full rounded-t-3xl p-5 space-y-3 border-t border-slate-200 dark:border-slate-800 animate-in slide-in-from-bottom" onclick="event.stopPropagation()">
+    <div class="bg-white dark:bg-slate-900 w-full rounded-t-3xl p-5 space-y-3.5 border-t border-slate-200 dark:border-slate-800 animate-in slide-in-from-bottom pb-8" onclick="event.stopPropagation()">
       <div class="w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-2"></div>
       <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">管理メニュー</h3>
-      <div class="space-y-1.5 text-sm font-medium">
-        <button onclick="switchTab('master'); closeMobileMoreSheet();" class="w-full text-left p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-between">
+      <div class="space-y-2 text-sm font-medium">
+        <button onclick="switchTab('master'); closeMobileMoreSheet();" class="w-full text-left p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-between touch-target-btn">
           <span>🛠️ 工程マスター設定（標準日数）</span>
           <span>➔</span>
         </button>
-        <button onclick="switchTab('members'); closeMobileMoreSheet();" class="w-full text-left p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-between">
+        <button onclick="switchTab('members'); closeMobileMoreSheet();" class="w-full text-left p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-between touch-target-btn">
           <span>👥 所属メンバー管理</span>
           <span>➔</span>
         </button>
       </div>
-      <button onclick="closeMobileMoreSheet()" class="w-full py-2.5 text-center text-xs font-bold text-slate-500 dark:text-slate-400 pt-2">閉じる</button>
+      <button onclick="closeMobileMoreSheet()" class="w-full py-3 text-center text-xs font-bold text-slate-500 dark:text-slate-400 touch-target-btn">閉じる</button>
     </div>
   </div>
 
-  <!-- ==================== 案件統合チャット＆進捗モーダル（PC左右2分割対応） ==================== -->
+  <!-- ==================== 案件統合チャット＆進捗モーダル（PC左右2分割 ＆ スマホ操作最適化） ==================== -->
   <div id="projectChatModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl md:max-w-5xl w-full p-4 sm:p-5 border border-slate-200 dark:border-slate-800 max-h-[95vh] h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl md:max-w-5xl w-full p-3.5 sm:p-5 border border-slate-200 dark:border-slate-800 max-h-[95vh] h-[92vh] sm:h-[90vh] flex flex-col shadow-2xl overflow-hidden">
       
       <!-- ヘッダー -->
       <div class="flex items-start justify-between border-b dark:border-slate-800 pb-2.5 flex-shrink-0 gap-2">
@@ -326,38 +336,39 @@
           <div id="chatModalRelatedLink" class="mt-1 flex flex-wrap items-center gap-1.5"></div>
         </div>
         <div class="flex items-center space-x-1.5 flex-shrink-0">
-          <button id="chatModalFinancialBtn" class="hidden px-2 py-1 text-xs rounded bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-bold border border-purple-200 dark:border-purple-800">
+          <button id="chatModalFinancialBtn" class="hidden px-2.5 py-1 text-xs rounded bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-bold border border-purple-200 dark:border-purple-800 touch-target-btn">
             💰 財務
           </button>
-          <button id="chatModalDeleteBtn" onclick="deleteCurrentProject()" class="hidden px-2 py-1 text-xs rounded bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-400 font-bold border border-red-200 dark:border-red-800 hover:bg-red-100 transition">
+          <button id="chatModalDeleteBtn" onclick="deleteCurrentProject()" class="hidden px-2.5 py-1 text-xs rounded bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-400 font-bold border border-red-200 dark:border-red-800 hover:bg-red-100 transition touch-target-btn">
             🗑️ 削除
           </button>
-          <button onclick="closeModal('projectChatModal')" class="text-slate-400 hover:text-slate-600 text-base p-1">✕</button>
+          <button onclick="closeModal('projectChatModal')" class="text-slate-400 hover:text-slate-600 text-lg p-2 touch-target-btn flex items-center justify-center">✕</button>
         </div>
       </div>
 
-      <!-- モーダル内部コンテナ：スマホは縦積み、PC（md:）は左右2ペイン分割 -->
+      <!-- モーダル内部コンテナ：スマホは縦積み、PCは左右2ペイン分割 -->
       <div class="flex-1 flex flex-col md:flex-row min-h-0 divide-y md:divide-y-0 md:divide-x dark:divide-slate-800">
 
-        <!-- 左ペイン (PC: 幅35〜38% / スマホ: 上部) 進行パイプライン -->
-        <div class="w-full md:w-[36%] flex flex-col flex-shrink-0 bg-slate-50/70 dark:bg-slate-950/40 p-3 sm:p-3.5 overflow-hidden">
-          <div class="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400 pb-2 flex-shrink-0 border-b dark:border-slate-800/80">
+        <!-- 左ペイン (PC: 幅36% / スマホ: 上部) 進行パイプライン -->
+        <div class="w-full md:w-[36%] flex flex-col flex-shrink-0 bg-slate-50/70 dark:bg-slate-950/40 p-2.5 sm:p-3.5 overflow-hidden">
+          <div class="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400 pb-1.5 flex-shrink-0 border-b dark:border-slate-800/80">
             <span class="tracking-wider uppercase text-[10px]">ROADMAP / 進行パイプライン</span>
-            <button id="btnOpenAddTaskBar" onclick="openAddTaskModal()" class="text-blue-600 dark:text-blue-400 hover:underline">
+            <button id="btnOpenAddTaskBar" onclick="openAddTaskModal()" class="text-blue-600 dark:text-blue-400 hover:underline p-1 touch-target-btn">
               ＋ 工程追加
             </button>
           </div>
-          <div id="chatModalTaskListContainer" class="flex-1 overflow-y-auto py-2 pr-1 space-y-1"></div>
+          <!-- スマホでのタップ誤爆防止パディング＆スクロールエリア -->
+          <div id="chatModalTaskListContainer" class="flex-1 overflow-y-auto py-1.5 pr-1 space-y-0.5"></div>
         </div>
 
         <!-- 右ペイン (PC: 幅64% / スマホ: 下部) チャットログ ＆ 送信フォーム -->
-        <div class="w-full md:w-[64%] flex-1 flex flex-col min-h-0 bg-white dark:bg-slate-900 overflow-hidden pl-0 md:pl-3 pt-2 md:pt-0">
+        <div class="w-full md:w-[64%] flex-1 flex flex-col min-h-0 bg-white dark:bg-slate-900 overflow-hidden pl-0 md:pl-3 pt-1.5 md:pt-0">
           
           <!-- チャットログタイムライン（昇順：上が過去、下が最新） -->
           <div class="flex-1 overflow-y-auto min-h-0 space-y-3 p-2 sm:p-3" id="chatModalTimeline"></div>
 
-          <!-- チャット入力＆ステータス操作フォーム -->
-          <div id="chatDropZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleFileDrop(event)" class="bg-slate-50 dark:bg-slate-800/50 p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 transition space-y-2 flex-shrink-0 relative m-2">
+          <!-- チャット入力＆ステータス操作フォーム（スマホでタップしやすいボタンサイズ） -->
+          <div id="chatDropZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleFileDrop(event)" class="bg-slate-50 dark:bg-slate-800/50 p-2 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 transition space-y-2 flex-shrink-0 relative m-1 sm:m-2">
             
             <div id="dropOverlay" class="hidden absolute inset-0 bg-blue-600/90 text-white rounded-xl flex flex-col items-center justify-center font-bold text-xs pointer-events-none z-20 space-y-1">
               <span class="text-2xl">📥</span>
@@ -365,26 +376,26 @@
             </div>
 
             <!-- 折りたたみ展開可能な工程コントロールバー -->
-            <div id="taskControlPanel" class="hidden p-2.5 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm space-y-2 text-xs">
+            <div id="taskControlPanel" class="hidden p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-2.5 text-xs">
               <div class="flex items-center justify-between border-b dark:border-slate-800 pb-1.5">
                 <span class="font-bold text-slate-700 dark:text-slate-200 flex items-center space-x-1">
                   <span>⚙️ 進行・ステータス設定</span>
                   <span id="currentSelectedTaskTag" class="text-blue-600 dark:text-blue-400 font-extrabold ml-1"></span>
                 </span>
-                <button onclick="toggleTaskControlPanel()" type="button" class="text-[11px] text-slate-400 hover:text-slate-600">閉じる ✕</button>
+                <button onclick="toggleTaskControlPanel()" type="button" class="text-xs text-slate-400 hover:text-slate-600 p-1 touch-target-btn">閉じる ✕</button>
               </div>
               <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <div>
-                  <label class="block text-[10px] text-slate-400 mb-0.5">対象工程</label>
-                  <select id="chatInputTaskId" onchange="syncSelectedTaskDetails()" class="w-full px-2 py-1.5 border dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-800 font-bold outline-none"></select>
+                  <label class="block text-[10px] text-slate-400 mb-1">対象工程</label>
+                  <select id="chatInputTaskId" onchange="syncSelectedTaskDetails()" class="w-full px-2.5 py-2 border dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 font-bold outline-none text-xs"></select>
                 </div>
                 <div>
-                  <label class="block text-[10px] text-slate-400 mb-0.5">担当者</label>
-                  <select id="chatInputAssigneeId" class="w-full px-2 py-1.5 border dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-800 font-medium outline-none"></select>
+                  <label class="block text-[10px] text-slate-400 mb-1">担当者</label>
+                  <select id="chatInputAssigneeId" class="w-full px-2.5 py-2 border dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 font-medium outline-none text-xs"></select>
                 </div>
                 <div>
-                  <label class="block text-[10px] text-slate-400 mb-0.5">ボール (手番)</label>
-                  <select id="chatInputBallHolder" class="w-full px-2 py-1.5 border dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-800 font-bold text-indigo-600 dark:text-indigo-400 outline-none">
+                  <label class="block text-[10px] text-slate-400 mb-1">ボール (手番)</label>
+                  <select id="chatInputBallHolder" class="w-full px-2.5 py-2 border dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 font-bold text-indigo-600 dark:text-indigo-400 outline-none text-xs">
                     <option value="creator">👤 担当クリエイター</option>
                     <option value="admin">🛡️ 運営・ディレクター</option>
                     <option value="client">🏢 クライアント (先方)</option>
@@ -392,13 +403,13 @@
                   </select>
                 </div>
                 <div>
-                  <label class="block text-[10px] text-slate-400 mb-0.5">締切期日</label>
-                  <input type="date" id="chatInputDeadline" class="w-full px-2 py-1 border dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-800 text-xs">
+                  <label class="block text-[10px] text-slate-400 mb-1">締切期日</label>
+                  <input type="date" id="chatInputDeadline" class="w-full px-2.5 py-2 border dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 text-xs">
                 </div>
               </div>
               <div>
-                <label class="block text-[10px] text-slate-400 mb-0.5">工程ステータス</label>
-                <select id="chatInputStatus" onchange="handleStatusAutoAssist()" class="w-full px-2 py-1.5 border dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-800 font-semibold outline-none">
+                <label class="block text-[10px] text-slate-400 mb-1">工程ステータス</label>
+                <select id="chatInputStatus" onchange="handleStatusAutoAssist()" class="w-full px-2.5 py-2 border dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 font-semibold outline-none text-xs">
                   <option value="">(変更なし)</option>
                   <option value="作業中">🔵 作業中</option>
                   <option value="提出・確認待ち">🟡 提出・確認待ち</option>
@@ -408,32 +419,32 @@
               </div>
             </div>
 
-            <div id="attachedFilePreview" class="hidden flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg text-xs">
+            <div id="attachedFilePreview" class="hidden flex items-center justify-between p-2.5 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg text-xs">
               <div class="flex items-center space-x-2 truncate">
                 <span id="attachedFileIcon">📎</span>
                 <span id="attachedFileName" class="font-bold text-blue-700 dark:text-blue-300 truncate"></span>
                 <span id="attachedFileSize" class="text-[10px] text-slate-400"></span>
               </div>
-              <button onclick="removeAttachedFile()" type="button" class="text-red-500 hover:text-red-700 text-xs font-bold px-1.5">✕ 削除</button>
+              <button onclick="removeAttachedFile()" type="button" class="text-red-500 hover:text-red-700 text-xs font-bold px-2 py-1 touch-target-btn">✕ 削除</button>
             </div>
 
-            <!-- テキスト入力エリア -->
+            <!-- テキスト入力エリア ＆ スマホ最適化アクションバー -->
             <div class="relative">
-              <textarea id="chatInputComment" rows="2" placeholder="メッセージを入力... (URL共有、音声/画像のドラッグ＆ドロップ対応)" class="w-full p-2.5 pb-8 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500 break-words leading-relaxed"></textarea>
+              <textarea id="chatInputComment" rows="2" placeholder="メッセージを入力... (URL共有、音声/画像のドラッグ＆ドロップ対応)" class="w-full p-3 pb-12 sm:pb-9 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl text-xs sm:text-xs outline-none focus:ring-2 focus:ring-blue-500 break-words leading-relaxed"></textarea>
               
               <div class="absolute bottom-2 left-2 flex items-center space-x-2">
-                <button type="button" onclick="toggleTaskControlPanel()" id="btnToggleTaskPanel" class="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[11px] font-semibold border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 hover:bg-slate-100 text-slate-700 dark:text-slate-200 transition shadow-xs">
+                <button type="button" onclick="toggleTaskControlPanel()" id="btnToggleTaskPanel" class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 hover:bg-slate-100 text-slate-700 dark:text-slate-200 transition shadow-xs touch-target-btn">
                   <span>⚙️ 進行設定</span>
-                  <span id="panelActiveDot" class="hidden w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                  <span id="panelActiveDot" class="hidden w-2 h-2 rounded-full bg-blue-500"></span>
                 </button>
-                <label class="cursor-pointer inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-200 transition">
+                <label class="cursor-pointer inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-200 transition touch-target-btn">
                   <span>📎 添付</span>
                   <input type="file" id="fileInputPicker" onchange="handleFileInputChange(event)" accept="audio/mp3,audio/m4a,audio/*,image/*" class="hidden">
                 </label>
               </div>
 
               <div class="absolute bottom-2 right-2">
-                <button onclick="handleChatSubmitClick()" id="btnSubmitChat" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-sm whitespace-nowrap">
+                <button onclick="handleChatSubmitClick()" id="btnSubmitChat" class="px-5 py-2 sm:py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-xs font-bold transition shadow-sm whitespace-nowrap touch-target-btn flex items-center justify-center">
                   送信 ➔
                 </button>
               </div>
@@ -464,14 +475,14 @@
           <span>連動してスライドする後続工程:</span>
           <span class="text-[10px] text-slate-400">※不要な工程はチェックを解除</span>
         </div>
-        <div id="shiftCandidatesList" class="space-y-1.5 max-h-44 overflow-y-auto p-2 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800 text-xs"></div>
+        <div id="shiftCandidatesList" class="space-y-2 max-h-48 overflow-y-auto p-2 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800 text-xs"></div>
       </div>
 
-      <div class="flex flex-col sm:flex-row items-center justify-end gap-2 pt-2 border-t dark:border-slate-800">
-        <button onclick="executeFinalChatSubmission(false)" class="w-full sm:w-auto px-3.5 py-2 rounded-lg border dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+      <div class="flex flex-col sm:flex-row items-center justify-end gap-2.5 pt-2 border-t dark:border-slate-800">
+        <button onclick="executeFinalChatSubmission(false)" class="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl border dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition touch-target-btn">
           この工程のみ変更
         </button>
-        <button onclick="executeFinalChatSubmission(true)" class="w-full sm:w-auto px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-sm">
+        <button onclick="executeFinalChatSubmission(true)" class="w-full sm:w-auto px-5 py-2.5 sm:py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-sm touch-target-btn">
           チェック工程も連動して一括更新 ➔
         </button>
       </div>
@@ -486,19 +497,19 @@
       </h3>
       <div>
         <label class="block text-[11px] font-semibold text-slate-500 mb-1">追加する工程名 *</label>
-        <select id="addTaskNameSelect" onchange="handleAddTaskSelectChange()" class="w-full px-2.5 py-2 border dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-800 font-bold"></select>
+        <select id="addTaskNameSelect" onchange="handleAddTaskSelectChange()" class="w-full px-3 py-2.5 sm:py-2 border dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-800 font-bold"></select>
       </div>
       <div>
         <label class="block text-[11px] font-semibold text-slate-500 mb-1">担当クリエイター (任意)</label>
-        <select id="addTaskAssigneeSelect" class="w-full px-2.5 py-1.5 border dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-800 font-medium"></select>
+        <select id="addTaskAssigneeSelect" class="w-full px-3 py-2.5 sm:py-2 border dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-800 font-medium"></select>
       </div>
       <div>
         <label class="block text-[11px] font-semibold text-slate-500 mb-1">締切期日 *</label>
-        <input type="date" id="addTaskDeadlineInput" class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs">
+        <input type="date" id="addTaskDeadlineInput" class="w-full px-3 py-2.5 sm:py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs">
       </div>
       <div class="flex justify-end space-x-2 pt-2">
-        <button onclick="closeModal('addTaskModal')" class="px-3 py-1.5 border dark:border-slate-700 rounded-lg text-xs">キャンセル</button>
-        <button onclick="submitAddCustomTask()" class="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold">追加する</button>
+        <button onclick="closeModal('addTaskModal')" class="px-3.5 py-2 border dark:border-slate-700 rounded-lg text-xs touch-target-btn">キャンセル</button>
+        <button onclick="submitAddCustomTask()" class="px-5 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold touch-target-btn">追加する</button>
       </div>
     </div>
   </div>
@@ -512,11 +523,11 @@
       </p>
       <div>
         <label class="block text-[11px] font-semibold text-slate-500 mb-1">着手予定日 *</label>
-        <input type="date" id="addRelatedStartDate" class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs">
+        <input type="date" id="addRelatedStartDate" class="w-full px-3 py-2.5 sm:py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs">
       </div>
       <div class="flex justify-end space-x-2 pt-2">
-        <button onclick="closeModal('addRelatedModal')" class="px-3 py-1.5 border dark:border-slate-700 rounded-lg text-xs">キャンセル</button>
-        <button onclick="submitCreateRelatedProject()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold">ペア起票 ➔</button>
+        <button onclick="closeModal('addRelatedModal')" class="px-3.5 py-2 border dark:border-slate-700 rounded-lg text-xs touch-target-btn">キャンセル</button>
+        <button onclick="submitCreateRelatedProject()" class="px-5 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold touch-target-btn">ペア起票 ➔</button>
       </div>
     </div>
   </div>
@@ -529,28 +540,28 @@
           <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300">👑 Master限定・秘匿情報</span>
           <h3 id="financialModalTitle" class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 mt-1">財務事項・請求書管理</h3>
         </div>
-        <button onclick="closeModal('financialModal')" class="text-slate-400 hover:text-slate-600 text-base p-1">✕</button>
+        <button onclick="closeModal('financialModal')" class="text-slate-400 hover:text-slate-600 text-lg p-2 touch-target-btn">✕</button>
       </div>
 
       <div class="bg-purple-50/50 dark:bg-purple-950/20 p-3 sm:p-4 rounded-xl border border-purple-100 dark:border-purple-900/40 space-y-2.5 mt-3 flex-shrink-0">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div>
             <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">項目・用途 *</label>
-            <input type="text" id="fnInputTitle" placeholder="例: クリエイター報酬、請求書発行" class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none focus:ring-2 focus:ring-purple-500">
+            <input type="text" id="fnInputTitle" placeholder="例: クリエイター報酬、請求書発行" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500">
           </div>
           <div>
             <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">金額 (円)</label>
-            <input type="number" id="fnInputAmount" placeholder="例: 50000" class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none focus:ring-2 focus:ring-purple-500">
+            <input type="number" id="fnInputAmount" placeholder="例: 50000" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500">
           </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div>
             <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">期日 (支払 / 入金)</label>
-            <input type="date" id="fnInputDueDate" class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none focus:ring-2 focus:ring-purple-500">
+            <input type="date" id="fnInputDueDate" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500">
           </div>
           <div>
             <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">ステータス</label>
-            <select id="fnInputStatus" class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none focus:ring-2 focus:ring-purple-500">
+            <select id="fnInputStatus" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500">
               <option value="未対応">🔴 未対応</option>
               <option value="対応済">🟢 対応済</option>
             </select>
@@ -558,14 +569,14 @@
         </div>
         <div>
           <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">請求書URL (Google Drive / クラウド等)</label>
-          <input type="url" id="fnInputInvoiceUrl" placeholder="https://drive.google.com/..." class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none focus:ring-2 focus:ring-purple-500">
+          <input type="url" id="fnInputInvoiceUrl" placeholder="https://drive.google.com/..." class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500">
         </div>
         <div>
           <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">メモ (任意)</label>
-          <input type="text" id="fnInputMemo" placeholder="振込先や備考" class="w-full px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none focus:ring-2 focus:ring-purple-500">
+          <input type="text" id="fnInputMemo" placeholder="振込先や備考" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500">
         </div>
         <div class="text-right pt-1">
-          <button onclick="submitFinancialLog()" class="px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded text-xs font-bold transition shadow-sm">
+          <button onclick="submitFinancialLog()" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold transition shadow-sm touch-target-btn">
             財務ログを記録
           </button>
         </div>
@@ -577,7 +588,7 @@
       </div>
 
       <div class="flex justify-end pt-3 border-t dark:border-slate-800 flex-shrink-0">
-        <button onclick="closeModal('financialModal')" class="w-full sm:w-auto px-5 py-1.5 border dark:border-slate-700 rounded-lg text-xs font-medium">閉じる</button>
+        <button onclick="closeModal('financialModal')" class="w-full sm:w-auto px-5 py-2.5 border dark:border-slate-700 rounded-lg text-xs font-medium touch-target-btn">閉じる</button>
       </div>
     </div>
   </div>
@@ -588,26 +599,26 @@
       <h3 class="font-bold text-base sm:text-lg">新規営業チケット起票</h3>
       <div>
         <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">相手の名前 *</label>
-        <input type="text" id="leadClientName" required class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="例: 星野 アリス">
+        <input type="text" id="leadClientName" required class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="例: 星野 アリス">
       </div>
       <div>
         <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">X (Twitter) ID</label>
         <div class="flex items-center">
-          <span class="px-3 py-2 border border-r-0 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-400 text-sm rounded-l-lg">@</span>
-          <input type="text" id="leadTwitterId" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-r-lg text-sm" placeholder="username">
+          <span class="px-3 py-2.5 border border-r-0 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-400 text-sm rounded-l-lg">@</span>
+          <input type="text" id="leadTwitterId" class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-r-lg text-sm" placeholder="username">
         </div>
       </div>
       <div>
         <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">YouTube チャンネルURL</label>
-        <input type="url" id="leadYoutubeUrl" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="https://youtube.com/@...">
+        <input type="url" id="leadYoutubeUrl" class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="https://youtube.com/@...">
       </div>
       <div>
         <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">連絡先メールアドレス（任意）</label>
-        <input type="email" id="leadContactEmail" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="contact@example.com">
+        <input type="email" id="leadContactEmail" class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="contact@example.com">
       </div>
       <div class="flex justify-end space-x-2 pt-2">
-        <button onclick="closeModal('newLeadModal')" class="px-3 py-2 border dark:border-slate-700 rounded-lg text-xs sm:text-sm">キャンセル</button>
-        <button onclick="createLeadTicket()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs sm:text-sm font-medium">起票</button>
+        <button onclick="closeModal('newLeadModal')" class="px-4 py-2.5 border dark:border-slate-700 rounded-lg text-xs sm:text-sm touch-target-btn">キャンセル</button>
+        <button onclick="createLeadTicket()" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-xs sm:text-sm font-medium touch-target-btn">起票</button>
       </div>
     </div>
   </div>
@@ -637,13 +648,13 @@
       <div class="space-y-2 border-t dark:border-slate-800 pt-3">
         <div class="flex items-center justify-between gap-2">
           <label class="text-xs font-bold text-slate-700 dark:text-slate-300">定型文（名前自動反映）</label>
-          <select id="templateSelector" onchange="applyTemplateToBox()" class="text-xs px-2 py-1 border dark:border-slate-700 rounded bg-white dark:bg-slate-800 max-w-[160px] sm:max-w-xs truncate">
+          <select id="templateSelector" onchange="applyTemplateToBox()" class="text-xs px-2.5 py-1.5 border dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 max-w-[160px] sm:max-w-xs truncate">
             <option value="">-- 定型文を選択 --</option>
           </select>
         </div>
         <div class="relative">
           <textarea id="templateMessageBox" rows="3" class="w-full p-2.5 pb-8 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs font-mono outline-none focus:ring-2 focus:ring-blue-500 break-words" placeholder="定型文を選択するとここに名前が反映されます。"></textarea>
-          <button onclick="copyTemplateBox()" type="button" class="absolute bottom-2 right-2 px-2.5 py-1 bg-slate-800 dark:bg-slate-700 text-white rounded text-[11px] font-medium hover:bg-slate-700 transition shadow">
+          <button onclick="copyTemplateBox()" type="button" class="absolute bottom-2 right-2 px-3 py-1.5 bg-slate-800 dark:bg-slate-700 text-white rounded-lg text-[11px] font-medium hover:bg-slate-700 transition shadow touch-target-btn">
             📋 コピー
           </button>
         </div>
@@ -655,18 +666,18 @@
           <span id="phaseGuideText" class="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400"></span>
         </div>
         <div>
-          <textarea id="logMessageInput" rows="2" class="w-full p-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none break-words" placeholder="送信内容のメモや先方からの返信..."></textarea>
+          <textarea id="logMessageInput" rows="2" class="w-full p-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none break-words" placeholder="送信内容のメモや先方からの返信..."></textarea>
         </div>
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
           <div class="flex items-center space-x-1.5 text-xs">
             <span class="text-slate-500">次回予定:</span>
-            <input type="date" id="actionNextDate" class="px-2 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs">
+            <input type="date" id="actionNextDate" class="px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs">
           </div>
           <div class="flex items-center space-x-2">
-            <button id="btnRecordSend" onclick="recordLeadAction('send')" class="flex-1 sm:flex-none px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition shadow-sm whitespace-nowrap">
+            <button id="btnRecordSend" onclick="recordLeadAction('send')" class="flex-1 sm:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition shadow-sm whitespace-nowrap touch-target-btn">
               送信記録
             </button>
-            <button onclick="recordLeadAction('reply')" class="flex-1 sm:flex-none px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-medium transition shadow-sm whitespace-nowrap">
+            <button onclick="recordLeadAction('reply')" class="flex-1 sm:flex-none px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium transition shadow-sm whitespace-nowrap touch-target-btn">
               返信あり
             </button>
           </div>
@@ -675,15 +686,15 @@
 
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-t dark:border-slate-800 pt-3">
         <div class="flex items-center space-x-2">
-          <select id="stopReasonSelect" class="text-xs px-2 py-1.5 border dark:border-slate-700 rounded bg-white dark:bg-slate-800">
+          <select id="stopReasonSelect" class="text-xs px-2.5 py-2 border dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800">
             <option value="直近の相談予定なし">直近の相談予定なし</option>
             <option value="追客上限">追客上限</option>
           </select>
-          <button onclick="markLeadStopped()" class="px-2.5 py-1.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded text-xs font-medium hover:bg-slate-300 transition whitespace-nowrap">
+          <button onclick="markLeadStopped()" class="px-3 py-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-medium hover:bg-slate-300 transition whitespace-nowrap touch-target-btn">
             対応停止
           </button>
         </div>
-        <button onclick="markLeadConsultation()" class="w-full sm:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-bold transition shadow-sm text-center">
+        <button onclick="markLeadConsultation()" class="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition shadow-sm text-center touch-target-btn">
           🎉 相談決定 ➔ 制作起票
         </button>
       </div>
@@ -694,7 +705,7 @@
       </div>
 
       <div class="flex justify-end pt-2 border-t dark:border-slate-800">
-        <button onclick="closeModal('leadDetailModal')" class="w-full sm:w-auto px-4 py-1.5 border dark:border-slate-700 rounded-lg text-xs">閉じる</button>
+        <button onclick="closeModal('leadDetailModal')" class="w-full sm:w-auto px-5 py-2 border dark:border-slate-700 rounded-lg text-xs touch-target-btn">閉じる</button>
       </div>
     </div>
   </div>
@@ -705,19 +716,19 @@
       <h3 class="font-bold text-base sm:text-lg">マイアカウント設定</h3>
       <div>
         <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">表示名</label>
-        <input type="text" id="myAccountName" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm">
+        <input type="text" id="myAccountName" class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm">
       </div>
       <div>
         <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">ログイン用ID（半角英数字）</label>
-        <input type="text" id="myAccountUserId" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm">
+        <input type="text" id="myAccountUserId" class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm">
       </div>
       <div class="border-t border-slate-100 dark:border-slate-800 pt-3">
         <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">新しいパスワード</label>
-        <input type="password" id="myAccountNewPassword" placeholder="6文字以上で入力" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm">
+        <input type="password" id="myAccountNewPassword" placeholder="6文字以上で入力" class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm">
       </div>
       <div class="flex justify-end space-x-2 pt-2">
-        <button onclick="closeModal('myAccountModal')" class="px-3 py-2 border dark:border-slate-700 rounded-lg text-xs sm:text-sm">キャンセル</button>
-        <button onclick="saveMyAccount()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs sm:text-sm font-medium">保存</button>
+        <button onclick="closeModal('myAccountModal')" class="px-4 py-2.5 border dark:border-slate-700 rounded-lg text-xs sm:text-sm touch-target-btn">キャンセル</button>
+        <button onclick="saveMyAccount()" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-xs sm:text-sm font-medium touch-target-btn">保存</button>
       </div>
     </div>
   </div>
@@ -728,31 +739,31 @@
       <h3 class="font-bold text-base sm:text-lg">新規メンバー追加</h3>
       <div>
         <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">ユーザーID（半角英数） *</label>
-        <input type="text" id="newMemberUserId" required class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="yamada_t">
+        <input type="text" id="newMemberUserId" required class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="yamada_t">
       </div>
       <div>
         <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">表示名 *</label>
-        <input type="text" id="newMemberName" required class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="山田 太郎">
+        <input type="text" id="newMemberName" required class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="山田 太郎">
       </div>
       <div>
         <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">メールアドレス *</label>
-        <input type="email" id="newMemberEmail" required class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="creator@example.com">
+        <input type="email" id="newMemberEmail" required class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="creator@example.com">
       </div>
       <div>
         <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">初期パスワード *</label>
-        <input type="password" id="newMemberPassword" required class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="6文字以上">
+        <input type="password" id="newMemberPassword" required class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="6文字以上">
       </div>
       <div>
         <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">権限ロール</label>
-        <select id="newMemberRole" class="w-full px-3 py-2 border dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-800">
+        <select id="newMemberRole" class="w-full px-3 py-2.5 border dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-800">
           <option value="user">クリエイター (User)</option>
           <option value="admin">管理者 (Admin)</option>
           <option value="master">👑 統括・代表 (Master)</option>
         </select>
       </div>
       <div class="flex justify-end space-x-2 pt-2">
-        <button onclick="closeModal('newMemberModal')" class="px-3 py-2 border dark:border-slate-700 rounded-lg text-xs sm:text-sm">キャンセル</button>
-        <button onclick="createNewMember()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs sm:text-sm font-medium">作成</button>
+        <button onclick="closeModal('newMemberModal')" class="px-4 py-2.5 border dark:border-slate-700 rounded-lg text-xs sm:text-sm touch-target-btn">キャンセル</button>
+        <button onclick="createNewMember()" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-xs sm:text-sm font-medium touch-target-btn">作成</button>
       </div>
     </div>
   </div>
@@ -764,24 +775,24 @@
       
       <div>
         <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">基本案件名 *</label>
-        <input type="text" id="newPrjTitle" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="例: 【〇〇様】2nd Single 制作">
+        <input type="text" id="newPrjTitle" class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="例: 【〇〇様】2nd Single 制作">
       </div>
 
       <div>
         <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">共有ドライブURL (任意)</label>
-        <input type="url" id="newPrjDrive" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="https://drive.google.com/...">
+        <input type="url" id="newPrjDrive" class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="https://drive.google.com/...">
       </div>
 
       <div class="border-t dark:border-slate-800 pt-3 space-y-2">
         <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">作成するチケット（関連チケットとして連携）</label>
         <div class="grid grid-cols-2 gap-2 text-xs">
-          <label class="flex items-center space-x-2 p-2 rounded-lg border dark:border-slate-700 bg-blue-50/50 dark:bg-blue-950/20 cursor-pointer">
-            <input type="checkbox" id="checkCreateMusic" checked onchange="toggleTrackCheckboxes()" class="rounded text-blue-600">
-            <span class="font-bold text-blue-700 dark:text-blue-300">🎵 [楽曲] チケット</span>
+          <label class="flex items-center space-x-2 p-2.5 rounded-lg border dark:border-slate-700 bg-blue-50/50 dark:bg-blue-950/20 cursor-pointer touch-target-btn">
+            <input type="checkbox" id="checkCreateMusic" checked onchange="toggleTrackCheckboxes()" class="w-4 h-4 rounded text-blue-600">
+            <span class="font-bold text-blue-700 dark:text-blue-300">🎵 [楽曲]</span>
           </label>
-          <label class="flex items-center space-x-2 p-2 rounded-lg border dark:border-slate-700 bg-purple-50/50 dark:bg-purple-950/20 cursor-pointer">
-            <input type="checkbox" id="checkCreateMv" checked onchange="toggleTrackCheckboxes()" class="rounded text-purple-600">
-            <span class="font-bold text-purple-700 dark:text-purple-300">🎬 [イラスト/MV] チケット</span>
+          <label class="flex items-center space-x-2 p-2.5 rounded-lg border dark:border-slate-700 bg-purple-50/50 dark:bg-purple-950/20 cursor-pointer touch-target-btn">
+            <input type="checkbox" id="checkCreateMv" checked onchange="toggleTrackCheckboxes()" class="w-4 h-4 rounded text-purple-600">
+            <span class="font-bold text-purple-700 dark:text-purple-300">🎬 [MV]</span>
           </label>
         </div>
       </div>
@@ -789,15 +800,15 @@
       <div class="border-t dark:border-slate-800 pt-3">
         <div class="flex items-center justify-between mb-2">
           <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">着手日 & 工程組み込み</label>
-          <input type="date" id="autoCalcStartDate" class="px-2 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs">
+          <input type="date" id="autoCalcStartDate" class="px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs">
         </div>
         
-        <div id="processCheckboxes" class="space-y-1.5 max-h-44 overflow-y-auto p-2 bg-slate-50 dark:bg-slate-800 rounded-lg border dark:border-slate-700 text-xs"></div>
+        <div id="processCheckboxes" class="space-y-2 max-h-48 overflow-y-auto p-2.5 bg-slate-50 dark:bg-slate-800 rounded-lg border dark:border-slate-700 text-xs"></div>
       </div>
 
       <div class="flex justify-end space-x-2 pt-2">
-        <button onclick="closeModal('newProjectModal')" class="px-3 py-2 border dark:border-slate-700 rounded-lg text-xs sm:text-sm">キャンセル</button>
-        <button onclick="createCreativeProject()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs sm:text-sm font-medium">起票</button>
+        <button onclick="closeModal('newProjectModal')" class="px-4 py-2.5 border dark:border-slate-700 rounded-lg text-xs sm:text-sm touch-target-btn">キャンセル</button>
+        <button onclick="createCreativeProject()" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-xs sm:text-sm font-medium touch-target-btn">起票</button>
       </div>
     </div>
   </div>
@@ -821,6 +832,21 @@
 
     let targetProjectForRelated = null;
     let pendingDeadlineShiftContext = null;
+
+    // ====================================================
+    // デバイス判定（UA ＋ タッチスクリーン機能判定ハイブリッド）
+    // ====================================================
+    function detectTouchDevice() {
+      const ua = navigator.userAgent || '';
+      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+      const isTouchScreen = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
+      
+      if (isMobileUA || isTouchScreen) {
+        document.documentElement.classList.add('is-touch-device');
+      } else {
+        document.documentElement.classList.remove('is-touch-device');
+      }
+    }
 
     function getCurrentUserIdentifier() {
       if (!userProfile) return '';
@@ -1159,7 +1185,7 @@
       let statusKey = 'unstarted';
       let label = '未着手';
       let dot = '⚫️';
-      let badgeClass = 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300';
+      badgeClass = 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300';
 
       if (activeItems.some(item => item.isOverdue)) {
         statusKey = 'overdue';
@@ -1228,15 +1254,13 @@
       document.querySelectorAll('.andon-filter-btn').forEach(btn => {
         const isMatch = btn.dataset.status === key;
         btn.className = isMatch
-          ? 'andon-filter-btn px-3 py-1.5 rounded-lg border font-bold transition bg-blue-600 text-white border-blue-600'
-          : 'andon-filter-btn px-3 py-1.5 rounded-lg border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700';
+          ? 'andon-filter-btn px-3.5 py-2 sm:py-1.5 rounded-xl border font-bold transition bg-blue-600 text-white border-blue-600 touch-target-btn'
+          : 'andon-filter-btn px-3.5 py-2 sm:py-1.5 rounded-xl border font-semibold transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 touch-target-btn';
       });
       renderCreativeProjectsList();
     }
 
-    // ====================================================
-    // 【案件一覧描画（PC対応マルチカラムグリッド）】
-    // ====================================================
+    // 案件一覧描画（PCマルチカラム ＆ スマホタップ領域最適化）
     function renderCreativeProjectsList() {
       const container = document.getElementById('projectList');
       if (!container) return;
@@ -1304,14 +1328,14 @@
         }
 
         const unreadDot = hasUnread 
-          ? '<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>'
+          ? '<span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>'
           : '';
 
         let relatedLinkHtml = '';
         if (relatedPrj) {
           const relCat = getProjectCategory(relatedPrj);
           const relLabel = relCat === 'mv' ? '🎬 MVへ' : '🎵 楽曲へ';
-          relatedLinkHtml = `<button onclick="event.stopPropagation(); openProjectChatModal('${relatedPrj.id}')" class="text-[10px] px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 font-semibold transition">
+          relatedLinkHtml = `<button onclick="event.stopPropagation(); openProjectChatModal('${relatedPrj.id}')" class="text-[10px] px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 font-semibold transition touch-target-btn">
             ${relLabel} ➔
           </button>`;
         }
@@ -1340,7 +1364,7 @@
           }).join('');
         }
 
-        return `<div onclick="openProjectChatModal('${p.id}')" class="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 cursor-pointer transition space-y-2.5 relative group flex flex-col justify-between">
+        return `<div onclick="openProjectChatModal('${p.id}')" class="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 cursor-pointer transition space-y-2.5 relative group flex flex-col justify-between active:scale-[0.99]">
           
           <div class="space-y-2">
             <!-- 上段: コード + カテゴリ + タイトル + 状態バッジ -->
@@ -1373,9 +1397,7 @@
       }).join('');
     }
 
-    // ----------------------------------------------------
-    // 【案件チャットモーダル（PC左右2分割 ＆ パイプライン食い込み解消）】
-    // ----------------------------------------------------
+    // 案件チャットモーダル（左ペインの丸ポチ食い込み解消＆スマホタッチ領域拡張）
     function openProjectChatModal(projectId) {
       selectedProjectForChat = cachedCreativeProjects.find(p => p.id === projectId);
       if (!selectedProjectForChat) return;
@@ -1413,12 +1435,12 @@
         const relCat = getProjectCategory(relatedPrj);
         const relCode = relatedPrj.ticket_code ? `[${relatedPrj.ticket_code}] ` : '';
         const relLabel = relCat === 'mv' ? `🎬 関連: ${relCode}MVを開く` : `🎵 関連: ${relCode}楽曲を開く`;
-        relatedLinkContainer.innerHTML = `<button onclick="openProjectChatModal('${relatedPrj.id}')" class="text-xs px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 transition">
+        relatedLinkContainer.innerHTML = `<button onclick="openProjectChatModal('${relatedPrj.id}')" class="text-xs px-2.5 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 transition touch-target-btn">
           ${relLabel} ➔
         </button>`;
       } else if (isAdminOrMaster()) {
         const addLabel = cat === 'music' ? '＋ 🎬 関連MVを追加' : '＋ 🎵 関連楽曲を追加';
-        relatedLinkContainer.innerHTML = `<button onclick="openAddRelatedModal('${p.id}')" class="text-xs px-2.5 py-1 rounded-lg border border-dashed border-indigo-300 dark:border-indigo-800 bg-indigo-50/60 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 font-semibold transition">
+        relatedLinkContainer.innerHTML = `<button onclick="openAddRelatedModal('${p.id}')" class="text-xs px-2.5 py-1.5 rounded-lg border border-dashed border-indigo-300 dark:border-indigo-800 bg-indigo-50/60 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 font-semibold transition touch-target-btn">
           ${addLabel}
         </button>`;
       } else {
@@ -1441,11 +1463,9 @@
       const tasks = getFilteredTasksForProject(p).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
       const todayStr = new Date().toISOString().split('T')[0];
 
-      // ====================================================
-      // 【パイプライン食い込み解消】十分な左余白(ml-2 pl-4)を確保したステップツリー
-      // ====================================================
+      // パイプライン食い込み解消＆スマホタッチ領域拡大
       const taskListContainer = document.getElementById('chatModalTaskListContainer');
-      taskListContainer.innerHTML = `<div class="relative ml-2 pl-4 space-y-2 border-l-2 border-slate-300 dark:border-slate-700 my-1 py-1">`
+      taskListContainer.innerHTML = `<div class="relative ml-2.5 pl-4 sm:pl-4 space-y-1 sm:space-y-2 border-l-2 border-slate-300 dark:border-slate-700 my-1 py-1">`
         + tasks.map((t) => {
             const isDone = t.status === '完了';
             const isOverdue = t.deadline && t.deadline < todayStr && !isDone;
@@ -1470,12 +1490,12 @@
 
             const ballTag = getBallHolderTag(t.ball_holder || 'creator');
 
-            return `<div onclick="selectTaskForControl('${t.id}')" class="relative group cursor-pointer flex items-center justify-between text-xs py-1 px-2 rounded hover:bg-white/80 dark:hover:bg-slate-800/80 transition -ml-2">
-              <!-- 丸ポチ：境界線上に綺麗にセンタリング（-left-[13px]） -->
-              <span class="absolute -left-[13px] top-2.5 w-2.5 h-2.5 rounded-full ring-2 ${dotColor} z-10"></span>
+            return `<div onclick="selectTaskForControl('${t.id}')" class="relative group cursor-pointer flex items-center justify-between text-xs py-2 sm:py-1 px-2 rounded-lg hover:bg-white/80 dark:hover:bg-slate-800/80 transition -ml-2 touch-target-row active:bg-blue-50 dark:active:bg-blue-950/40">
+              <!-- 丸ポチ：境界線上にセンタリング -->
+              <span class="absolute -left-[14px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full ring-2 ${dotColor} z-10"></span>
               
               <div class="flex items-center space-x-1.5 truncate pl-2">
-                <span class="${titleColor}">${t.title}</span>
+                <span class="${titleColor} font-bold sm:font-normal">${t.title}</span>
                 <span class="text-slate-400 text-[10px]">·</span>
                 <span class="text-slate-600 dark:text-slate-300 font-medium text-[11px] truncate">${assigneeName}</span>
                 ${ballTag}
@@ -1510,8 +1530,7 @@
       openModal('projectChatModal');
       autoMarkProjectTasksAsRead(p);
       
-      // モーダルを開いた瞬間に最下部（最新メッセージ位置）へ自動スクロール
-      setTimeout(scrollToLatestMessage, 50);
+      setTimeout(scrollToLatestMessage, 60);
     }
 
     function renderAssigneeDropdown() {
@@ -1579,9 +1598,7 @@
       }
     }
 
-    // ====================================================
-    // 【昇順化】チャットタイムライン（上が過去、下が最新）
-    // ====================================================
+    // チャットタイムライン（昇順描画）
     function renderProjectChatTimeline(project) {
       const timelineContainer = document.getElementById('chatModalTimeline');
       if (!timelineContainer) return;
@@ -1594,7 +1611,6 @@
         });
       });
 
-      // 昇順（古いログ ➔ 最新ログ）にソート
       allLogs.sort((a,b) => new Date(a.at) - new Date(b.at));
 
       if (allLogs.length === 0) {
@@ -1637,19 +1653,19 @@
                 <span class="font-bold text-slate-700 dark:text-slate-300">自分</span>
                 <span class="px-1.5 py-0.2 rounded font-semibold ${badgeStyle}">[${l.taskTitle}]</span>
               </div>
-              <div class="p-2.5 sm:p-3 rounded-2xl rounded-tr-none bg-blue-600 text-white shadow-xs text-xs space-y-1">
+              <div class="p-3 sm:p-3 rounded-2xl rounded-tr-none bg-blue-600 text-white shadow-xs text-xs space-y-1">
                 ${formattedComment ? `<div class="font-normal whitespace-pre-wrap break-words leading-relaxed selection:bg-blue-800">${formattedComment}</div>` : ''}
                 ${separateUrlHtml}
               </div>
               ${readStatusHtml}
             </div>
-            <div class="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-4">
+            <div class="w-7 h-7 sm:w-6 sm:h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] sm:text-[10px] font-bold flex-shrink-0 mt-4">
               ${userInitial}
             </div>
           </div>`;
         } else {
           return `<div class="flex justify-start space-x-2 pr-6 sm:pr-10">
-            <div class="w-6 h-6 rounded-full bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-4">
+            <div class="w-7 h-7 sm:w-6 sm:h-6 rounded-full bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center text-[11px] sm:text-[10px] font-bold flex-shrink-0 mt-4">
               ${userInitial}
             </div>
             <div class="max-w-[85%] flex flex-col items-start">
@@ -1659,7 +1675,7 @@
                 <span class="font-mono">${dateStr}</span>
                 ${unreadTag}
               </div>
-              <div class="p-2.5 sm:p-3 rounded-2xl rounded-tl-none bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-xs text-xs space-y-1 border border-slate-200/60 dark:border-slate-700/60">
+              <div class="p-3 sm:p-3 rounded-2xl rounded-tl-none bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-xs text-xs space-y-1 border border-slate-200/60 dark:border-slate-700/60">
                 ${formattedComment ? `<div class="font-normal whitespace-pre-wrap break-words leading-relaxed">${formattedComment}</div>` : ''}
                 ${separateUrlHtml}
               </div>
@@ -1717,9 +1733,9 @@
         curDate.setDate(curDate.getDate() + diffDays);
         const shiftedDateStr = curDate.toISOString().split('T')[0];
 
-        return `<label class="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-slate-800 border dark:border-slate-700 cursor-pointer hover:border-blue-400 transition">
+        return `<label class="flex items-center justify-between p-2.5 rounded-lg bg-white dark:bg-slate-800 border dark:border-slate-700 cursor-pointer hover:border-blue-400 transition touch-target-row">
           <div class="flex items-center space-x-2 truncate">
-            <input type="checkbox" value="${t.id}" data-shifted="${shiftedDateStr}" checked class="shift-task-checkbox rounded text-blue-600">
+            <input type="checkbox" value="${t.id}" data-shifted="${shiftedDateStr}" checked class="shift-task-checkbox w-4 h-4 rounded text-blue-600">
             <span class="font-bold text-slate-800 dark:text-slate-100">${t.title}</span>
           </div>
           <div class="text-[11px] text-slate-500 font-mono">
@@ -1815,7 +1831,7 @@
 
         const logs = targetTask.logs || [];
         if (comment || uploadedFileUrl || detectedUrl || newStatus) {
-          logs.push({
+          logs.unshift({
             type: logType,
             user: currentUserName,
             url: detectedUrl || null,
@@ -2177,8 +2193,8 @@
             </div>
             <div class="flex items-center space-x-1.5 flex-shrink-0">
               ${statusBadge}
-              <button onclick="toggleFinancialStatus('${l.id}', '${l.status}')" class="text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition">切替</button>
-              <button onclick="deleteFinancialLog('${l.id}')" class="text-[10px] text-red-500 hover:text-red-700 p-0.5" title="削除">🗑️</button>
+              <button onclick="toggleFinancialStatus('${l.id}', '${l.status}')" class="text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition touch-target-btn">切替</button>
+              <button onclick="deleteFinancialLog('${l.id}')" class="text-[10px] text-red-500 hover:text-red-700 p-0.5 touch-target-btn" title="削除">🗑️</button>
             </div>
           </div>
           <div class="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-700">
@@ -2313,6 +2329,8 @@
     }
 
     async function init() {
+      detectTouchDevice();
+      window.addEventListener('resize', detectTouchDevice);
       initTheme();
       try {
         const { data: { session } } = await supabaseClient.auth.getSession();
@@ -2583,8 +2601,8 @@
       document.querySelectorAll('.lead-filter-btn').forEach(btn => {
         const isMatch = btn.dataset.status === status;
         btn.className = isMatch 
-          ? 'lead-filter-btn px-2.5 py-1 rounded-lg border dark:border-slate-700 bg-blue-600 text-white font-medium'
-          : 'lead-filter-btn px-2.5 py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300';
+          ? 'lead-filter-btn px-3 py-2 sm:py-1 rounded-lg border dark:border-slate-700 bg-blue-600 text-white font-medium touch-target-btn'
+          : 'lead-filter-btn px-3 py-2 sm:py-1 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 touch-target-btn';
       });
       renderLeadsGrid();
     }
@@ -2631,7 +2649,7 @@
         const isFollowupDue = l.next_followup_at && l.next_followup_at <= todayStr && l.status !== '対応停止' && l.status !== '相談決定';
         const phaseBadge = getLeadPhaseBadge(l);
 
-        return `<div onclick="openLeadDetail('${l.id}')" class="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-blue-500 cursor-pointer transition space-y-2.5 relative">
+        return `<div onclick="openLeadDetail('${l.id}')" class="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-blue-500 cursor-pointer transition space-y-2.5 relative touch-target-row active:scale-[0.99]">
           <div class="flex justify-between items-start gap-2">
             <h4 class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100 truncate flex-1 min-w-0">${l.client_name}</h4>
             <div class="text-right space-y-1 flex-shrink-0">
@@ -2705,13 +2723,13 @@
 
       let linksHtml = '';
       if (selectedLead.twitter_id) {
-        linksHtml += `<a href="https://twitter.com/${selectedLead.twitter_id}" target="_blank" class="px-2 py-0.5 bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300 rounded text-xs font-semibold hover:underline">X ↗</a>`;
+        linksHtml += `<a href="https://twitter.com/${selectedLead.twitter_id}" target="_blank" class="px-2.5 py-1 bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300 rounded text-xs font-semibold hover:underline touch-target-btn">X ↗</a>`;
       }
       if (selectedLead.youtube_url) {
-        linksHtml += `<a href="${selectedLead.youtube_url}" target="_blank" class="px-2 py-0.5 bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-300 rounded text-xs font-semibold hover:underline">YouTube ↗</a>`;
+        linksHtml += `<a href="${selectedLead.youtube_url}" target="_blank" class="px-2.5 py-1 bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-300 rounded text-xs font-semibold hover:underline touch-target-btn">YouTube ↗</a>`;
       }
       if (selectedLead.contact_email) {
-        linksHtml += `<a href="mailto:${selectedLead.contact_email}" class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded text-xs font-semibold hover:underline">Mail ↗</a>`;
+        linksHtml += `<a href="mailto:${selectedLead.contact_email}" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded text-xs font-semibold hover:underline touch-target-btn">Mail ↗</a>`;
       }
       document.getElementById('detailLinks').innerHTML = linksHtml;
 
@@ -2719,7 +2737,7 @@
       document.getElementById('detailLogsTimeline').innerHTML = logs.length > 0 
         ? logs.map(lg => {
             const dateStr = new Date(lg.at).toLocaleString('ja-JP');
-            return `<div class="p-2 bg-slate-50 dark:bg-slate-800 rounded border dark:border-slate-700">
+            return `<div class="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-lg border dark:border-slate-700">
               <div class="flex justify-between text-[10px] text-slate-400 mb-0.5 font-bold"><span>${lg.type}</span><span>${dateStr}</span></div>
               <div class="text-slate-700 dark:text-slate-300 font-mono text-[11px] whitespace-pre-wrap break-words">${lg.text}</div>
             </div>`;
@@ -2901,7 +2919,7 @@
           </div>
           ${formattedComment ? `<div class="text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-pre-wrap break-words pl-1.5 border-l-2 border-slate-200 dark:border-slate-700">${formattedComment}</div>` : ''}
           <div class="text-right pt-0.5">
-            <button onclick="openProjectChatModal('${l.projectId}')" class="text-[11px] text-blue-600 dark:text-blue-400 hover:underline">チャットを開く ➔</button>
+            <button onclick="openProjectChatModal('${l.projectId}')" class="text-[11px] text-blue-600 dark:text-blue-400 hover:underline p-1 touch-target-btn">チャットを開く ➔</button>
           </div>
         </div>`;
       }).join('');
@@ -2917,17 +2935,17 @@
         const dependsText = w.depends.length > 0 ? w.depends.join(' ＋ ') : '着手日';
 
         return `<tr class="border-b border-slate-100 dark:border-slate-800/60 last:border-b-0 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-          <td class="py-2.5 px-3">${trackBadge}</td>
-          <td class="py-2.5 px-3 font-medium">${w.name}</td>
-          <td class="py-2.5 px-3 text-slate-500 dark:text-slate-400 text-xs">${dependsText}</td>
-          <td class="py-2.5 px-3">
+          <td class="py-3 px-4">${trackBadge}</td>
+          <td class="py-3 px-4 font-medium">${w.name}</td>
+          <td class="py-3 px-4 text-slate-500 dark:text-slate-400 text-xs">${dependsText}</td>
+          <td class="py-3 px-4">
             <div class="flex items-center space-x-1">
-              <input type="number" min="1" max="90" id="input_days_${w.key}" value="${w.days}" class="w-14 px-2 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs font-bold text-center focus:ring-2 focus:ring-blue-500 outline-none">
+              <input type="number" min="1" max="90" id="input_days_${w.key}" value="${w.days}" class="w-16 px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs font-bold text-center focus:ring-2 focus:ring-blue-500 outline-none">
               <span class="text-xs text-slate-500">日</span>
             </div>
           </td>
-          <td class="py-2.5 px-3 text-right">
-            <button onclick="saveSingleMasterDay('${w.key}')" class="px-2 py-1 text-xs bg-slate-100 dark:bg-slate-800 hover:bg-blue-600 hover:text-white rounded font-medium transition text-slate-700 dark:text-slate-300">保存</button>
+          <td class="py-3 px-4 text-right">
+            <button onclick="saveSingleMasterDay('${w.key}')" class="px-3 py-1.5 text-xs bg-slate-100 dark:bg-slate-800 hover:bg-blue-600 hover:text-white rounded-lg font-medium transition text-slate-700 dark:text-slate-300 touch-target-btn">保存</button>
           </td>
         </tr>`;
       }).join('');
@@ -2995,8 +3013,8 @@
         const tag = isMusic ? '[楽曲]' : '[イラスト/MV]';
         const isHidden = (isMusic && !createMusic) || (!isMusic && !createMv);
 
-        return `<label class="flex items-center space-x-2 cursor-pointer ${isHidden ? 'opacity-30 pointer-events-none' : ''}">
-          <input type="checkbox" value="${w.key}" data-name="${w.name}" data-days="${w.days}" data-track="${w.track}" ${isHidden ? '' : 'checked'} class="rounded text-blue-600">
+        return `<label class="flex items-center space-x-2.5 cursor-pointer py-1 ${isHidden ? 'opacity-30 pointer-events-none' : ''} touch-target-row">
+          <input type="checkbox" value="${w.key}" data-name="${w.name}" data-days="${w.days}" data-track="${w.track}" ${isHidden ? '' : 'checked'} class="w-4 h-4 rounded text-blue-600">
           <span class="text-xs text-slate-700 dark:text-slate-300 font-medium">${tag} ${w.name} (${w.days}日)</span>
         </label>`;
       }).join('');
@@ -3041,12 +3059,12 @@
             const activeTime = new Date(u.last_active_at).getTime();
             const isOnline = (now - activeTime) <= fiveMinutes;
             onlineBadge = isOnline 
-              ? '<span class="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span><span>ONLINE</span></span>'
-              : '<span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">OFFLINE</span>';
+              ? '<span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span><span>ONLINE</span></span>'
+              : '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-medium bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">OFFLINE</span>';
 
             lastActiveText = new Date(u.last_active_at).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
           } else {
-            onlineBadge = '<span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">OFFLINE</span>';
+            onlineBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-medium bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">OFFLINE</span>';
           }
         }
 
@@ -3059,7 +3077,7 @@
           </td>
           <td class="p-3.5 font-mono text-xs text-blue-600 dark:text-blue-400 font-semibold">${u.user_id || '-'}</td>
           <td class="p-3.5 text-slate-500 dark:text-slate-400">${u.email || '-'}</td>
-          <td class="p-3.5"><span class="px-2 py-0.5 rounded text-xs font-semibold ${badgeClass}">${roleName}</span></td>
+          <td class="p-3.5"><span class="px-2.5 py-1 rounded-md text-xs font-semibold ${badgeClass}">${roleName}</span></td>
           ${masterUser ? `<td class="p-3.5 text-slate-400 text-xs font-mono">${lastActiveText}</td>` : ''}
         </tr>`;
       }).join('');
@@ -3237,9 +3255,9 @@
         const mobBtn = document.getElementById('mobTab' + t.charAt(0).toUpperCase() + t.slice(1));
         if (mobBtn) {
           if (t === tab) {
-            mobBtn.className = "flex flex-col items-center justify-center flex-1 py-1 text-blue-600 dark:text-blue-400 font-bold transition";
+            mobBtn.className = "flex flex-col items-center justify-center flex-1 py-1.5 text-blue-600 dark:text-blue-400 font-bold transition touch-target-btn";
           } else {
-            mobBtn.className = "flex flex-col items-center justify-center flex-1 py-1 text-slate-400 dark:text-slate-500 font-medium transition";
+            mobBtn.className = "flex flex-col items-center justify-center flex-1 py-1.5 text-slate-400 dark:text-slate-500 font-medium transition touch-target-btn";
           }
         }
       });
@@ -3247,9 +3265,9 @@
       const mobMoreBtn = document.getElementById('mobTabMore');
       if (mobMoreBtn) {
         if (tab === 'master' || tab === 'members') {
-          mobMoreBtn.className = "flex flex-col items-center justify-center flex-1 py-1 text-blue-600 dark:text-blue-400 font-bold transition";
+          mobMoreBtn.className = "flex flex-col items-center justify-center flex-1 py-1.5 text-blue-600 dark:text-blue-400 font-bold transition touch-target-btn";
         } else {
-          mobMoreBtn.className = "flex flex-col items-center justify-center flex-1 py-1 text-slate-400 dark:text-slate-500 font-medium transition";
+          mobMoreBtn.className = "flex flex-col items-center justify-center flex-1 py-1.5 text-slate-400 dark:text-slate-500 font-medium transition touch-target-btn";
         }
       }
 
