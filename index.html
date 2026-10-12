@@ -171,7 +171,8 @@
           </button>
         </div>
 
-        <div id="projectList" class="space-y-3 sm:space-y-4"></div>
+        <!-- PC最適化：マルチカラムグリッド（スマホは1列、PCは2〜3列） -->
+        <div id="projectList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"></div>
       </div>
 
       <!-- 営業・商談ボード -->
@@ -308,9 +309,9 @@
     </div>
   </div>
 
-  <!-- ==================== 案件統合チャット＆進捗モーダル ==================== -->
+  <!-- ==================== 案件統合チャット＆進捗モーダル（PC左右2分割対応） ==================== -->
   <div id="projectChatModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full p-4 sm:p-5 border border-slate-200 dark:border-slate-800 max-h-[95vh] flex flex-col shadow-2xl overflow-hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl md:max-w-5xl w-full p-4 sm:p-5 border border-slate-200 dark:border-slate-800 max-h-[95vh] h-[90vh] flex flex-col shadow-2xl overflow-hidden">
       
       <!-- ヘッダー -->
       <div class="flex items-start justify-between border-b dark:border-slate-800 pb-2.5 flex-shrink-0 gap-2">
@@ -335,101 +336,111 @@
         </div>
       </div>
 
-      <!-- 【差別化①：縦の一本線ステップツリー（背景引き締め＆ボックス枠全廃）】 -->
-      <div class="bg-slate-100/70 dark:bg-slate-950/40 -mx-4 sm:-mx-5 px-4 sm:px-5 py-2.5 border-b dark:border-slate-800 flex-shrink-0 space-y-1.5">
-        <div class="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400">
-          <span class="tracking-wider uppercase text-[10px]">ROADMAP / 進行パイプライン</span>
-          <button id="btnOpenAddTaskBar" onclick="openAddTaskModal()" class="text-blue-600 dark:text-blue-400 hover:underline">
-            ＋ 工程追加
-          </button>
-        </div>
-        <div id="chatModalTaskListContainer" class="max-h-36 overflow-y-auto pr-1"></div>
-      </div>
+      <!-- モーダル内部コンテナ：スマホは縦積み、PC（md:）は左右2ペイン分割 -->
+      <div class="flex-1 flex flex-col md:flex-row min-h-0 divide-y md:divide-y-0 md:divide-x dark:divide-slate-800">
 
-      <!-- 【差別化②：メッセージバブル（会話UI）タイムライン】 -->
-      <div class="flex-1 overflow-y-auto min-h-[160px] space-y-3 py-3 pr-1 bg-white dark:bg-slate-900" id="chatModalTimeline"></div>
-
-      <!-- 開閉式チャット＆ステータスフォーム -->
-      <div id="chatDropZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleFileDrop(event)" class="bg-slate-50 dark:bg-slate-800/50 p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 transition space-y-2 flex-shrink-0 relative">
-        
-        <div id="dropOverlay" class="hidden absolute inset-0 bg-blue-600/90 text-white rounded-xl flex flex-col items-center justify-center font-bold text-xs pointer-events-none z-20 space-y-1">
-          <span class="text-2xl">📥</span>
-          <span>ファイルをドロップして自動添付</span>
+        <!-- 左ペイン (PC: 幅35〜38% / スマホ: 上部) 進行パイプライン -->
+        <div class="w-full md:w-[36%] flex flex-col flex-shrink-0 bg-slate-50/70 dark:bg-slate-950/40 p-3 sm:p-3.5 overflow-hidden">
+          <div class="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400 pb-2 flex-shrink-0 border-b dark:border-slate-800/80">
+            <span class="tracking-wider uppercase text-[10px]">ROADMAP / 進行パイプライン</span>
+            <button id="btnOpenAddTaskBar" onclick="openAddTaskModal()" class="text-blue-600 dark:text-blue-400 hover:underline">
+              ＋ 工程追加
+            </button>
+          </div>
+          <div id="chatModalTaskListContainer" class="flex-1 overflow-y-auto py-2 pr-1 space-y-1"></div>
         </div>
 
-        <!-- 折りたたみ展開可能な工程コントロールバー -->
-        <div id="taskControlPanel" class="hidden p-2.5 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm space-y-2 text-xs">
-          <div class="flex items-center justify-between border-b dark:border-slate-800 pb-1.5">
-            <span class="font-bold text-slate-700 dark:text-slate-200 flex items-center space-x-1">
-              <span>⚙️ 進行・ステータス設定</span>
-              <span id="currentSelectedTaskTag" class="text-blue-600 dark:text-blue-400 font-extrabold ml-1"></span>
-            </span>
-            <button onclick="toggleTaskControlPanel()" type="button" class="text-[11px] text-slate-400 hover:text-slate-600">閉じる ✕</button>
-          </div>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <div>
-              <label class="block text-[10px] text-slate-400 mb-0.5">対象工程</label>
-              <select id="chatInputTaskId" onchange="syncSelectedTaskDetails()" class="w-full px-2 py-1.5 border dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-800 font-bold outline-none"></select>
-            </div>
-            <div>
-              <label class="block text-[10px] text-slate-400 mb-0.5">担当者</label>
-              <select id="chatInputAssigneeId" class="w-full px-2 py-1.5 border dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-800 font-medium outline-none"></select>
-            </div>
-            <div>
-              <label class="block text-[10px] text-slate-400 mb-0.5">ボール (手番)</label>
-              <select id="chatInputBallHolder" class="w-full px-2 py-1.5 border dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-800 font-bold text-indigo-600 dark:text-indigo-400 outline-none">
-                <option value="creator">👤 担当クリエイター</option>
-                <option value="admin">🛡️ 運営・ディレクター</option>
-                <option value="client">🏢 クライアント (先方)</option>
-                <option value="none">⚪ なし / 完了</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-[10px] text-slate-400 mb-0.5">締切期日</label>
-              <input type="date" id="chatInputDeadline" class="w-full px-2 py-1 border dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-800 text-xs">
-            </div>
-          </div>
-          <div>
-            <label class="block text-[10px] text-slate-400 mb-0.5">工程ステータス</label>
-            <select id="chatInputStatus" onchange="handleStatusAutoAssist()" class="w-full px-2 py-1.5 border dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-800 font-semibold outline-none">
-              <option value="">(変更なし)</option>
-              <option value="作業中">🔵 作業中</option>
-              <option value="提出・確認待ち">🟡 提出・確認待ち</option>
-              <option value="リテイク">🟠 リテイク指示</option>
-              <option value="完了">🟢 承認・完了</option>
-            </select>
-          </div>
-        </div>
-
-        <div id="attachedFilePreview" class="hidden flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg text-xs">
-          <div class="flex items-center space-x-2 truncate">
-            <span id="attachedFileIcon">📎</span>
-            <span id="attachedFileName" class="font-bold text-blue-700 dark:text-blue-300 truncate"></span>
-            <span id="attachedFileSize" class="text-[10px] text-slate-400"></span>
-          </div>
-          <button onclick="removeAttachedFile()" type="button" class="text-red-500 hover:text-red-700 text-xs font-bold px-1.5">✕ 削除</button>
-        </div>
-
-        <!-- テキスト入力エリア -->
-        <div class="relative">
-          <textarea id="chatInputComment" rows="2" placeholder="メッセージを入力... (URL共有、音声/画像のドラッグ＆ドロップ対応)" class="w-full p-2.5 pb-8 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500 break-words leading-relaxed"></textarea>
+        <!-- 右ペイン (PC: 幅64% / スマホ: 下部) チャットログ ＆ 送信フォーム -->
+        <div class="w-full md:w-[64%] flex-1 flex flex-col min-h-0 bg-white dark:bg-slate-900 overflow-hidden pl-0 md:pl-3 pt-2 md:pt-0">
           
-          <div class="absolute bottom-2 left-2 flex items-center space-x-2">
-            <button type="button" onclick="toggleTaskControlPanel()" id="btnToggleTaskPanel" class="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[11px] font-semibold border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 hover:bg-slate-100 text-slate-700 dark:text-slate-200 transition shadow-xs">
-              <span>⚙️ 進行設定</span>
-              <span id="panelActiveDot" class="hidden w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-            </button>
-            <label class="cursor-pointer inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-200 transition">
-              <span>📎 添付</span>
-              <input type="file" id="fileInputPicker" onchange="handleFileInputChange(event)" accept="audio/mp3,audio/m4a,audio/*,image/*" class="hidden">
-            </label>
+          <!-- チャットログタイムライン（昇順：上が過去、下が最新） -->
+          <div class="flex-1 overflow-y-auto min-h-0 space-y-3 p-2 sm:p-3" id="chatModalTimeline"></div>
+
+          <!-- チャット入力＆ステータス操作フォーム -->
+          <div id="chatDropZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleFileDrop(event)" class="bg-slate-50 dark:bg-slate-800/50 p-2.5 sm:p-3 rounded-xl border border-slate-200 dark:border-slate-800 transition space-y-2 flex-shrink-0 relative m-2">
+            
+            <div id="dropOverlay" class="hidden absolute inset-0 bg-blue-600/90 text-white rounded-xl flex flex-col items-center justify-center font-bold text-xs pointer-events-none z-20 space-y-1">
+              <span class="text-2xl">📥</span>
+              <span>ファイルをドロップして自動添付</span>
+            </div>
+
+            <!-- 折りたたみ展開可能な工程コントロールバー -->
+            <div id="taskControlPanel" class="hidden p-2.5 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm space-y-2 text-xs">
+              <div class="flex items-center justify-between border-b dark:border-slate-800 pb-1.5">
+                <span class="font-bold text-slate-700 dark:text-slate-200 flex items-center space-x-1">
+                  <span>⚙️ 進行・ステータス設定</span>
+                  <span id="currentSelectedTaskTag" class="text-blue-600 dark:text-blue-400 font-extrabold ml-1"></span>
+                </span>
+                <button onclick="toggleTaskControlPanel()" type="button" class="text-[11px] text-slate-400 hover:text-slate-600">閉じる ✕</button>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-0.5">対象工程</label>
+                  <select id="chatInputTaskId" onchange="syncSelectedTaskDetails()" class="w-full px-2 py-1.5 border dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-800 font-bold outline-none"></select>
+                </div>
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-0.5">担当者</label>
+                  <select id="chatInputAssigneeId" class="w-full px-2 py-1.5 border dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-800 font-medium outline-none"></select>
+                </div>
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-0.5">ボール (手番)</label>
+                  <select id="chatInputBallHolder" class="w-full px-2 py-1.5 border dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-800 font-bold text-indigo-600 dark:text-indigo-400 outline-none">
+                    <option value="creator">👤 担当クリエイター</option>
+                    <option value="admin">🛡️ 運営・ディレクター</option>
+                    <option value="client">🏢 クライアント (先方)</option>
+                    <option value="none">⚪ なし / 完了</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[10px] text-slate-400 mb-0.5">締切期日</label>
+                  <input type="date" id="chatInputDeadline" class="w-full px-2 py-1 border dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-800 text-xs">
+                </div>
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-0.5">工程ステータス</label>
+                <select id="chatInputStatus" onchange="handleStatusAutoAssist()" class="w-full px-2 py-1.5 border dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-800 font-semibold outline-none">
+                  <option value="">(変更なし)</option>
+                  <option value="作業中">🔵 作業中</option>
+                  <option value="提出・確認待ち">🟡 提出・確認待ち</option>
+                  <option value="リテイク">🟠 リテイク指示</option>
+                  <option value="完了">🟢 承認・完了</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="attachedFilePreview" class="hidden flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg text-xs">
+              <div class="flex items-center space-x-2 truncate">
+                <span id="attachedFileIcon">📎</span>
+                <span id="attachedFileName" class="font-bold text-blue-700 dark:text-blue-300 truncate"></span>
+                <span id="attachedFileSize" class="text-[10px] text-slate-400"></span>
+              </div>
+              <button onclick="removeAttachedFile()" type="button" class="text-red-500 hover:text-red-700 text-xs font-bold px-1.5">✕ 削除</button>
+            </div>
+
+            <!-- テキスト入力エリア -->
+            <div class="relative">
+              <textarea id="chatInputComment" rows="2" placeholder="メッセージを入力... (URL共有、音声/画像のドラッグ＆ドロップ対応)" class="w-full p-2.5 pb-8 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500 break-words leading-relaxed"></textarea>
+              
+              <div class="absolute bottom-2 left-2 flex items-center space-x-2">
+                <button type="button" onclick="toggleTaskControlPanel()" id="btnToggleTaskPanel" class="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[11px] font-semibold border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 hover:bg-slate-100 text-slate-700 dark:text-slate-200 transition shadow-xs">
+                  <span>⚙️ 進行設定</span>
+                  <span id="panelActiveDot" class="hidden w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                </button>
+                <label class="cursor-pointer inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-200 transition">
+                  <span>📎 添付</span>
+                  <input type="file" id="fileInputPicker" onchange="handleFileInputChange(event)" accept="audio/mp3,audio/m4a,audio/*,image/*" class="hidden">
+                </label>
+              </div>
+
+              <div class="absolute bottom-2 right-2">
+                <button onclick="handleChatSubmitClick()" id="btnSubmitChat" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-sm whitespace-nowrap">
+                  送信 ➔
+                </button>
+              </div>
+            </div>
+
           </div>
 
-          <div class="absolute bottom-2 right-2">
-            <button onclick="handleChatSubmitClick()" id="btnSubmitChat" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-sm whitespace-nowrap">
-              送信 ➔
-            </button>
-          </div>
         </div>
 
       </div>
@@ -1223,6 +1234,9 @@
       renderCreativeProjectsList();
     }
 
+    // ====================================================
+    // 【案件一覧描画（PC対応マルチカラムグリッド）】
+    // ====================================================
     function renderCreativeProjectsList() {
       const container = document.getElementById('projectList');
       if (!container) return;
@@ -1255,7 +1269,7 @@
       });
 
       if (filtered.length === 0) {
-        container.innerHTML = '<div class="p-8 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs">該当する制作案件はありません</div>';
+        container.innerHTML = '<div class="col-span-full p-8 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs">該当する制作案件はありません</div>';
         return;
       }
 
@@ -1326,26 +1340,31 @@
           }).join('');
         }
 
-        return `<div onclick="openProjectChatModal('${p.id}')" class="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 cursor-pointer transition space-y-2.5 relative group">
+        return `<div onclick="openProjectChatModal('${p.id}')" class="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 cursor-pointer transition space-y-2.5 relative group flex flex-col justify-between">
           
-          <div class="flex items-center justify-between gap-2">
-            <div class="flex items-center space-x-1.5 min-w-0">
-              ${unreadDot}
-              ${codeBadge}
-              ${catBadge}
-              <h3 class="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 truncate group-hover:text-blue-600 transition">${p.title}</h3>
+          <div class="space-y-2">
+            <!-- 上段: コード + カテゴリ + タイトル + 状態バッジ -->
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center space-x-1.5 min-w-0">
+                ${unreadDot}
+                ${codeBadge}
+                ${catBadge}
+                <h3 class="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 truncate group-hover:text-blue-600 transition">${p.title}</h3>
+              </div>
+              <div class="flex items-center space-x-1.5 flex-shrink-0">
+                ${relatedLinkHtml}
+                <span class="px-2 py-0.5 rounded text-[11px] font-bold ${andon.badgeClass}">${andon.dot} ${andon.label}</span>
+              </div>
             </div>
-            <div class="flex items-center space-x-1.5 flex-shrink-0">
-              ${relatedLinkHtml}
-              <span class="px-2 py-0.5 rounded text-[11px] font-bold ${andon.badgeClass}">${andon.dot} ${andon.label}</span>
+
+            <!-- 中段: 手番・工程要約 -->
+            <div class="bg-slate-50 dark:bg-slate-800/40 p-2 sm:p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 space-y-1">
+              ${activeSummaryHtml}
             </div>
           </div>
 
-          <div class="bg-slate-50 dark:bg-slate-800/40 p-2 sm:p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 space-y-1">
-            ${activeSummaryHtml}
-          </div>
-
-          <div class="text-[11px] text-slate-500 flex items-center space-x-1.5 min-w-0 truncate pt-0.5">
+          <!-- 下段: 1行ログプレビュー -->
+          <div class="text-[11px] text-slate-500 flex items-center space-x-1.5 min-w-0 truncate pt-2 border-t border-slate-100 dark:border-slate-800/60">
             <span class="text-xs flex-shrink-0">💬</span>
             <div class="truncate">${latestLogHtml}</div>
           </div>
@@ -1355,7 +1374,7 @@
     }
 
     // ----------------------------------------------------
-    // 【案件チャットモーダル（差別化デザイン適用）】
+    // 【案件チャットモーダル（PC左右2分割 ＆ パイプライン食い込み解消）】
     // ----------------------------------------------------
     function openProjectChatModal(projectId) {
       selectedProjectForChat = cachedCreativeProjects.find(p => p.id === projectId);
@@ -1423,11 +1442,11 @@
       const todayStr = new Date().toISOString().split('T')[0];
 
       // ====================================================
-      // 【差別化①】縦の一本線ステップツリー（カード枠完全排除）
+      // 【パイプライン食い込み解消】十分な左余白(ml-2 pl-4)を確保したステップツリー
       // ====================================================
       const taskListContainer = document.getElementById('chatModalTaskListContainer');
-      taskListContainer.innerHTML = `<div class="relative pl-3 space-y-2 border-l-2 border-slate-300 dark:border-slate-700 my-1">`
-        + tasks.map((t, index) => {
+      taskListContainer.innerHTML = `<div class="relative ml-2 pl-4 space-y-2 border-l-2 border-slate-300 dark:border-slate-700 my-1 py-1">`
+        + tasks.map((t) => {
             const isDone = t.status === '完了';
             const isOverdue = t.deadline && t.deadline < todayStr && !isDone;
             const assignee = allProfiles.find(u => u.id === t.assignee_id);
@@ -1451,11 +1470,11 @@
 
             const ballTag = getBallHolderTag(t.ball_holder || 'creator');
 
-            return `<div onclick="selectTaskForControl('${t.id}')" class="relative group cursor-pointer flex items-center justify-between text-xs py-0.5 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 -ml-3 pl-3 pr-1.5 rounded transition">
-              <!-- 左側ステップドット -->
-              <span class="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full ring-2 ${dotColor}"></span>
+            return `<div onclick="selectTaskForControl('${t.id}')" class="relative group cursor-pointer flex items-center justify-between text-xs py-1 px-2 rounded hover:bg-white/80 dark:hover:bg-slate-800/80 transition -ml-2">
+              <!-- 丸ポチ：境界線上に綺麗にセンタリング（-left-[13px]） -->
+              <span class="absolute -left-[13px] top-2.5 w-2.5 h-2.5 rounded-full ring-2 ${dotColor} z-10"></span>
               
-              <div class="flex items-center space-x-1.5 truncate">
+              <div class="flex items-center space-x-1.5 truncate pl-2">
                 <span class="${titleColor}">${t.title}</span>
                 <span class="text-slate-400 text-[10px]">·</span>
                 <span class="text-slate-600 dark:text-slate-300 font-medium text-[11px] truncate">${assigneeName}</span>
@@ -1490,6 +1509,9 @@
 
       openModal('projectChatModal');
       autoMarkProjectTasksAsRead(p);
+      
+      // モーダルを開いた瞬間に最下部（最新メッセージ位置）へ自動スクロール
+      setTimeout(scrollToLatestMessage, 50);
     }
 
     function renderAssigneeDropdown() {
@@ -1550,8 +1572,15 @@
       });
     }
 
+    function scrollToLatestMessage() {
+      const container = document.getElementById('chatModalTimeline');
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
+    }
+
     // ====================================================
-    // 【差別化②】メッセージバブル（会話UI）タイムライン描画
+    // 【昇順化】チャットタイムライン（上が過去、下が最新）
     // ====================================================
     function renderProjectChatTimeline(project) {
       const timelineContainer = document.getElementById('chatModalTimeline');
@@ -1565,10 +1594,11 @@
         });
       });
 
-      allLogs.sort((a,b) => new Date(b.at) - new Date(a.at));
+      // 昇順（古いログ ➔ 最新ログ）にソート
+      allLogs.sort((a,b) => new Date(a.at) - new Date(b.at));
 
       if (allLogs.length === 0) {
-        timelineContainer.innerHTML = '<div class="text-center py-8 text-slate-400 text-xs italic">まだメッセージログはありません</div>';
+        timelineContainer.innerHTML = '<div class="text-center py-12 text-slate-400 text-xs italic">まだメッセージログはありません</div>';
         return;
       }
 
@@ -1599,9 +1629,8 @@
           </div>`;
         }
 
-        // バブルスタイル（右寄せ: 自分の発言 / 左寄せ: 相手の発言）
         if (isMyPost) {
-          return `<div class="flex justify-end space-x-2 pl-8">
+          return `<div class="flex justify-end space-x-2 pl-6 sm:pl-10">
             <div class="max-w-[85%] flex flex-col items-end">
               <div class="flex items-center space-x-1.5 text-[10px] text-slate-400 mb-1">
                 <span class="font-mono">${dateStr}</span>
@@ -1619,7 +1648,7 @@
             </div>
           </div>`;
         } else {
-          return `<div class="flex justify-start space-x-2 pr-8">
+          return `<div class="flex justify-start space-x-2 pr-6 sm:pr-10">
             <div class="w-6 h-6 rounded-full bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-4">
               ${userInitial}
             </div>
@@ -1786,7 +1815,7 @@
 
         const logs = targetTask.logs || [];
         if (comment || uploadedFileUrl || detectedUrl || newStatus) {
-          logs.unshift({
+          logs.push({
             type: logType,
             user: currentUserName,
             url: detectedUrl || null,
@@ -1837,6 +1866,8 @@
         await loadCreativeProjects();
         openProjectChatModal(selectedProjectForChat.id);
         renderAllUpdatesLogs();
+
+        setTimeout(scrollToLatestMessage, 100);
 
       } catch (err) {
         alert('エラー: ' + err.message);
