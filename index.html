@@ -55,31 +55,54 @@
         <span id="roleBadge" class="hidden sm:inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">Guest</span>
       </div>
 
-      <!-- PCヘッダーナビ -->
-      <nav id="pcAdminNav" class="hidden md:flex items-center space-x-1 lg:space-x-2 flex-1 justify-center max-w-2xl">
-        <button onclick="switchTab('creative')" id="pcTabCreative" class="px-3 py-1.5 rounded-lg text-xs font-bold transition text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60">制作進行</button>
-        <button onclick="switchTab('sales')" id="pcTabSales" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">営業・商談</button>
-        <button onclick="switchTab('updates')" id="pcTabUpdates" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">更新ログ</button>
-        <button onclick="switchTab('master')" id="pcTabMaster" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">マスター設定</button>
-        <button onclick="switchTab('members')" id="pcTabMembers" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">メンバー</button>
+      <!-- PCヘッダーナビ（日常業務の3機能に絞り込み、横幅崩れを解消） -->
+      <nav id="pcAdminNav" class="hidden md:flex items-center space-x-1 lg:space-x-2 flex-1 justify-center max-w-md">
+        <button onclick="switchTab('creative')" id="pcTabCreative" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60">制作進行</button>
+        <button onclick="switchTab('sales')" id="pcTabSales" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">営業・商談</button>
+        <button onclick="switchTab('updates')" id="pcTabUpdates" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">更新ログ</button>
       </nav>
 
       <!-- PCツールバー -->
-      <div id="pcUserActions" class="hidden md:flex items-center space-x-2.5 flex-shrink-0">
-        <button id="storageCleanupNavBtn" onclick="manualTriggerStorageCleanup()" type="button" class="hidden px-2.5 py-1 text-xs font-semibold rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 hover:bg-amber-100 transition whitespace-nowrap">
-          📦 容量管理
-        </button>
-        <button id="viewToggleBtn" onclick="toggleAdminViewMode()" type="button" class="hidden px-2.5 py-1 text-xs font-semibold rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 transition whitespace-nowrap">
-          視点切替
-        </button>
-        <button onclick="toggleDarkMode()" type="button" class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" title="テーマ切り替え">
+      <div id="pcUserActions" class="hidden md:flex items-center space-x-2 flex-shrink-0 relative">
+        <button onclick="toggleDarkMode()" type="button" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition" title="テーマ切り替え">
           <span class="themeIcon text-sm">🌙</span>
         </button>
-        <button onclick="openMyAccountModal()" id="pcUserNameBtn" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 transition">
-          <span class="userInitialAvatar w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px]">U</span>
-          <span id="pcUserDisplayName" class="max-w-[120px] truncate">ユーザー</span>
-        </button>
-        <button onclick="logout()" class="text-xs text-slate-400 hover:text-red-500 transition px-1">ログアウト</button>
+
+        <!-- PCドロップダウンメニュー連動ボタン -->
+        <div class="relative">
+          <button onclick="togglePcUserMenu()" id="pcUserNameBtn" class="flex items-center space-x-2 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/60 text-xs font-bold text-slate-700 dark:text-slate-200 transition">
+            <span class="userInitialAvatar w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px]">U</span>
+            <span id="pcUserDisplayName" class="max-w-[110px] truncate">ユーザー</span>
+            <span class="text-[10px] text-slate-400">▼</span>
+          </button>
+
+          <!-- PCアバターメニュー（設定系・管理系を集約） -->
+          <div id="pcUserDropdown" class="hidden absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 py-2 z-50 animate-in fade-in zoom-in-95 text-xs">
+            <div id="pcAdminMenuSection" class="hidden border-b border-slate-100 dark:border-slate-800 pb-1.5 mb-1.5 px-1 space-y-0.5">
+              <button onclick="toggleAdminViewMode(); togglePcUserMenu();" id="pcDropdownViewToggle" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-between">
+                <span>🔄 視点切替</span>
+                <span id="pcDropdownViewTag" class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60">全件</span>
+              </button>
+              <button onclick="switchTab('master'); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium flex items-center space-x-2">
+                <span>🛠️ 工程マスター設定</span>
+              </button>
+              <button onclick="switchTab('members'); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium flex items-center space-x-2">
+                <span>👥 所属メンバー管理</span>
+              </button>
+              <button onclick="manualTriggerStorageCleanup(); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-medium flex items-center space-x-2">
+                <span>📦 ストレージ容量管理</span>
+              </button>
+            </div>
+            <div class="px-1 space-y-0.5">
+              <button onclick="openMyAccountModal(); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium flex items-center space-x-2">
+                <span>⚙️ アカウント設定</span>
+              </button>
+              <button onclick="logout()" class="w-full text-left px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 font-bold flex items-center space-x-2">
+                <span>🚪 ログアウト</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- スマホメニューボタン -->
@@ -334,7 +357,7 @@
     </div>
   </div>
 
-  <!-- ==================== 案件統合チャット＆進捗モーダル ==================== -->
+  <!-- ==================== 案件統合チャット＆進捗モーダル（財務ボタン削除済） ==================== -->
   <div id="projectChatModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl md:max-w-5xl w-full p-3.5 sm:p-5 border border-slate-200 dark:border-slate-800 max-h-[95vh] h-[92vh] sm:h-[90vh] flex flex-col shadow-2xl overflow-hidden">
       
@@ -350,9 +373,6 @@
           <div id="chatModalRelatedLink" class="mt-1 flex flex-wrap items-center gap-1.5"></div>
         </div>
         <div class="flex items-center space-x-1.5 flex-shrink-0">
-          <button id="chatModalFinancialBtn" class="hidden px-2.5 py-1 text-xs rounded bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-bold border border-purple-200 dark:border-purple-800 touch-target-btn">
-            💰 財務
-          </button>
           <button id="chatModalDeleteBtn" onclick="deleteCurrentProject()" class="hidden px-2.5 py-1 text-xs rounded bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-400 font-bold border border-red-200 dark:border-red-800 hover:bg-red-100 transition touch-target-btn">
             🗑️ 削除
           </button>
@@ -500,7 +520,7 @@
     </div>
   </div>
 
-  <!-- ==================== ストレージ容量クリーンアップモーダル ==================== -->
+  <!-- ストレージ容量クリーンアップモーダル -->
   <div id="storageCleanupModal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-3 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full p-5 space-y-4 border border-amber-300 dark:border-amber-800 shadow-2xl animate-in fade-in zoom-in-95">
       
@@ -582,67 +602,6 @@
       <div class="flex justify-end space-x-2 pt-2">
         <button onclick="closeModal('addRelatedModal')" class="px-3.5 py-2 border dark:border-slate-700 rounded-lg text-xs touch-target-btn">キャンセル</button>
         <button onclick="submitCreateRelatedProject()" class="px-5 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold touch-target-btn">ペア起票 ➔</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 【Master限定】財務事項ログモーダル -->
-  <div id="financialModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2.5 sm:p-4 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full p-4 sm:p-6 border border-purple-200 dark:border-purple-900/60 max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
-      <div class="flex items-start justify-between border-b dark:border-slate-800 pb-3 flex-shrink-0 gap-2">
-        <div>
-          <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300">👑 Master限定・秘匿情報</span>
-          <h3 id="financialModalTitle" class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 mt-1">財務事項・請求書管理</h3>
-        </div>
-        <button onclick="closeModal('financialModal')" class="text-slate-400 hover:text-slate-600 text-lg p-2 touch-target-btn">✕</button>
-      </div>
-
-      <div class="bg-purple-50/50 dark:bg-purple-950/20 p-3 sm:p-4 rounded-xl border border-purple-100 dark:border-purple-900/40 space-y-2.5 mt-3 flex-shrink-0">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <div>
-            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">項目・用途 *</label>
-            <input type="text" id="fnInputTitle" placeholder="例: クリエイター報酬、請求書発行" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500">
-          </div>
-          <div>
-            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">金額 (円)</label>
-            <input type="number" id="fnInputAmount" placeholder="例: 50000" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500">
-          </div>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <div>
-            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">期日 (支払 / 入金)</label>
-            <input type="date" id="fnInputDueDate" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500">
-          </div>
-          <div>
-            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">ステータス</label>
-            <select id="fnInputStatus" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500">
-              <option value="未対応">🔴 未対応</option>
-              <option value="対応済">🟢 対応済</option>
-            </select>
-          </div>
-        </div>
-        <div>
-          <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">請求書URL (Google Drive / クラウド等)</label>
-          <input type="url" id="fnInputInvoiceUrl" placeholder="https://drive.google.com/..." class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500">
-        </div>
-        <div>
-          <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-0.5">メモ (任意)</label>
-          <input type="text" id="fnInputMemo" placeholder="振込先や備考" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500">
-        </div>
-        <div class="text-right pt-1">
-          <button onclick="submitFinancialLog()" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold transition shadow-sm touch-target-btn">
-            財務ログを記録
-          </button>
-        </div>
-      </div>
-
-      <div class="flex-1 overflow-y-auto min-h-[140px] space-y-2 pt-3 pr-1">
-        <h4 class="text-xs font-bold text-slate-500 sticky top-0 bg-white dark:bg-slate-900 py-0.5 z-10">記録済み財務ログ</h4>
-        <div id="financialTimeline" class="space-y-2 text-xs"></div>
-      </div>
-
-      <div class="flex justify-end pt-3 border-t dark:border-slate-800 flex-shrink-0">
-        <button onclick="closeModal('financialModal')" class="w-full sm:w-auto px-5 py-2.5 border dark:border-slate-700 rounded-lg text-xs font-medium touch-target-btn">閉じる</button>
       </div>
     </div>
   </div>
@@ -880,7 +839,6 @@
     let selectedLead = null;
     let salesTemplates = [];
     let selectedProjectForChat = null;
-    let selectedProjectForFinancial = null;
     let cachedCreativeProjects = [];
     let pendingUploadFile = null;
 
@@ -1306,7 +1264,6 @@
       return cachedCreativeProjects.find(p => p.group_id === project.group_id && p.id !== project.id);
     }
 
-    // 制作ステータス絞り込み変更ハンドラ
     function handleCreativeFilterChange(key) {
       currentAndonFilter = key;
       renderCreativeProjectsList();
@@ -1329,10 +1286,10 @@
       const filtered = targetProjects.filter(p => {
         const andon = evaluateProjectAndon(p);
         if (currentAndonFilter === 'active') {
-          return andon.statusKey !== 'completed'; // 完了以外を表示
+          return andon.statusKey !== 'completed';
         }
         if (currentAndonFilter === 'all') {
-          return true; // 完了も含め全件
+          return true;
         }
         return andon.statusKey === currentAndonFilter;
       });
@@ -1472,7 +1429,7 @@
 
       const filtered = allLeads.filter(l => {
         if (currentFilterStatus === 'active') {
-          return l.status !== '対応停止'; // 停止以外を表示
+          return l.status !== '対応停止';
         }
         if (currentFilterStatus === 'all') {
           return true;
@@ -1562,16 +1519,6 @@
 
       const delBtn = document.getElementById('chatModalDeleteBtn');
       if (delBtn) delBtn.classList.toggle('hidden', !isAdminOrMaster());
-
-      const fnBtn = document.getElementById('chatModalFinancialBtn');
-      if (fnBtn) {
-        if (isMaster()) {
-          fnBtn.classList.remove('hidden');
-          fnBtn.onclick = () => openFinancialModal(p.id);
-        } else {
-          fnBtn.classList.add('hidden');
-        }
-      }
 
       const tasks = getFilteredTasksForProject(p).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
       const todayStr = new Date().toISOString().split('T')[0];
@@ -2421,117 +2368,6 @@
       renderProjectChatTimeline(project);
     }
 
-    async function openFinancialModal(projectId) {
-      if (!isMaster()) return alert('この機能はMaster権限専用です');
-      const targetPrj = cachedCreativeProjects.find(p => p.id === projectId);
-      if (!targetPrj) return;
-      selectedProjectForFinancial = targetPrj;
-
-      document.getElementById('financialModalTitle').innerText = '💰 財務事項・請求管理: ' + targetPrj.title;
-      document.getElementById('fnInputTitle').value = '';
-      document.getElementById('fnInputAmount').value = '';
-      document.getElementById('fnInputDueDate').value = '';
-      document.getElementById('fnInputInvoiceUrl').value = '';
-      document.getElementById('fnInputStatus').value = '未対応';
-      document.getElementById('fnInputMemo').value = '';
-
-      await loadFinancialLogs(projectId);
-      openModal('financialModal');
-    }
-
-    async function loadFinancialLogs(projectId) {
-      const container = document.getElementById('financialTimeline');
-      if (!container) return;
-      container.innerHTML = '<div class="text-slate-400 text-center py-4">読み込み中...</div>';
-
-      const { data: logs, error } = await supabaseClient
-        .from('financial_logs')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false });
-
-      if (error || !logs || logs.length === 0) {
-        container.innerHTML = '<div class="text-slate-400 text-center py-6 bg-slate-50 dark:bg-slate-800/40 rounded-lg">記録された財務ログはありません</div>';
-        return;
-      }
-
-      container.innerHTML = logs.map(l => {
-        const dateStr = l.due_date ? ('期日: ' + l.due_date) : '期日なし';
-        const isDone = l.status === '対応済';
-        const statusBadge = isDone 
-          ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">🟢 対応済</span>'
-          : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300">🔴 未対応</span>';
-
-        const amountStr = l.amount ? ('¥' + Number(l.amount).toLocaleString()) : '金額未定';
-        const invoiceLink = l.invoice_url ? `<div class="mt-1"><a href="${l.invoice_url}" target="_blank" class="text-blue-600 dark:text-blue-400 font-bold hover:underline inline-flex items-center text-[11px] break-all">📄 請求書ファイル ↗</a></div>` : '';
-
-        return `<div class="p-3 bg-white dark:bg-slate-800 rounded-xl border dark:border-slate-700 space-y-1.5 shadow-sm">
-          <div class="flex justify-between items-start gap-2">
-            <div>
-              <span class="font-bold text-xs text-slate-800 dark:text-slate-100">${l.title}</span>
-              <div class="text-[11px] text-purple-600 dark:text-purple-400 font-extrabold mt-0.5">${amountStr}</div>
-            </div>
-            <div class="flex items-center space-x-1.5 flex-shrink-0">
-              ${statusBadge}
-              <button onclick="toggleFinancialStatus('${l.id}', '${l.status}')" class="text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition touch-target-btn">切替</button>
-              <button onclick="deleteFinancialLog('${l.id}')" class="text-[10px] text-red-500 hover:text-red-700 p-0.5 touch-target-btn" title="削除">🗑️</button>
-            </div>
-          </div>
-          <div class="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-700">
-            <span>${dateStr}</span>
-            ${l.memo ? `<span class="text-slate-500 truncate max-w-[180px]">メモ: ${l.memo}</span>` : ''}
-          </div>
-          ${invoiceLink}
-        </div>`;
-      }).join('');
-    }
-
-    async function submitFinancialLog() {
-      if (!selectedProjectForFinancial) return;
-      const title = document.getElementById('fnInputTitle').value.trim();
-      const amount = parseFloat(document.getElementById('fnInputAmount').value) || 0;
-      const dueDate = document.getElementById('fnInputDueDate').value || null;
-      const status = document.getElementById('fnInputStatus').value;
-      const invoiceUrl = document.getElementById('fnInputInvoiceUrl').value.trim() || null;
-      const memo = document.getElementById('fnInputMemo').value.trim() || null;
-
-      if (!title) return alert('項目・用途を入力してください');
-
-      const { error } = await supabaseClient.from('financial_logs').insert({
-        project_id: selectedProjectForFinancial.id,
-        title: title,
-        amount: amount,
-        due_date: dueDate,
-        status: status,
-        invoice_url: invoiceUrl,
-        memo: memo
-      });
-
-      if (error) return alert('保存エラー: ' + error.message);
-
-      document.getElementById('fnInputTitle').value = '';
-      document.getElementById('fnInputAmount').value = '';
-      document.getElementById('fnInputInvoiceUrl').value = '';
-      document.getElementById('fnInputMemo').value = '';
-      await loadFinancialLogs(selectedProjectForFinancial.id);
-    }
-
-    async function toggleFinancialStatus(logId, currentStatus) {
-      const next = (currentStatus === '対応済') ? '未対応' : '対応済';
-      await supabaseClient.from('financial_logs').update({ status: next }).eq('id', logId);
-      if (selectedProjectForFinancial) {
-        loadFinancialLogs(selectedProjectForFinancial.id);
-      }
-    }
-
-    async function deleteFinancialLog(logId) {
-      if (!confirm('この財務ログを削除しますか？')) return;
-      await supabaseClient.from('financial_logs').delete().eq('id', logId);
-      if (selectedProjectForFinancial) {
-        loadFinancialLogs(selectedProjectForFinancial.id);
-      }
-    }
-
     let workflowMasters = [
       { key: 'compose', name: '作曲', days: 7, track: 'music', order: 1, depends: [] },
       { key: 'lyrics', name: '作詞', days: 5, track: 'music', order: 2, depends: ['作曲'] },
@@ -2612,6 +2448,16 @@
       detectTouchDevice();
       window.addEventListener('resize', detectTouchDevice);
       initTheme();
+
+      // PCメニュー外側クリックで閉じる
+      window.addEventListener('click', (e) => {
+        const dd = document.getElementById('pcUserDropdown');
+        const btn = document.getElementById('pcUserNameBtn');
+        if (dd && !dd.classList.contains('hidden') && !btn.contains(e.target) && !dd.contains(e.target)) {
+          dd.classList.add('hidden');
+        }
+      });
+
       try {
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (session) {
@@ -2650,11 +2496,9 @@
       const loginView = document.getElementById('loginView');
       const appView = document.getElementById('appView');
       const roleBadge = document.getElementById('roleBadge');
-      const viewToggleBtn = document.getElementById('viewToggleBtn');
-      const storageCleanupNavBtn = document.getElementById('storageCleanupNavBtn');
-      const mobileViewToggleBtn = document.getElementById('mobileViewToggleBtn');
       const pcNav = document.getElementById('pcAdminNav');
       const pcUserActions = document.getElementById('pcUserActions');
+      const pcAdminSection = document.getElementById('pcAdminMenuSection');
       const mobileHeaderActions = document.getElementById('mobileHeaderActions');
       const mobileBottomNav = document.getElementById('mobileBottomNav');
       const btnNewProjectTop = document.getElementById('btnNewProjectTop');
@@ -2686,26 +2530,22 @@
         document.getElementById('mobileUserMenuRole').className = roleClass;
 
         if (isAdminOrMaster()) {
-          viewToggleBtn.classList.remove('hidden');
-          storageCleanupNavBtn.classList.remove('hidden');
-          mobileViewToggleBtn.classList.remove('hidden');
           btnNewProjectTop.classList.remove('hidden');
           pcNav.classList.remove('md:hidden');
           pcNav.classList.add('md:flex');
           pcUserActions.classList.remove('md:hidden');
           pcUserActions.classList.add('md:flex');
+          pcAdminSection.classList.remove('hidden');
           mobileHeaderActions.classList.remove('hidden');
           mobileBottomNav.classList.remove('hidden');
           applyAdminViewMode();
         } else {
-          viewToggleBtn.classList.add('hidden');
-          storageCleanupNavBtn.classList.add('hidden');
-          mobileViewToggleBtn.classList.add('hidden');
           btnNewProjectTop.classList.add('hidden');
           pcNav.classList.add('md:hidden');
           pcNav.classList.remove('md:flex');
           pcUserActions.classList.remove('md:hidden');
           pcUserActions.classList.add('md:flex');
+          pcAdminSection.classList.add('hidden');
           mobileHeaderActions.classList.remove('hidden');
           mobileBottomNav.classList.add('hidden');
           
@@ -2732,25 +2572,34 @@
       }
     }
 
+    function togglePcUserMenu() {
+      const dd = document.getElementById('pcUserDropdown');
+      if (dd) dd.classList.toggle('hidden');
+    }
+
     function toggleAdminViewMode() {
       adminViewMode = (adminViewMode === 'admin') ? 'creator' : 'admin';
       applyAdminViewMode();
     }
 
     function applyAdminViewMode() {
-      const btn = document.getElementById('viewToggleBtn');
       const mobBtn = document.getElementById('mobileViewToggleBtn');
+      const tag = document.getElementById('pcDropdownViewTag');
       const scopeBadge = document.getElementById('creativeScopeBadge');
 
       if (adminViewMode === 'creator') {
-        btn.innerText = 'マイ担当表示中 (全件へ戻る)';
-        btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 hover:bg-amber-100 transition whitespace-nowrap";
-        mobBtn.innerHTML = '<span>🔄 視点切替 (現在: マイ担当)</span>';
+        if (tag) {
+          tag.innerText = 'マイ担当';
+          tag.className = 'text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300';
+        }
+        if (mobBtn) mobBtn.innerHTML = '<span>🔄 視点切替 (現在: マイ担当)</span>';
         if (scopeBadge) scopeBadge.innerText = 'マイ担当のみ';
       } else {
-        btn.innerText = '視点切替';
-        btn.className = "px-2.5 py-1 text-xs font-semibold rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 transition whitespace-nowrap";
-        mobBtn.innerHTML = '<span>🔄 視点切替 (現在: 全案件)</span>';
+        if (tag) {
+          tag.innerText = '全案件';
+          tag.className = 'text-[10px] px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300';
+        }
+        if (mobBtn) mobBtn.innerHTML = '<span>🔄 視点切替 (現在: 全案件)</span>';
         if (scopeBadge) scopeBadge.innerText = '全案件';
       }
       renderCreativeProjectsList();
@@ -3458,9 +3307,9 @@
         const pcBtn = document.getElementById('pcTab' + t.charAt(0).toUpperCase() + t.slice(1));
         if (pcBtn) {
           if (t === tab) {
-            pcBtn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60";
+            pcBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60";
           } else {
-            pcBtn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition";
+            pcBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition";
           }
         }
 
