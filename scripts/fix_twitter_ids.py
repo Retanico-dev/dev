@@ -21,14 +21,15 @@ def is_excluded(val):
 def extract_twitter_from_text(text):
     if not text:
         return None
-    # 1. twitter.com/xxx や x.com/xxx 形式
+    
+    # 1. twitter.com/xxx または x.com/xxx
     m = re.search(r"(?:twitter|x)\.com/([a-zA-Z0-9_]{3,20})", text)
     if m:
         handle = m.group(1)
         if not is_excluded(handle):
             return handle
     
-    # 2. X: @xxx や Twitter: @xxx 形式
+    # 2. X: @xxx または Twitter: @xxx
     m2 = re.search(r"(?:Twitter|X|ツイッター)[：:\s]*@([a-zA-Z0-9_]{3,20})", text, re.IGNORECASE)
     if m2:
         handle = m2.group(1)
@@ -38,7 +39,6 @@ def extract_twitter_from_text(text):
     return None
 
 def fix_leads_fast():
-    # 既存のリードを取得
     res = supabase.table("leads").select("id, client_name, channel_id, twitter_id").execute()
     leads = res.data or []
 
@@ -60,11 +60,34 @@ def fix_leads_fast():
 
         if ch_id and YOUTUBE_API_KEY:
             try:
-                # YouTube APIでチャンネルの概要欄・カスタムリンク説明を取得
                 api_url = "https://www.googleapis.com/youtube/v3/channels"
                 params = {
                     "part": "snippet",
                     "id": ch_id,
                     "key": YOUTUBE_API_KEY
                 }
-                r = requests.get(api
+                r = requests.get(api_url, params=params, timeout=10)
+                data = r.json()
+                items = data.get("items", [])
+
+                if items:
+                    desc = items[0].get("snippet", {}).get("description", "")
+                    real_x = extract_twitter_from_text(desc)
+            except Exception as e:
+                print(f"    API Error: {e}")
+
+        # 結果をSupabaseに反映
+        if real_x:
+            supabase.table("leads").update({"twitter_id": real_x}).eq("id", lead_id).execute()
+            print(f"  ==> ★更新成功: @{real_x}")
+            updated_count += 1
+        else:
+            supabase.table("leads").update({"twitter_id": None}).eq("id", lead_id).execute()
+            print(f"  ==> ・X未記載のためクリア(NULL)")
+
+    print(f"\n==========================================")
+    print(f"完了: 合計 {updated_count} / {len(leads)} 件の X ID を更新しました！")
+    print(f"==========================================")
+
+if __name__ == "__main__":
+    fix_leads_fast()
