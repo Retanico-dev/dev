@@ -1,0 +1,31 @@
+name: Sync VTuber Sales Leads
+
+on:
+  schedule:
+    # 毎週月曜日 午前0時 UTC (日本時間 午前9時)
+    - cron: '0 0 * * 1'
+  workflow_dispatch: # 手動実行トリガー
+
+jobs:
+  scrape-and-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          pip install requests beautifulsoup4 supabase
+
+      - name: Run Fetch Script
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: |
+          python scripts/fetch_vtubers.py
