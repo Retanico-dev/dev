@@ -1,7 +1,6 @@
 import os
 import re
 import requests
-from bs4 import BeautifulSoup
 from supabase import create_client, Client
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
@@ -19,111 +18,53 @@ def is_excluded(val):
         return True
     return any(ex in val for ex in EXCLUDE_KEYWORDS)
 
-def get_twitter_from_youtube_about(channel_id):
-    """YouTubeチャンネルの概要欄・カスタムリンクからXのIDを抽出"""
-    if not YOUTUBE_API_KEY or not channel_id:
+def extract_twitter_from_text(text):
+    if not text:
         return None
-    try:
-        url = "https://www.googleapis.com/youtube/v3/channels"
-        params = {
-            "part": "snippet",
-            "id": channel_id,
-            "key": YOUTUBE_API_KEY
-        }
-        res = requests.get(url, params=params, timeout=10)
-        data = res.json()
-        items = data.get("items", [])
-        if not items:
-            return None
+    # 1. twitter.com/xxx や x.com/xxx 形式
+    m = re.search(r"(?:twitter|x)\.com/([a-zA-Z0-9_]{3,20})", text)
+    if m:
+        handle = m.group(1)
+        if not is_excluded(handle):
+            return handle
+    
+    # 2. X: @xxx や Twitter: @xxx 形式
+    m2 = re.search(r"(?:Twitter|X|ツイッター)[：:\s]*@([a-zA-Z0-9_]{3,20})", text, re.IGNORECASE)
+    if m2:
+        handle = m2.group(1)
+        if not is_excluded(handle):
+            return handle
 
-        desc = items[0]["snippet"].get("description", "")
-        # 概要欄に書かれた twitter.com/xxx や @xxx を探索
-        m = re.search(r"(?:twitter|x)\.com/([a-zA-Z0-9_]{3,20})", desc)
-        if m and not is_excluded(m.group(1)):
-            return m.group(1)
-        
-        # 「X: @handle」「Twitter: @handle」の表記
-        m2 = re.search(r"(?:Twitter|X|ツイッター)[：:\s]*@([a-zA-Z0-9_]{3,20})", desc, re.IGNORECASE)
-        if m2 and not is_excluded(m2.group(1)):
-            return m2.group(1)
-
-    except Exception as e:
-        print(f"    [YouTube API Snippet Error]: {e}")
     return None
 
-def fix_leads():
-    res = supabase.table("leads").select("id, client_name, youtube_url, channel_id, twitter_id").execute()
+def fix_leads_fast():
+    # 既存のリードを取得
+    res = supabase.table("leads").select("id, client_name, channel_id, twitter_id").execute()
     leads = res.data or []
 
-    # 17件のリードを対象にする
-    print(f"修正対象: {len(leads)} 件")
-
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-
-    # 念のためV-Stackの1〜2ページ目にある全VTuberの {名前: X_ID} 正確な対応表を1度だけ作成（数十秒）
-    name_to_x = {}
-    for p in range(1, 4):
-        list_url = f"https://v-stack.jp/vtubers?page={p}"
-        try:
-            r = requests.get(list_url, headers=headers, timeout=10)
-            soup = BeautifulSoup(r.text, "html.parser")
-            for a in soup.select("a[href*='/vtubers/']"):
-                href = a.get("href", "")
-                if re.search(r"/vtubers/[a-zA-Z0-9_-]+", href) and not href.rstrip("/").endswith("/vtubers"):
-                    d_url = href if href.startswith("http") else f"https://v-stack.jp{href}"
-                    # 詳細を開いて本人の名前とXをペアで保存
-                    dr = requests.get(d_url, headers=headers, timeout=10)
-                    dsoup = BeautifulSoup(dr.text, "html.parser")
-                    
-                    person_name_el = dsoup.select_one("h1, h2, .name")
-                    person_name = person_name_el.get_text(strip=True) if person_name_el else ""
-
-                    person_x = None
-                    for link in dsoup.select("a[href]"):
-                        l_href = link.get("href", "")
-                        if "twitter.com" in l_href or "x.com" in l_href:
-                            mx = re.search(r"(?:twitter|x)\.com/([a-zA-Z0-9_]+)", l_href)
-                            if mx and not is_excluded(mx.group(1)):
-                                person_x = mx.group(1)
-                                break
-                    if person_name and person_x:
-                        name_to_x[person_name] = person_x
-        except Exception:
-            pass
+    print(f"対象リード数: {len(leads)} 件")
+    if not leads:
+        print("リードが存在しません。")
+        return
 
     updated_count = 0
-    for lead in leads:
+
+    for idx, lead in enumerate(leads, 1):
         lead_id = lead["id"]
         c_name = lead.get("client_name", "")
         ch_id = lead.get("channel_id")
 
+        print(f"[{idx}/{len(leads)}] 確認中: {c_name} (Channel: {ch_id})")
+
         real_x = None
 
-        # 1. まずV-Stackで取得した本人の名前完全一致から引く
-        if c_name in name_to_x:
-            real_x = name_to_x[c_name]
-        else:
-            # 部分一致で探す
-            for k, v in name_to_x.items():
-                if k in c_name or c_name in k:
-                    real_x = v
-                    break
-
-        # 2. V-Stackで取れなければ、YouTubeの公式概要欄から引く
-        if not real_x and ch_id:
-            real_x = get_twitter_from_youtube_about(ch_id)
-
-        # 反映
-        if real_x:
-            supabase.table("leads").update({"twitter_id": real_x}).eq("id", lead_id).execute()
-            print(f"★更新成功: {c_name} ➔ @{real_x}")
-            updated_count += 1
-        else:
-            # 不正なめろ田めろさんのIDを消去してNULLに
-            supabase.table("leads").update({"twitter_id": None}).eq("id", lead_id).execute()
-            print(f"・一致なし (NULLクリア): {c_name}")
-
-    print(f"\n完了: {updated_count} / {len(leads)} 件を正しい個別X IDに修正しました。")
-
-if __name__ == "__main__":
-    fix_leads()
+        if ch_id and YOUTUBE_API_KEY:
+            try:
+                # YouTube APIでチャンネルの概要欄・カスタムリンク説明を取得
+                api_url = "https://www.googleapis.com/youtube/v3/channels"
+                params = {
+                    "part": "snippet",
+                    "id": ch_id,
+                    "key": YOUTUBE_API_KEY
+                }
+                r = requests.get(api
