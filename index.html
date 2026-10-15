@@ -11,7 +11,6 @@
     }
   </script>
   <style>
-    /* タッチデバイス向けの最小タップターゲット保証 */
     .is-touch-device .touch-target-btn {
       min-height: 42px;
       min-width: 42px;
@@ -68,7 +67,7 @@
           <span class="themeIcon text-sm">🌙</span>
         </button>
 
-        <!-- PCドロップダウンメニュー連動ボタン -->
+        <!-- PCドロップダウンメニュー -->
         <div class="relative">
           <button onclick="togglePcUserMenu()" id="pcUserNameBtn" class="flex items-center space-x-2 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/60 text-xs font-bold text-slate-700 dark:text-slate-200 transition">
             <span class="userInitialAvatar w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">U</span>
@@ -76,7 +75,6 @@
             <span class="text-[10px] text-slate-400">▼</span>
           </button>
 
-          <!-- PCアバターメニュー -->
           <div id="pcUserDropdown" class="hidden absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 py-2 z-50 animate-in fade-in zoom-in-95 text-xs">
             <div id="pcAdminMenuSection" class="hidden border-b border-slate-100 dark:border-slate-800 pb-1.5 mb-1.5 px-1 space-y-0.5">
               <button onclick="toggleAdminViewMode(); togglePcUserMenu();" id="pcDropdownViewToggle" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-between">
@@ -181,7 +179,6 @@
       <!-- 制作進行 -->
       <div id="creativeSection" class="space-y-3 sm:space-y-4">
         
-        <!-- ヘッダー＋絞り込みプルダウン一体型バー -->
         <div class="flex items-center justify-between gap-2 bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
           <div class="min-w-0 flex-1 flex items-center space-x-2">
             <h2 class="text-base sm:text-lg font-bold truncate">制作ボード</h2>
@@ -189,7 +186,6 @@
           </div>
           
           <div class="flex items-center space-x-2 flex-shrink-0">
-            <!-- 制作ステータス絞り込みプルダウン -->
             <div class="relative">
               <select id="creativeStatusSelect" onchange="handleCreativeFilterChange(this.value)" class="text-xs font-bold pl-3 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500 appearance-none touch-target-btn cursor-pointer">
                 <option value="active" selected>⚡ 進行中のみ (未完了)</option>
@@ -209,7 +205,6 @@
           </div>
         </div>
 
-        <!-- 案件コンテナ（PC: 1行リストテーブル / スマホ: スマートカード） -->
         <div id="projectList"></div>
       </div>
 
@@ -471,7 +466,6 @@
               <button onclick="removeAttachedFile()" type="button" class="text-red-500 hover:text-red-700 text-xs font-bold px-2 py-1 touch-target-btn">✕ 削除</button>
             </div>
 
-            <!-- テキスト入力エリア -->
             <div class="relative">
               <textarea id="chatInputComment" rows="2" placeholder="メッセージを入力... (音源・画像のD&D対応、URL共有)" class="w-full p-3 pb-12 sm:pb-9 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 break-words leading-relaxed"></textarea>
               
@@ -672,7 +666,7 @@
     </div>
   </div>
 
-  <!-- モーダル: 営業チケット詳細・追客操作（vibe_notes表示対応） -->
+  <!-- モーダル: 営業チケット詳細・追客操作 -->
   <div id="leadDetailModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full p-4 sm:p-6 space-y-4 border border-slate-200 dark:border-slate-800 max-h-[92vh] overflow-y-auto">
       <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2 border-b dark:border-slate-800 pb-3">
@@ -686,7 +680,6 @@
         <div class="flex flex-wrap items-center gap-1.5" id="detailLinks"></div>
       </div>
 
-      <!-- クローラー収集メモ（vibe_notes）表示ブロック -->
       <div id="detailVibeNotesBox" class="hidden bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 text-xs">
         <span class="text-[10px] text-slate-400 font-bold block mb-0.5">💡 プロフィール・選曲傾向</span>
         <p id="detailVibeNotesText" class="text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap"></p>
@@ -1412,7 +1405,6 @@
         return;
       }
 
-      // スマホ向けカードHTML
       const mobileCardsHtml = `<div class="block md:hidden space-y-3">` + filtered.map(p => {
         const andon = evaluateProjectAndon(p);
         const hasUnread = getProjectUnreadStatus(p);
@@ -1507,7 +1499,6 @@
         </div>`;
       }).join('') + `</div>`;
 
-      // PC向け1行リストテーブルHTML（列幅を拡げて見切れ解消）
       const pcTableHtml = `
       <div class="hidden md:block bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
         <table class="w-full text-xs text-left border-collapse table-fixed">
@@ -1644,7 +1635,6 @@
       container.innerHTML = mobileCardsHtml + pcTableHtml;
     }
 
-    // 営業チケット絞り込み
     function filterLeads(status) {
       currentFilterStatus = status;
       renderLeadsGrid();
@@ -1671,7 +1661,6 @@
       return `<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">追客: ${lead.send_count || 0}/3</span>`;
     }
 
-    // 営業チケット一覧描画（登録者数バッジ対応）
     function renderLeadsGrid() {
       const container = document.getElementById('leadsList');
       if (!container) return;
@@ -1697,7 +1686,6 @@
         const isFollowupDue = l.next_followup_at && l.next_followup_at <= todayStr && l.status !== '対応停止' && l.status !== '相談決定';
         const phaseBadge = getLeadPhaseBadge(l);
 
-        // 登録者数バッジ（例: 3,500人 ➔ 3.5k）
         let subBadge = '';
         if (l.subscriber_count) {
           const subText = l.subscriber_count >= 1000 
@@ -1794,7 +1782,6 @@
       }
     }
 
-    // 営業チケット詳細モーダルを開く（vibe_notes・登録者数の表示対応）
     function openLeadDetail(leadId) {
       selectedLead = allLeads.find(l => l.id === leadId);
       if (!selectedLead) return;
@@ -1979,7 +1966,6 @@
       openModal('newProjectModal');
     }
 
-    // 案件チャットモーダルを開く
     function openProjectChatModal(projectId) {
       selectedProjectForChat = cachedCreativeProjects.find(p => p.id === projectId);
       if (!selectedProjectForChat) return;
@@ -3437,6 +3423,477 @@
       document.getElementById('leadYoutubeUrl').value = '';
       document.getElementById('leadContactEmail').value = '';
       loadLeads();
+    }
+
+    function renderAllUpdatesLogs() {
+      const container = document.getElementById('allUpdatesLogsContainer');
+      if (!container) return;
+
+      const allTaskLogs = [];
+      cachedCreativeProjects.forEach(p => {
+        const validTasks = getFilteredTasksForProject(p);
+        validTasks.forEach(t => {
+          (t.logs || []).forEach(l => {
+            allTaskLogs.push({
+              ...l,
+              projectTitle: p.title,
+              category: getProjectCategory(p),
+              taskTitle: t.title,
+              taskId: t.id,
+              projectId: p.id
+            });
+          });
+        });
+      });
+
+      allTaskLogs.sort((a,b) => new Date(b.at) - new Date(a.at));
+
+      if (allTaskLogs.length === 0) {
+        container.innerHTML = '<div class="text-center py-10 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs text-slate-400">現在、制作更新ログはありません</div>';
+        return;
+      }
+
+      container.innerHTML = allTaskLogs.map(l => {
+        const isUnread = isLogItemUnread(l);
+        const dateStr = new Date(l.at).toLocaleString('ja-JP');
+        const badgeColor = l.type === '提出' ? 'bg-blue-100 text-blue-700' : l.type === 'リテイク指示' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700';
+        const formattedComment = formatMessageWithLinksAndMedia(l.comment || '');
+        const catBadge = getCategoryBadgeHtml(l.category);
+
+        return `<div class="bg-white dark:bg-slate-900 p-3 sm:p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-1 hover:border-slate-300 dark:hover:border-slate-700 transition ${isUnread ? 'ring-1 ring-red-400' : ''}">
+          <div class="flex flex-wrap items-center justify-between gap-1 text-[11px]">
+            <div class="flex items-center space-x-1.5 min-w-0">
+              ${catBadge}
+              <span class="font-bold text-slate-800 dark:text-slate-200 truncate">${l.projectTitle}</span>
+              <span class="text-slate-400">/</span>
+              <span class="text-blue-600 dark:text-blue-400 font-semibold truncate">[${l.taskTitle}]</span>
+              ${isUnread ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500 text-white animate-pulse">NEW</span>' : ''}
+            </div>
+            <span class="text-slate-400 text-[10px] font-mono flex-shrink-0">${dateStr}</span>
+          </div>
+          <div class="flex items-center space-x-2 text-xs">
+            <span class="font-bold px-1.5 py-0.5 rounded text-[10px] ${badgeColor}">${l.type}</span>
+            <span class="text-slate-500 font-medium">${l.user || '不明'}</span>
+          </div>
+          ${formattedComment ? `<div class="text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-pre-wrap break-words pl-1.5 border-l-2 border-slate-200 dark:border-slate-700">${formattedComment}</div>` : ''}
+          <div class="text-right pt-0.5">
+            <button onclick="openProjectChatModal('${l.projectId}')" class="text-[11px] text-blue-600 dark:text-blue-400 hover:underline p-1 touch-target-btn">チャットを開く ➔</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderMasterTable() {
+      const tbody = document.getElementById('masterTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = workflowMasters.map(w => {
+        const trackBadge = w.track === 'music' 
+          ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-900">🎵 楽曲</span>' 
+          : '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-900">🎬 MV</span>';
+        const dependsText = w.depends.length > 0 ? w.depends.join(' ＋ ') : '着手日';
+
+        return `<tr class="border-b border-slate-100 dark:border-slate-800/60 last:border-b-0 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+          <td class="py-3 px-4">${trackBadge}</td>
+          <td class="py-3 px-4 font-medium">${w.name}</td>
+          <td class="py-3 px-4 text-slate-500 dark:text-slate-400 text-xs">${dependsText}</td>
+          <td class="py-3 px-4">
+            <div class="flex items-center space-x-1">
+              <input type="number" min="1" max="90" id="input_days_${w.key}" value="${w.days}" class="w-16 px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs font-bold text-center focus:ring-2 focus:ring-blue-500 outline-none">
+              <span class="text-xs text-slate-500">日</span>
+            </div>
+          </td>
+          <td class="py-3 px-4 text-right">
+            <button onclick="saveSingleMasterDay('${w.key}')" class="px-3 py-1.5 text-xs bg-slate-100 dark:bg-slate-800 hover:bg-blue-600 hover:text-white rounded-lg font-medium transition text-slate-700 dark:text-slate-300 touch-target-btn">保存</button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    async function saveSingleMasterDay(key) {
+      const input = document.getElementById('input_days_' + key);
+      if (!input) return;
+      const newDays = parseInt(input.value, 10);
+      if (isNaN(newDays) || newDays < 1) return alert('1日以上で入力してください');
+
+      const target = workflowMasters.find(w => w.key === key);
+      if (!target) return;
+
+      target.days = newDays;
+
+      const { error } = await supabaseClient
+        .from('process_masters')
+        .upsert({ name: target.name, standard_days: newDays }, { onConflict: 'name' });
+
+      if (error) {
+        alert('保存エラー: ' + error.message);
+      } else {
+        renderCheckboxes();
+        alert(`「${target.name}」の標準日数を ${newDays} 日に更新しました！`);
+      }
+    }
+
+    async function saveAllMasterDays() {
+      const updates = [];
+      workflowMasters.forEach(w => {
+        const input = document.getElementById('input_days_' + w.key);
+        if (input) {
+          const val = parseInt(input.value, 10);
+          if (!isNaN(val) && val > 0) {
+            w.days = val;
+            updates.push({ name: w.name, standard_days: val });
+          }
+        }
+      });
+
+      if (updates.length === 0) return;
+
+      const { error } = await supabaseClient
+        .from('process_masters')
+        .upsert(updates, { onConflict: 'name' });
+
+      if (error) {
+        alert('一括保存エラー: ' + error.message);
+      } else {
+        renderCheckboxes();
+        alert('すべての標準工程日数を保存しました！');
+      }
+    }
+
+    function renderCheckboxes() {
+      const checkContainer = document.getElementById('processCheckboxes');
+      if (!checkContainer) return;
+
+      const createMusic = document.getElementById('checkCreateMusic')?.checked ?? true;
+      const createMv = document.getElementById('checkCreateMv')?.checked ?? true;
+
+      checkContainer.innerHTML = workflowMasters.map(w => {
+        const isMusic = w.track === 'music';
+        const tag = isMusic ? '🎵 [楽曲]' : '🎬 [イラスト/MV]';
+        const isHidden = (isMusic && !createMusic) || (!isMusic && !createMv);
+
+        return `<label class="flex items-center space-x-2.5 cursor-pointer py-1 ${isHidden ? 'opacity-30 pointer-events-none' : ''} touch-target-row">
+          <input type="checkbox" value="${w.key}" data-name="${w.name}" data-days="${w.days}" data-track="${w.track}" ${isHidden ? '' : 'checked'} class="w-4 h-4 rounded text-blue-600">
+          <span class="text-xs text-slate-700 dark:text-slate-300 font-medium">${tag} ${w.name} (${w.days}日)</span>
+        </label>`;
+      }).join('');
+
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+      const startEl = document.getElementById('autoCalcStartDate');
+      if (startEl && !startEl.value) {
+        startEl.value = todayStr;
+      }
+      syncSuggestedTicketNumber();
+    }
+
+    function toggleTrackCheckboxes() {
+      renderCheckboxes();
+    }
+
+    function renderMembersTable() {
+      const tbody = document.getElementById('membersTableBody');
+      const thActive = document.getElementById('thLastActive');
+      const notice = document.getElementById('masterMonitoringNotice');
+      if (!tbody) return;
+
+      const masterUser = isMaster();
+      if (thActive) thActive.classList.toggle('hidden', !masterUser);
+      if (notice) notice.classList.toggle('hidden', !masterUser);
+
+      const now = new Date().getTime();
+      const fiveMinutes = 5 * 60 * 1000;
+
+      tbody.innerHTML = allProfiles.map(u => {
+        let badgeClass = 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800';
+        let roleName = 'クリエイター';
+        if (u.role === 'master') {
+          badgeClass = 'bg-purple-50 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300 font-bold border border-purple-200 dark:border-purple-800';
+          roleName = '👑 Master';
+        } else if (u.role === 'admin') {
+          badgeClass = 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300 font-bold border border-indigo-200 dark:border-indigo-800';
+          roleName = '管理者';
+        }
+
+        let onlineBadge = '';
+        let lastActiveText = '-';
+
+        if (masterUser) {
+          if (u.last_active_at) {
+            const activeTime = new Date(u.last_active_at).getTime();
+            const isOnline = (now - activeTime) <= fiveMinutes;
+            onlineBadge = isOnline 
+              ? '<span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span><span>ONLINE</span></span>'
+              : '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-medium bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">OFFLINE</span>';
+
+            lastActiveText = new Date(u.last_active_at).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+          } else {
+            onlineBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-medium bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">OFFLINE</span>';
+          }
+        }
+
+        return `<tr class="border-b border-slate-100 dark:border-slate-800/60 last:border-b-0">
+          <td class="p-3.5">
+            <div class="flex items-center space-x-2">
+              ${masterUser ? onlineBadge : ''}
+              <span class="font-bold text-slate-800 dark:text-slate-100">${u.name || '未設定'}</span>
+            </div>
+          </td>
+          <td class="p-3.5 font-mono text-xs text-blue-600 dark:text-blue-400 font-semibold">${u.user_id || '-'}</td>
+          <td class="p-3.5 text-slate-500 dark:text-slate-400">${u.email || '-'}</td>
+          <td class="p-3.5"><span class="px-2.5 py-1 rounded-md text-xs font-semibold ${badgeClass}">${roleName}</span></td>
+          ${masterUser ? `<td class="p-3.5 text-slate-400 text-xs font-mono">${lastActiveText}</td>` : ''}
+        </tr>`;
+      }).join('');
+    }
+
+    async function createNewMember() {
+      const userId = document.getElementById('newMemberUserId').value.trim();
+      const name = document.getElementById('newMemberName').value.trim();
+      const email = document.getElementById('newMemberEmail').value.trim();
+      const password = document.getElementById('newMemberPassword').value.trim();
+      const role = document.getElementById('newMemberRole').value;
+
+      if (!userId || !name || !email || !password) return alert('全ての項目を入力してください');
+      if (password.length < 6) return alert('パスワードは6文字以上で指定してください');
+
+      const tempClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: { persistSession: false }
+      });
+
+      const { data, error } = await tempClient.auth.signUp({
+        email: email,
+        password: password,
+        options: { data: { name: name } }
+      });
+
+      if (error) return alert('メンバー作成失敗: ' + error.message);
+
+      if (data.user) {
+        await supabaseClient.from('profiles').upsert({
+          id: data.user.id,
+          user_id: userId,
+          email: email,
+          name: name,
+          role: role
+        });
+      }
+
+      alert(`メンバー「${name}（ID: ${userId}）」を追加しました！`);
+      closeModal('newMemberModal');
+      document.getElementById('newMemberUserId').value = '';
+      document.getElementById('newMemberName').value = '';
+      document.getElementById('newMemberEmail').value = '';
+      document.getElementById('newMemberPassword').value = '';
+      await loadAllProfiles();
+      renderMembersTable();
+    }
+
+    async function createCreativeProject() {
+      const baseTitle = document.getElementById('newPrjTitle').value.trim();
+      const drive = document.getElementById('newPrjDrive').value.trim();
+      const startDateStr = document.getElementById('autoCalcStartDate').value;
+      const customCodeInput = document.getElementById('newPrjCustomCode').value.trim();
+      const createMusic = document.getElementById('checkCreateMusic').checked;
+      const createMv = document.getElementById('checkCreateMv').checked;
+
+      if (!baseTitle) return alert('案件名を入力してください');
+      if (!createMusic && !createMv) return alert('少なくとも1つのチケットを選択してください');
+
+      const checkedKeys = new Set(
+        Array.from(document.querySelectorAll('#processCheckboxes input:checked')).map(cb => cb.value)
+      );
+
+      const baseDate = new Date(startDateStr || new Date());
+      const addDays = (d, n) => {
+        const res = new Date(d);
+        res.setDate(res.getDate() + n);
+        return res;
+      };
+      const fmt = (d) => d.toISOString().split('T')[0];
+      const getD = (k) => {
+        const found = workflowMasters.find(w => w.key === k);
+        return found ? found.days : 0;
+      };
+
+      const dates = {};
+      dates.compose = addDays(baseDate, getD('compose'));
+      dates.lyrics = addDays(dates.compose, getD('lyrics'));
+      dates.arrange = addDays(dates.compose, getD('arrange'));
+      const recStart = (dates.lyrics > dates.arrange) ? dates.lyrics : dates.arrange;
+      dates.rec = addDays(recStart, getD('rec'));
+      dates.mix = addDays(dates.rec, getD('mix'));
+      dates.mastering = addDays(dates.mix, getD('mastering'));
+
+      dates.illust = addDays(baseDate, getD('illust'));
+      dates.movie = addDays(dates.illust, getD('movie'));
+
+      const groupId = 'grp_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+      
+      let baseCode = customCodeInput;
+      if (!baseCode) {
+        const { prefix, nextNumStr } = getNextTicketNumber(startDateStr);
+        baseCode = `${prefix}-${nextNumStr}`;
+      }
+
+      const cleanBaseCode = baseCode.replace(/[MV]$/i, '');
+      const musicCode = `${cleanBaseCode}M`;
+      const mvCode = `${cleanBaseCode}V`;
+
+      if (createMusic) {
+        const { data: prjMusic, error: errM } = await supabaseClient.from('projects').insert({
+          type: 'creative',
+          title: baseTitle,
+          category: 'music',
+          ticket_code: musicCode,
+          group_id: (createMusic && createMv) ? groupId : null,
+          drive_url: drive || null,
+          status: '進行中'
+        }).select().single();
+
+        if (errM) return alert('楽曲チケット作成エラー: ' + errM.message);
+
+        const musicTasks = [];
+        workflowMasters.filter(w => w.track === 'music').forEach(w => {
+          if (checkedKeys.has(w.key)) {
+            musicTasks.push({
+              project_id: prjMusic.id,
+              title: w.name,
+              deadline: fmt(dates[w.key]),
+              sort_order: w.order,
+              status: '未着手',
+              ball_holder: 'creator',
+              logs: []
+            });
+          }
+        });
+        if (musicTasks.length > 0) {
+          await supabaseClient.from('tasks').insert(musicTasks);
+        }
+      }
+
+      if (createMv) {
+        const { data: prjMv, error: errV } = await supabaseClient.from('projects').insert({
+          type: 'creative',
+          title: baseTitle,
+          category: 'mv',
+          ticket_code: mvCode,
+          group_id: (createMusic && createMv) ? groupId : null,
+          drive_url: drive || null,
+          status: '進行中'
+        }).select().single();
+
+        if (errV) return alert('MVチケット作成エラー: ' + errV.message);
+
+        const mvTasks = [];
+        workflowMasters.filter(w => w.track === 'mv').forEach(w => {
+          if (checkedKeys.has(w.key)) {
+            mvTasks.push({
+              project_id: prjMv.id,
+              title: w.name,
+              deadline: fmt(dates[w.key]),
+              sort_order: w.order,
+              status: '未着手',
+              ball_holder: 'creator',
+              logs: []
+            });
+          }
+        });
+        if (mvTasks.length > 0) {
+          await supabaseClient.from('tasks').insert(mvTasks);
+        }
+      }
+
+      closeModal('newProjectModal');
+      document.getElementById('newPrjTitle').value = '';
+      document.getElementById('newPrjDrive').value = '';
+      document.getElementById('newPrjCustomCode').value = '';
+      await loadCreativeProjects();
+    }
+
+    function switchTab(tab) {
+      currentActiveTab = tab;
+      ['creative', 'sales', 'updates', 'master', 'members'].forEach(t => {
+        const el = document.getElementById(t + 'Section');
+        if (el) el.classList.toggle('hidden', t !== tab);
+
+        const pcBtn = document.getElementById('pcTab' + t.charAt(0).toUpperCase() + t.slice(1));
+        if (pcBtn) {
+          if (t === tab) {
+            pcBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60";
+          } else {
+            pcBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition";
+          }
+        }
+
+        const mobBtn = document.getElementById('mobTab' + t.charAt(0).toUpperCase() + t.slice(1));
+        if (mobBtn) {
+          if (t === tab) {
+            mobBtn.className = "flex flex-col items-center justify-center flex-1 py-1 text-blue-600 dark:text-blue-400 font-bold transition touch-target-btn";
+          } else {
+            mobBtn.className = "flex flex-col items-center justify-center flex-1 py-1 text-slate-400 dark:text-slate-500 font-medium transition touch-target-btn";
+          }
+        }
+      });
+
+      const mobMoreBtn = document.getElementById('mobTabMore');
+      if (mobMoreBtn) {
+        if (tab === 'master' || tab === 'members') {
+          mobMoreBtn.className = "flex flex-col items-center justify-center flex-1 py-1 text-blue-600 dark:text-blue-400 font-bold transition touch-target-btn";
+        } else {
+          mobMoreBtn.className = "flex flex-col items-center justify-center flex-1 py-1 text-slate-400 dark:text-slate-500 font-medium transition touch-target-btn";
+        }
+      }
+
+      if (tab === 'creative') {
+        renderCreativeProjectsList();
+      } else if (tab === 'sales') {
+        renderLeadsGrid();
+      } else if (tab === 'members') {
+        renderMembersTable();
+      } else if (tab === 'updates') {
+        renderAllUpdatesLogs();
+      }
+    }
+
+    function openModal(id) { 
+      document.getElementById(id).classList.remove('hidden'); 
+      if (id === 'newProjectModal') {
+        syncSuggestedTicketNumber();
+      }
+    }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const isDark = (savedTheme === 'dark' || (!savedTheme && prefersDark));
+      document.documentElement.classList.toggle('dark', isDark);
+      document.querySelectorAll('.themeIcon').forEach(el => {
+        el.innerText = isDark ? '☀️' : '🌙';
+      });
+    }
+
+    function toggleDarkMode() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      document.querySelectorAll('.themeIcon').forEach(el => {
+        el.innerText = isDark ? '☀️' : '🌙';
+      });
+    }
+
+    function toggleMobileUserMenu() {
+      const menu = document.getElementById('mobileUserMenu');
+      if (menu) menu.classList.toggle('hidden');
+    }
+
+    function openMobileMoreSheet() {
+      const sheet = document.getElementById('mobileMoreSheet');
+      if (sheet) sheet.classList.remove('hidden');
+    }
+
+    function closeMobileMoreSheet() {
+      const sheet = document.getElementById('mobileMoreSheet');
+      if (sheet) sheet.classList.add('hidden');
     }
 
     init();
