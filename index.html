@@ -1707,7 +1707,7 @@
     }
 
     // ==========================================================
-    // 営業モーダル（HOT/追客 切り替え & 着手ロック コア実装）
+    // 営業モーダル（HOT/追客 切り替え & 着手ロック仕様）
     // ==========================================================
     function openLeadDetail(leadId) {
       selectedLead = allLeads.find(l => l.id === leadId);
@@ -1852,18 +1852,8 @@
       return html;
     }
 
+    // DM文面ジェネレーター（初期文面なし・直接入力＆返信対応）
     function renderDmComposerHTML(lead, targetStep) {
-      const clientName = lead.client_name || 'クリエイター';
-      let defaultText = '';
-
-      if (targetStep === 1) {
-        defaultText = `${clientName}さん、はじめまして！楽曲制作を行っておりますSound Value（ProjectFlow）と申します。\nYouTubeでの魅力的な歌枠・配信を拝見しご連絡いたしました。\nオリジナル曲や歌ってみたのサウンドプロデュースを行っておりまして、もし今後楽曲制作などご検討でしたらお力添えできれば幸いです...`;
-      } else if (targetStep === 2) {
-        defaultText = `${clientName}さん、以前ご連絡させていただきましたSound Valueです！\nその後ご活動の進捗はいかがでしょうか？\nもし直近で音楽制作やイベント企画などご予定がございましたら、お気軽にご相談ください...`;
-      } else {
-        defaultText = `${clientName}さん、度々失礼いたします！Sound Valueです。\nもしタイミングが合いましたら、ポートフォリオだけでもご覧いただけますと幸いです...`;
-      }
-
       const defaultNextDate = new Date();
       defaultNextDate.setDate(defaultNextDate.getDate() + 5);
       const nextDateStr = defaultNextDate.toISOString().split('T')[0];
@@ -1872,17 +1862,17 @@
         <div class="space-y-3 bg-blue-50/50 dark:bg-blue-950/20 p-3.5 rounded-2xl border border-blue-100 dark:border-blue-900/40">
           <div class="flex items-center justify-between">
             <label class="text-xs font-bold text-blue-900 dark:text-blue-300">
-              ${targetStep}通目 送信文面（自動反映）
+              ${targetStep}通目 アプローチ文面 / 返信メモ
             </label>
             <div class="flex items-center space-x-1.5">
               <select id="modalTemplateSelector" onchange="applyTemplateToCustomBox()" class="text-[11px] px-2 py-1 border dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 max-w-[140px] truncate cursor-pointer">
-                <option value="">定型文切替</option>
+                <option value="">定型文を挿入...</option>
                 ${salesTemplates.map(t => `<option value="${t.id}">${t.title}</option>`).join('')}
               </select>
             </div>
           </div>
 
-          <textarea id="modalDmMessageBox" rows="5" class="w-full p-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 break-words leading-relaxed font-sans">${escapeHtml(defaultText)}</textarea>
+          <textarea id="modalDmMessageBox" rows="5" class="w-full p-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 break-words leading-relaxed font-sans" placeholder="送信するDM文面、または先方から受け取った返信内容を入力..."></textarea>
 
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
             <button onclick="copyModalDmText()" type="button" class="px-3.5 py-2 bg-slate-800 dark:bg-slate-700 text-white rounded-lg text-xs font-bold hover:bg-slate-700 transition shadow touch-target-btn flex items-center justify-center space-x-1.5">
@@ -1894,11 +1884,9 @@
                 <span>次回:</span>
                 <input type="date" id="modalDmNextDate" value="${nextDateStr}" class="px-2 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs font-mono">
               </div>
-              ${targetStep > 1 ? `
-                <button onclick="recordDirectReply('${lead.id}')" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-sm whitespace-nowrap touch-target-btn">
-                  返信あり
-                </button>
-              ` : ''}
+              <button onclick="recordDirectReply('${lead.id}')" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-sm whitespace-nowrap touch-target-btn">
+                💬 返信を記録
+              </button>
               <button onclick="completeDmSendCustom('${lead.id}', ${targetStep})" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-sm whitespace-nowrap touch-target-btn">
                 ✓ 送信完了
               </button>
@@ -1996,24 +1984,29 @@
       const lead = allLeads.find(l => l.id === leadId);
       if (!lead) return;
 
-      const replyMemo = prompt('先方からの返信内容やメモを入力してください:', '返信あり・案件検討中');
-      if (replyMemo === null) return;
+      const replyMemo = document.getElementById('modalDmMessageBox').value.trim();
+      if (!replyMemo) {
+        alert('ボックスに先方からの返信内容やメモを入力してください');
+        return;
+      }
 
+      const nextDate = document.getElementById('modalDmNextDate').value;
       const logs = lead.logs || [];
       logs.unshift({
         type: '返信受信',
-        text: replyMemo || '返信を受信しました',
+        text: replyMemo,
         at: new Date().toISOString()
       });
 
       try {
         const { error } = await supabaseClient.from('leads').update({
           status: '先方返信あり（要対応）',
+          next_followup_at: nextDate || null,
           logs: logs
         }).eq('id', leadId);
 
         if (error) throw error;
-        alert('ステータスを「返信あり（ラリー中）」に更新しました！');
+        alert('返信ログを記録し、ステータスを「返信あり」に更新しました！');
         closeModal('leadDetailModal');
         await loadLeads();
       } catch (err) {
