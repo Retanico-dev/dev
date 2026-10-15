@@ -1,6 +1,7 @@
 import os
 import re
 import time
+from urllib.parse import quote
 import requests
 from bs4 import BeautifulSoup
 from supabase import create_client, Client
@@ -19,9 +20,9 @@ def is_excluded(val):
         return True
     return any(ex in val for ex in EXCLUDE_KEYWORDS)
 
-def fix_leads_twitter():
+def fix_leads_twitter_fast():
     # 修正対象のリードを取得（X IDが未設定、またはvstack系になっているもの）
-    res = supabase.table("leads").select("id, client_name, youtube_url, twitter_id").execute()
+    res = supabase.table("leads").select("id, client_name, twitter_id, youtube_url").execute()
     leads = res.data or []
 
     target_leads = [
@@ -35,90 +36,62 @@ def fix_leads_twitter():
         return
 
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-
-    # V-Stackの一覧ページを巡回して、各VTuberのページURLとYouTube URLの対応マップを作る
-    print("V-Stackからプロフィールの照合データを収集中...")
-    yt_to_x = {}
-    current_page = 1
-    max_pages = 30
-
-    while current_page <= max_pages:
-        url = f"https://v-stack.jp/vtubers?page={current_page}"
-        try:
-            r = requests.get(url, headers=headers, timeout=15)
-            if r.status_code != 200:
-                break
-            soup = BeautifulSoup(r.text, "html.parser")
-        except Exception as e:
-            print(f"Error fetching page {current_page}: {e}")
-            break
-
-        detail_links = []
-        for a in soup.select("a[href*='/vtubers/']"):
-            href = a.get("href")
-            if href and re.search(r"/vtubers/[a-zA-Z0-9_-]+", href):
-                full_url = href if href.startswith("http") else f"https://v-stack.jp{href}"
-                if full_url not in detail_links and not full_url.rstrip("/").endswith("/vtubers"):
-                    detail_links.append(full_url)
-
-        if not detail_links:
-            break
-
-        for d_url in detail_links:
-            try:
-                time.sleep(0.3)
-                dr = requests.get(d_url, headers=headers, timeout=10)
-                dsoup = BeautifulSoup(dr.text, "html.parser")
-
-                found_yt = None
-                found_x = None
-
-                for a in dsoup.select("a[href]"):
-                    href = a.get("href", "")
-                    if not found_yt and "youtube.com" in href and not is_excluded(href):
-                        if any(pt in href for pt in ["/channel/", "/@", "/c/", "/user/"]):
-                            found_yt = href.rstrip("/")
-                    
-                    if not found_x and ("twitter.com" in href or "x.com" in href):
-                        m = re.search(r"(?:twitter|x)\.com/([a-zA-Z0-9_]+)", href)
-                        if m and not is_excluded(m.group(1)):
-                            found_x = m.group(1)
-
-                if found_yt and found_x:
-                    yt_to_x[found_yt.lower()] = found_x
-
-            except Exception:
-                pass
-
-        print(f"  ページ {current_page} 完了 (照合可能数: {len(yt_to_x)}件)")
-        current_page += 1
-
-    # DBのレコードを更新
     updated_count = 0
-    for lead in target_leads:
-        yt = (lead.get("youtube_url") or "").lower().rstrip("/")
-        real_x = yt_to_x.get(yt)
 
-        # YouTube URL完全一致で見つからなかった場合、ハンドル部分での部分一致
-        if not real_x and yt:
-            for k, v in yt_to_x.items():
-                if ("@" in yt and "@" in k and yt.split("@")[-1] == k.split("@")[-1]) or \
-                   ("channel/" in yt and "channel/" in k and yt.split("channel/")[-1] == k.split("channel/")[-1]):
-                    real_x = v
+    for idx, lead in enumerate(target_leads, 1):
+        name = lead.get("client_name") or ""
+        clean_name = re.sub(r"[【】\[\]（）()@/].*$", "", name).strip()
+        if not clean_name:
+            clean_name = name
+
+        print(f"[{idx}/{len(target_leads)}] 検索中: {name}")
+
+        try:
+            # V-Stack 内で名前検索
+            search_url = f"https://v-stack.jp/vtubers?search={quote(clean_name)}"
+            time.sleep(0.3)
+            s_res = requests.get(search_url, headers=headers, timeout=10)
+            soup = BeautifulSoup(s_res.text, "html.parser")
+
+            detail_link = None
+            for a in soup.select("a[href*='/vtubers/']"):
+                href = a.get("href", "")
+                if re.search(r"/vtubers/[a-zA-Z0-9_-]+", href) and not href.rstrip("/").endswith("/vtubers"):
+                    detail_link = href if href.startswith("http") else f"https://v-stack.jp{href}"
                     break
 
-        if real_x:
-            supabase.table("leads").update({"twitter_id": real_x}).eq("id", lead["id"]).execute()
-            updated_count += 1
-            print(f"★更新完了: {lead['client_name']} ➔ @{real_x}")
-        else:
-            # 見つからなかった場合はゴミ文字のまま残さないよう NULL にクリア
-            supabase.table("leads").update({"twitter_id": None}).eq("id", lead["id"]).execute()
-            print(f"・クリア (手動確認推奨): {lead['client_name']}")
+            real_x = None
+
+            if detail_link:
+                time.sleep(0.3)
+                d_res = requests.get(detail_link, headers=headers, timeout=10)
+                d_soup = BeautifulSoup(d_res.text, "html.parser")
+
+                for a in d_soup.select("a[href]"):
+                    href = a.get("href", "")
+                    if "twitter.com" in href or "x.com" in href:
+                        m = re.search(r"(?:twitter|x)\.com/([a-zA-Z0-9_]+)", href)
+                        if m:
+                            user = m.group(1)
+                            if not is_excluded(user):
+                                real_x = user
+                                break
+
+            if real_x:
+                supabase.table("leads").update({"twitter_id": real_x}).eq("id", lead["id"]).execute()
+                updated_count += 1
+                print(f"  ==> ★更新成功: {name} ➔ @{real_x}")
+            else:
+                # 本人のXが見つからない場合はゴミを残さず NULL にクリア
+                supabase.table("leads").update({"twitter_id": None}).eq("id", lead["id"]).execute()
+                print(f"  ==> ・X未設定 (NULLにクリア): {name}")
+
+        except Exception as e:
+            print(f"  ==> [Error] {name}: {e}")
 
     print(f"\n==========================================")
-    print(f"修正完了: {updated_count} / {len(target_leads)} 件の X ID を正しいものに更新しました。")
+    print(f"爆速修正完了: 合計 {updated_count} / {len(target_leads)} 件の X ID を修復しました！")
     print(f"==========================================")
 
 if __name__ == "__main__":
-    fix_leads_twitter()
+    fix_leads_twitter_fast()
