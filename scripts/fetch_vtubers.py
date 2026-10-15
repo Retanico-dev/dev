@@ -1,6 +1,7 @@
 import os
 import re
 import time
+from datetime import datetime, timezone
 import requests
 from bs4 import BeautifulSoup
 from supabase import create_client, Client
@@ -11,7 +12,7 @@ YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# 運営や共通で除外すべきキーワード・ハンドル
+# 運営や共通で除外すべきキーワード
 EXCLUDE_HANDLES = ["v-stack", "vstack", "intent", "share", "home", "search"]
 
 def get_channel_details(yt_url):
@@ -46,7 +47,6 @@ def get_channel_details(yt_url):
     if channel_id:
         params["id"] = channel_id
     elif handle:
-        # 除外キーワード
         if any(ex in handle.lower() for ex in EXCLUDE_HANDLES):
             return None, None
         params["forHandle"] = handle
@@ -108,19 +108,16 @@ def crawl_and_sync():
             name_el = d_soup.select_one("h1, h2, .name")
             name = name_el.get_text(strip=True) if name_el else "VTuber"
 
-            # 運営リンクを除外して個人のリンクを探す
+            # YouTube / X (Twitter) 探索
             yt_url = None
             x_id = None
             for a in d_soup.select("a[href]"):
                 href = a.get("href", "")
                 
-                # YouTube判定（v-stack運営のリンクを除外）
                 if "youtube.com" in href and not any(ex in href.lower() for ex in EXCLUDE_HANDLES):
-                    # /watch や /embed などの動画単体ではなくチャンネルリンクを採用
                     if any(pt in href for pt in ["/channel/", "/@", "/c/", "/user/"]):
                         yt_url = href
 
-                # X (Twitter) 判定
                 elif "twitter.com" in href or "x.com" in href:
                     m_x = re.search(r"(?:twitter|x)\.com/([a-zA-Z0-9_]+)", href)
                     if m_x:
@@ -131,7 +128,6 @@ def crawl_and_sync():
             if not yt_url:
                 continue
 
-            # 自己紹介文
             desc_el = d_soup.select_one(".description, .bio, .profile, p")
             vibe_notes = desc_el.get_text(strip=True) if desc_el else "個人勢VTuber"
 
@@ -146,8 +142,9 @@ def crawl_and_sync():
 
             print(f"  [チェック] {name}: 登録者 {sub_count:,}人 ({yt_url})")
 
-            # 登録者数 1,000人 〜 10,000人
+            # 登録者数 1,000人 〜 10,000人の判定
             if 1000 <= sub_count <= 10000:
+                now_iso = datetime.now(timezone.utc).isoformat()
                 lead_data = {
                     "client_name": name,
                     "twitter_id": x_id,
@@ -160,7 +157,7 @@ def crawl_and_sync():
                     "logs": [{
                         "type": "自動発掘",
                         "text": f"クローラーにより自動収集 (登録者数: {sub_count:,}人)",
-                        "at": requests.utils.format_datetime(requests.utils.datetime.datetime.now())
+                        "at": now_iso
                     }]
                 }
 
