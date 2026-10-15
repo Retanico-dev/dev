@@ -12,8 +12,21 @@ YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-TARGET_INSERT_COUNT = 100  # 追加目標件数
-EXCLUDE_HANDLES = ["v-stack", "vstack", "intent", "share", "home", "search"]
+TARGET_INSERT_COUNT = 100
+
+# 運営公式アカウント・除外キーワード（部分一致で一網打尽）
+EXCLUDE_KEYWORDS = [
+    "vstack", "v_stack", "v-stack",
+    "intent", "share", "home", "search", "hashtag", "privacy", "terms"
+]
+
+def is_excluded_handle(handle_or_url):
+    val = (handle_or_url or "").lower()
+    # v_stack, vstack, v-stack に加えて、ハイフンやアンダースコアを無視しても判定
+    normalized = re.sub(r"[-_]", "", val)
+    if "vstack" in normalized:
+        return True
+    return any(ex in val for ex in EXCLUDE_KEYWORDS)
 
 def get_channel_details(yt_url):
     """YouTube URLからチャンネルIDと登録者数を取得"""
@@ -23,17 +36,14 @@ def get_channel_details(yt_url):
     channel_id = None
     handle = None
 
-    # 1. /channel/UC... 形式
     m_id = re.search(r"youtube\.com/channel/([a-zA-Z0-9_-]+)", yt_url)
     if m_id:
         channel_id = m_id.group(1)
     else:
-        # 2. /@handle 形式
         m_handle = re.search(r"youtube\.com/@([a-zA-Z0-9_.-]+)", yt_url)
         if m_handle:
             handle = m_handle.group(1)
         else:
-            # 3. /c/name や /user/name 形式
             m_custom = re.search(r"youtube\.com/(?:c/|user/)?([a-zA-Z0-9_.-]+)", yt_url)
             if m_custom:
                 handle = m_custom.group(1)
@@ -47,7 +57,7 @@ def get_channel_details(yt_url):
     if channel_id:
         params["id"] = channel_id
     elif handle:
-        if any(ex in handle.lower() for ex in EXCLUDE_HANDLES):
+        if is_excluded_handle(handle):
             return None, None
         params["forHandle"] = handle
     else:
@@ -69,7 +79,6 @@ def get_channel_details(yt_url):
         return None, None
 
 def crawl_and_sync():
-    # 既存 channel_id を取得（重複追加防止）
     existing_res = supabase.table("leads").select("channel_id").not_.is_("channel_id", "null").execute()
     existing_ids = set(item["channel_id"] for item in existing_res.data if item.get("channel_id"))
     print(f"既存登録チャンネル数: {len(existing_ids)}")
@@ -77,23 +86,22 @@ def crawl_and_sync():
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
     inserted_count = 0
     current_page = 1
-    max_pages = 50  # 無限ループ防止用の最大ページ上限
+    max_pages = 50
 
     while inserted_count < TARGET_INSERT_COUNT and current_page <= max_pages:
         target_url = f"https://v-stack.jp/vtubers?page={current_page}"
-        print(f"\n--- ページ {current_page} を取得中: {target_url} (現在の新規追加: {inserted_count}/{TARGET_INSERT_COUNT}件) ---")
+        print(f"\n--- ページ {current_page} を取得中 (現在: {inserted_count}/{TARGET_INSERT_COUNT}件) ---")
         
         try:
             resp = requests.get(target_url, headers=headers, timeout=15)
             if resp.status_code != 200:
-                print(f"ページ終了またはステータス異常 (Status: {resp.status_code})。巡回を終了します。")
+                print(f"ページ終了 (Status: {resp.status_code})。巡回を終了します。")
                 break
             soup = BeautifulSoup(resp.text, "html.parser")
         except Exception as e:
             print(f"Scraping fetch error: {e}")
             break
 
-        # 詳細リンクを抽出
         detail_links = []
         for a in soup.select("a[href*='/vtubers/']"):
             href = a.get("href")
@@ -103,10 +111,8 @@ def crawl_and_sync():
                     detail_links.append(full_url)
 
         if not detail_links:
-            print("これ以上VTuberプロフィールが見つかりませんでした。巡回を終了します。")
+            print("VTuberプロフィールが見つかりませんでした。巡回を終了します。")
             break
-
-        print(f"ページ {current_page}: 発見したプロフィール {len(detail_links)} 件")
 
         for detail_url in detail_links:
             if inserted_count >= TARGET_INSERT_COUNT:
@@ -117,24 +123,27 @@ def crawl_and_sync():
                 d_resp = requests.get(detail_url, headers=headers, timeout=10)
                 d_soup = BeautifulSoup(d_resp.text, "html.parser")
 
-                # 名前取得
                 name_el = d_soup.select_one("h1, h2, .name")
                 name = name_el.get_text(strip=True) if name_el else "VTuber"
 
-                # YouTube / X 抽出
                 yt_url = None
                 x_id = None
+
                 for a in d_soup.select("a[href]"):
                     href = a.get("href", "")
-                    if "youtube.com" in href and not any(ex in href.lower() for ex in EXCLUDE_HANDLES):
+
+                    # YouTube
+                    if not yt_url and "youtube.com" in href and not is_excluded_handle(href):
                         if any(pt in href for pt in ["/channel/", "/@", "/c/", "/user/"]):
                             yt_url = href
-                    elif "twitter.com" in href or "x.com" in href:
+
+                    # X (Twitter)
+                    if not x_id and ("twitter.com" in href or "x.com" in href):
                         m_x = re.search(r"(?:twitter|x)\.com/([a-zA-Z0-9_]+)", href)
                         if m_x:
-                            user = m_x.group(1)
-                            if user.lower() not in EXCLUDE_HANDLES:
-                                x_id = user
+                            candidate_user = m_x.group(1)
+                            if not is_excluded_handle(candidate_user):
+                                x_id = candidate_user
 
                 if not yt_url:
                     continue
@@ -142,7 +151,6 @@ def crawl_and_sync():
                 desc_el = d_soup.select_one(".description, .bio, .profile, p")
                 vibe_notes = desc_el.get_text(strip=True) if desc_el else "個人勢VTuber"
 
-                # YouTube API判定
                 channel_id, sub_count = get_channel_details(yt_url)
                 if not channel_id:
                     continue
@@ -150,9 +158,8 @@ def crawl_and_sync():
                 if channel_id in existing_ids:
                     continue
 
-                print(f"  [チェック] {name}: 登録者 {sub_count:,}人 ({yt_url})")
+                print(f"  [チェック] {name}: 登録者 {sub_count:,}人 (X: @{x_id})")
 
-                # 条件判定: 1,000人 〜 10,000人
                 if 1000 <= sub_count <= 10000:
                     now_iso = datetime.now(timezone.utc).isoformat()
                     lead_data = {
@@ -174,16 +181,14 @@ def crawl_and_sync():
                     supabase.table("leads").insert(lead_data).execute()
                     existing_ids.add(channel_id)
                     inserted_count += 1
-                    print(f"  ==> ★新規追加成功 ({inserted_count}/{TARGET_INSERT_COUNT}): {name} ({sub_count:,}人)")
+                    print(f"  ==> ★新規追加成功 ({inserted_count}/{TARGET_INSERT_COUNT}): {name} (X: @{x_id})")
 
             except Exception as e:
                 print(f"  [Error] {detail_url}: {e}")
 
         current_page += 1
 
-    print(f"\n==========================================")
-    print(f"全工程完了: 合計 {inserted_count} 件の新規HOTリードを追加しました。")
-    print(f"==========================================")
+    print(f"\n全工程完了: 合計 {inserted_count} 件の新規HOTリードを追加しました。")
 
 if __name__ == "__main__":
     crawl_and_sync()
