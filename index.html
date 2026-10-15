@@ -83,21 +83,24 @@
                 <span>🔄 視点切替</span>
                 <span id="pcDropdownViewTag" class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 font-semibold">全件</span>
               </button>
-              <button onclick="switchTab('master'); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium">
+              <button onclick="switchTab('master'); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium flex items-center space-x-2">
                 <span>🛠️ 工程マスター設定</span>
               </button>
-              <button onclick="switchTab('members'); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium">
+              <button onclick="openSalesTemplatesModal(); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium flex items-center space-x-2">
+                <span>📝 営業定型文マスター設定</span>
+              </button>
+              <button onclick="switchTab('members'); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium flex items-center space-x-2">
                 <span>👥 所属メンバー管理</span>
               </button>
-              <button onclick="manualTriggerStorageCleanup(); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-medium">
+              <button onclick="manualTriggerStorageCleanup(); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-medium flex items-center space-x-2">
                 <span>📦 ストレージ容量管理</span>
               </button>
             </div>
             <div class="px-1 space-y-0.5">
-              <button onclick="openMyAccountModal(); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium">
+              <button onclick="openMyAccountModal(); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium flex items-center space-x-2">
                 <span>⚙️ アカウント設定</span>
               </button>
-              <button onclick="logout()" class="w-full text-left px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 font-bold">
+              <button onclick="logout()" class="w-full text-left px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 font-bold flex items-center space-x-2">
                 <span>🚪 ログアウト</span>
               </button>
             </div>
@@ -214,8 +217,11 @@
       <div id="salesSection" class="hidden space-y-3 sm:space-y-4">
         
         <div class="flex items-center justify-between gap-2 bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
-          <div class="min-w-0 flex-1">
+          <div class="min-w-0 flex-1 flex items-center space-x-2">
             <h2 class="text-base sm:text-lg font-bold truncate">営業チケットプール</h2>
+            <button onclick="openSalesTemplatesModal()" class="text-xs font-bold px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition flex items-center space-x-1" title="定型文の編集">
+              <span>📝 定型文設定</span>
+            </button>
           </div>
 
           <div class="flex items-center space-x-2 flex-shrink-0">
@@ -338,6 +344,10 @@
       <div class="w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-2"></div>
       <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">管理メニュー</h3>
       <div class="space-y-2 text-sm font-medium">
+        <button onclick="openSalesTemplatesModal(); closeMobileMoreSheet();" class="w-full text-left p-3.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 flex items-center justify-between touch-target-btn">
+          <span>📝 営業定型文マスター設定</span>
+          <span>➔</span>
+        </button>
         <button onclick="manualTriggerStorageCleanup(); closeMobileMoreSheet();" class="w-full text-left p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 flex items-center justify-between touch-target-btn">
           <span>📦 ストレージ容量管理・整理</span>
           <span>➔</span>
@@ -491,11 +501,10 @@
     </div>
   </div>
 
-  <!-- 工程クイック編集用オーバーレイ（案A: スマホは下部ボトムシート / PCは左ペインカード） -->
+  <!-- 工程クイック編集用オーバーレイ（スマホ：下部ボトムシート / PC：左ペインカード） -->
   <div id="taskQuickEditOverlay" class="hidden fixed inset-0 z-50 flex items-end md:items-center justify-center md:justify-start bg-black/60 backdrop-blur-xs md:backdrop-blur-none md:bg-transparent md:pointer-events-none" onclick="closeTaskQuickEditOverlay()">
     <div class="bg-white dark:bg-slate-900 w-full md:w-80 md:ml-6 md:mt-[-120px] rounded-t-3xl md:rounded-2xl shadow-2xl border-t md:border border-slate-200 dark:border-slate-700 p-4 sm:p-5 space-y-3.5 animate-in slide-in-from-bottom md:slide-in-from-top-2 md:fade-in duration-200 text-xs md:pointer-events-auto" onclick="event.stopPropagation()">
       
-      <!-- スマホ用ドラッグバー風インジケーター -->
       <div class="w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto md:hidden"></div>
 
       <div class="flex items-center justify-between border-b dark:border-slate-800 pb-2">
@@ -690,8 +699,13 @@
 
       <div class="space-y-2 border-t dark:border-slate-800 pt-3">
         <div class="flex items-center justify-between gap-2">
-          <label class="text-xs font-bold text-slate-700 dark:text-slate-300">定型文（名前自動反映）</label>
-          <select id="templateSelector" onchange="applyTemplateToBox()" class="text-xs px-2.5 py-1.5 border dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 max-w-[160px] sm:max-w-xs truncate">
+          <div class="flex items-center space-x-2">
+            <label class="text-xs font-bold text-slate-700 dark:text-slate-300">定型文（名前自動反映）</label>
+            <button id="btnLeadDetailEditTemplate" onclick="openSalesTemplatesModal()" class="hidden text-[10px] text-blue-600 dark:text-blue-400 hover:underline font-bold">
+              ⚙️ 編集
+            </button>
+          </div>
+          <select id="templateSelector" onchange="applyTemplateToBox()" class="text-xs px-2.5 py-1.5 border dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 max-w-[160px] sm:max-w-xs truncate cursor-pointer">
             <option value="">-- 定型文を選択 --</option>
           </select>
         </div>
@@ -750,6 +764,36 @@
       <div class="flex justify-end pt-2 border-t dark:border-slate-800">
         <button onclick="closeModal('leadDetailModal')" class="w-full sm:w-auto px-5 py-2 border dark:border-slate-700 rounded-lg text-xs touch-target-btn">閉じる</button>
       </div>
+    </div>
+  </div>
+
+  <!-- モーダル: 営業定型文マスター設定（追加・編集・削除） -->
+  <div id="salesTemplatesModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full p-4 sm:p-6 space-y-4 border border-slate-200 dark:border-slate-800 max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+      
+      <div class="flex items-center justify-between border-b dark:border-slate-800 pb-3 flex-shrink-0">
+        <div>
+          <h3 class="font-bold text-base sm:text-lg text-slate-800 dark:text-slate-100 flex items-center space-x-1.5">
+            <span>📝 営業定型文マスター設定</span>
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">文章中の <code class="px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-bold">{name}</code> は自動で相手の名前に置き換わります</p>
+        </div>
+        <button onclick="closeModal('salesTemplatesModal')" class="text-slate-400 hover:text-slate-600 text-lg p-1 touch-target-btn">✕</button>
+      </div>
+
+      <!-- 定型文一覧コンテナ -->
+      <div id="templatesListContainer" class="flex-1 overflow-y-auto space-y-3 pr-1 text-xs"></div>
+
+      <!-- 新規追加ボタン ＆ 閉じる -->
+      <div class="flex items-center justify-between pt-3 border-t dark:border-slate-800 flex-shrink-0">
+        <button onclick="addNewTemplateItem()" class="px-4 py-2 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 rounded-xl text-xs font-bold border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 transition touch-target-btn flex items-center space-x-1">
+          <span>＋ 新規定型文を追加</span>
+        </button>
+        <button onclick="closeModal('salesTemplatesModal')" class="px-5 py-2 border dark:border-slate-700 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition touch-target-btn">
+          閉じる
+        </button>
+      </div>
+
     </div>
   </div>
 
@@ -1370,7 +1414,7 @@
         return;
       }
 
-      // ==================== スマホ向けカードHTML ====================
+      // スマホ向けカードHTML
       const mobileCardsHtml = `<div class="block md:hidden space-y-3">` + filtered.map(p => {
         const andon = evaluateProjectAndon(p);
         const hasUnread = getProjectUnreadStatus(p);
@@ -1465,7 +1509,7 @@
         </div>`;
       }).join('') + `</div>`;
 
-      // ==================== PC向け1行リストテーブルHTML（列幅を拡げて見切れ解消） ====================
+      // PC向け1行リストテーブルHTML（列幅を拡げて見切れ解消）
       const pcTableHtml = `
       <div class="hidden md:block bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
         <table class="w-full text-xs text-left border-collapse table-fixed">
@@ -1841,7 +1885,6 @@
                 ${ballTag}
               </div>
 
-              <!-- 右端：期日のみ美しく整列 -->
               <div class="flex items-center space-x-1.5 text-[11px] flex-shrink-0">
                 <span class="${t.deadline && t.deadline < todayStr && t.status !== '完了' ? 'text-red-500 font-bold' : 'text-slate-500 dark:text-slate-400'}">${formatDeadlineStr(t.deadline)}</span>
               </div>
@@ -1877,7 +1920,7 @@
       if (taskId) openTaskQuickEditOverlay(taskId);
     }
 
-    // オーバーレイポップアップ開閉＆保存（案A: スマホは下部ボトムシート / PCは左ペインカード）
+    // オーバーレイポップアップ開閉＆保存（スマホ：下部ボトムシート / PC：左ペインカード）
     function openTaskQuickEditOverlay(taskId) {
       if (!selectedProjectForChat) return;
       const targetTask = (selectedProjectForChat.tasks || []).find(t => t.id === taskId);
@@ -2833,6 +2876,7 @@
       const mobileHeaderActions = document.getElementById('mobileHeaderActions');
       const mobileBottomNav = document.getElementById('mobileBottomNav');
       const btnNewProjectTop = document.getElementById('btnNewProjectTop');
+      const btnLeadDetailEditTemplate = document.getElementById('btnLeadDetailEditTemplate');
 
       if (isLoggedIn && userProfile) {
         loginView.classList.add('hidden');
@@ -2859,6 +2903,10 @@
         document.getElementById('mobileUserMenuName').innerText = displayName;
         document.getElementById('mobileUserMenuRole').innerText = roleText;
         document.getElementById('mobileUserMenuRole').className = roleClass;
+
+        if (btnLeadDetailEditTemplate) {
+          btnLeadDetailEditTemplate.classList.toggle('hidden', !isAdminOrMaster());
+        }
 
         if (isAdminOrMaster()) {
           btnNewProjectTop.classList.remove('hidden');
@@ -3008,15 +3056,122 @@
       allProfiles = data || [];
     }
 
+    // ====================================================
+    // 営業定型文（sales_templates）の管理
+    // ====================================================
     async function loadSalesTemplates() {
-      const { data } = await supabaseClient.from('sales_templates').select('*').order('sort_order');
+      const { data, error } = await supabaseClient.from('sales_templates').select('*').order('sort_order', { ascending: true });
+      if (error) console.error("Sales templates load error:", error);
       salesTemplates = data || [];
 
+      // 営業チケット詳細のセレクト更新
       const selector = document.getElementById('templateSelector');
-      if (!selector) return;
-      selector.innerHTML = '<option value="">-- 定型文を選択 --</option>' + salesTemplates.map(t => {
-        return `<option value="${t.id}">${t.title}</option>`;
+      if (selector) {
+        const currentVal = selector.value;
+        selector.innerHTML = '<option value="">-- 定型文を選択 --</option>' + salesTemplates.map(t => {
+          return `<option value="${t.id}">${t.title}</option>`;
+        }).join('');
+        if (currentVal && salesTemplates.some(t => t.id === currentVal)) {
+          selector.value = currentVal;
+        }
+      }
+    }
+
+    function openSalesTemplatesModal() {
+      if (!isAdminOrMaster()) return alert('定型文マスター設定は管理者のみ利用可能です');
+      renderSalesTemplatesListUI();
+      openModal('salesTemplatesModal');
+    }
+
+    function renderSalesTemplatesListUI() {
+      const container = document.getElementById('templatesListContainer');
+      if (!container) return;
+
+      if (salesTemplates.length === 0) {
+        container.innerHTML = '<div class="text-center py-8 text-slate-400">登録されている定型文はありません</div>';
+        return;
+      }
+
+      container.innerHTML = salesTemplates.map((t, idx) => {
+        return `
+          <div class="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2.5">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center space-x-2 flex-1 min-w-0">
+                <span class="text-slate-400 font-mono text-[10px]">#${t.sort_order || (idx + 1)}</span>
+                <input type="text" id="tpl_title_${t.id}" value="${t.title || ''}" placeholder="タイトル（例: 初回DM）" class="flex-1 font-bold px-2.5 py-1.5 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-xs outline-none focus:ring-1 focus:ring-blue-500">
+              </div>
+              <div class="flex items-center space-x-1.5 flex-shrink-0">
+                <input type="number" id="tpl_order_${t.id}" value="${t.sort_order ?? (idx + 1)}" title="表示順" class="w-12 text-center px-1.5 py-1.5 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono outline-none">
+                <button onclick="saveSingleSalesTemplate('${t.id}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-xs shadow-xs touch-target-btn">保存</button>
+                <button onclick="deleteSingleSalesTemplate('${t.id}')" class="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/60 dark:text-red-400 rounded-lg font-bold text-xs border border-red-200 dark:border-red-900 touch-target-btn" title="削除">🗑️</button>
+              </div>
+            </div>
+            <div>
+              <textarea id="tpl_body_${t.id}" rows="4" placeholder="定型文本文... {name} と記述すると相手の名前に変換されます" class="w-full p-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs font-mono outline-none focus:ring-1 focus:ring-blue-500 break-words">${t.body || ''}</textarea>
+            </div>
+          </div>
+        `;
       }).join('');
+    }
+
+    async function saveSingleSalesTemplate(templateId) {
+      const titleInput = document.getElementById(`tpl_title_${templateId}`);
+      const bodyInput = document.getElementById(`tpl_body_${templateId}`);
+      const orderInput = document.getElementById(`tpl_order_${templateId}`);
+
+      const title = titleInput.value.trim();
+      const body = bodyInput.value.trim();
+      const sortOrder = parseInt(orderInput.value, 10) || 1;
+
+      if (!title) return alert('タイトルを入力してください');
+
+      const { error } = await supabaseClient
+        .from('sales_templates')
+        .update({ title, body, sort_order: sortOrder })
+        .eq('id', templateId);
+
+      if (error) return alert('保存エラー: ' + error.message);
+
+      alert(`定型文「${title}」を更新しました！`);
+      await loadSalesTemplates();
+      renderSalesTemplatesListUI();
+    }
+
+    async function deleteSingleSalesTemplate(templateId) {
+      const target = salesTemplates.find(t => t.id === templateId);
+      const name = target ? target.title : 'この定型文';
+      if (!confirm(`定型文「${name}」を削除してもよろしいですか？`)) return;
+
+      const { error } = await supabaseClient
+        .from('sales_templates')
+        .delete()
+        .eq('id', templateId);
+
+      if (error) return alert('削除エラー: ' + error.message);
+
+      await loadSalesTemplates();
+      renderSalesTemplatesListUI();
+    }
+
+    async function addNewTemplateItem() {
+      const nextOrder = salesTemplates.length > 0 
+        ? Math.max(...salesTemplates.map(t => t.sort_order || 0)) + 1 
+        : 1;
+
+      const { data, error } = await supabaseClient
+        .from('sales_templates')
+        .insert({
+          title: '新規定型文',
+          body: '{name} 様\nお世話になっております。',
+          sort_order: nextOrder
+        })
+        .select()
+        .single();
+
+      if (error) return alert('追加エラー: ' + error.message);
+
+      await loadSalesTemplates();
+      renderSalesTemplatesListUI();
     }
 
     async function loadCreativeProjects() {
