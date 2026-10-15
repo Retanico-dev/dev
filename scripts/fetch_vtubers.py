@@ -11,6 +11,9 @@ YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+# 運営や共通で除外すべきキーワード・ハンドル
+EXCLUDE_HANDLES = ["v-stack", "vstack", "intent", "share", "home", "search"]
+
 def get_channel_details(yt_url):
     """YouTube URLからチャンネルIDと登録者数を取得"""
     if not yt_url or not YOUTUBE_API_KEY:
@@ -19,13 +22,20 @@ def get_channel_details(yt_url):
     channel_id = None
     handle = None
 
+    # 1. /channel/UC... 形式
     m_id = re.search(r"youtube\.com/channel/([a-zA-Z0-9_-]+)", yt_url)
     if m_id:
         channel_id = m_id.group(1)
     else:
+        # 2. /@handle 形式
         m_handle = re.search(r"youtube\.com/@([a-zA-Z0-9_.-]+)", yt_url)
         if m_handle:
             handle = m_handle.group(1)
+        else:
+            # 3. /c/name や /user/name 形式などのフォールバック
+            m_custom = re.search(r"youtube\.com/(?:c/|user/)?([a-zA-Z0-9_.-]+)", yt_url)
+            if m_custom:
+                handle = m_custom.group(1)
 
     api_url = "https://www.googleapis.com/youtube/v3/channels"
     params = {
@@ -36,6 +46,9 @@ def get_channel_details(yt_url):
     if channel_id:
         params["id"] = channel_id
     elif handle:
+        # 除外キーワード
+        if any(ex in handle.lower() for ex in EXCLUDE_HANDLES):
+            return None, None
         params["forHandle"] = handle
     else:
         return None, None
@@ -52,16 +65,14 @@ def get_channel_details(yt_url):
         sub_count = int(stats.get("subscriberCount", 0))
         return real_id, sub_count
     except Exception as e:
-        print(f"  [API Error] {yt_url}: {e}")
+        print(f"    [API Error] {yt_url}: {e}")
         return None, None
 
 def crawl_and_sync():
-    # 既存の channel_id を取得（重複排除用）
     existing_res = supabase.table("leads").select("channel_id").not_.is_("channel_id", "null").execute()
     existing_ids = set(item["channel_id"] for item in existing_res.data if item.get("channel_id"))
     print(f"既存登録チャンネル数: {len(existing_ids)}")
 
-    # V-Stack 一覧ページをクロール
     target_url = "https://v-stack.jp/vtubers"
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
     
@@ -72,13 +83,12 @@ def crawl_and_sync():
         print(f"Scraping fetch error: {e}")
         return
 
-    # プロフィール詳細リンクをすべて抽出 (/vtubers/xxxx)
     detail_links = []
     for a in soup.select("a[href*='/vtubers/']"):
         href = a.get("href")
-        if href and re.search(r"/vtubers/[a-zA-Z0-9-]+", href):
+        if href and re.search(r"/vtubers/[a-zA-Z0-9_-]+", href):
             full_url = href if href.startswith("http") else f"https://v-stack.jp{href}"
-            if full_url not in detail_links and not full_url.endswith("/vtubers"):
+            if full_url not in detail_links and not full_url.rstrip("/").endswith("/vtubers"):
                 detail_links.append(full_url)
 
     print(f"発見したVTuberプロフィール数: {len(detail_links)}")
@@ -90,7 +100,7 @@ def crawl_and_sync():
             break
 
         try:
-            time.sleep(0.5)  # 負荷軽減
+            time.sleep(0.5)
             d_resp = requests.get(detail_url, headers=headers, timeout=10)
             d_soup = BeautifulSoup(d_resp.text, "html.parser")
 
@@ -98,17 +108,25 @@ def crawl_and_sync():
             name_el = d_soup.select_one("h1, h2, .name")
             name = name_el.get_text(strip=True) if name_el else "VTuber"
 
-            # YouTube / X (Twitter) リンク探索
+            # 運営リンクを除外して個人のリンクを探す
             yt_url = None
             x_id = None
             for a in d_soup.select("a[href]"):
                 href = a.get("href", "")
-                if "youtube.com" in href:
-                    yt_url = href
+                
+                # YouTube判定（v-stack運営のリンクを除外）
+                if "youtube.com" in href and not any(ex in href.lower() for ex in EXCLUDE_HANDLES):
+                    # /watch や /embed などの動画単体ではなくチャンネルリンクを採用
+                    if any(pt in href for pt in ["/channel/", "/@", "/c/", "/user/"]):
+                        yt_url = href
+
+                # X (Twitter) 判定
                 elif "twitter.com" in href or "x.com" in href:
                     m_x = re.search(r"(?:twitter|x)\.com/([a-zA-Z0-9_]+)", href)
-                    if m_x and m_x.group(1).lower() not in ["intent", "share", "home", "search"]:
-                        x_id = m_x.group(1)
+                    if m_x:
+                        user = m_x.group(1)
+                        if user.lower() not in EXCLUDE_HANDLES:
+                            x_id = user
 
             if not yt_url:
                 continue
@@ -126,8 +144,9 @@ def crawl_and_sync():
                 print(f"  [スキップ・登録済] {name}")
                 continue
 
-            # 登録者数判定: 1,000人 〜 10,000人
-            print(f"  [チェック] {name}: 登録者 {sub_count:,}人")
+            print(f"  [チェック] {name}: 登録者 {sub_count:,}人 ({yt_url})")
+
+            # 登録者数 1,000人 〜 10,000人
             if 1000 <= sub_count <= 10000:
                 lead_data = {
                     "client_name": name,
