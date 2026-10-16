@@ -1708,29 +1708,6 @@
     }
 
     // ==========================================================
-    // メモのブロック分割フォーマッター（案B）
-    // ==========================================================
-    function formatVibeNotesBlocks(text) {
-      if (!text || !text.trim()) {
-        return '<div class="text-xs text-slate-500 italic p-3 text-center bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/60 dark:border-slate-700/60">自己紹介情報が登録されていません。</div>';
-      }
-
-      // 改行単位で分割し、空行を除去してブロック化
-      const blocks = text.split(/\n+/).map(p => p.trim()).filter(Boolean);
-
-      return `
-        <div class="space-y-2">
-          ${blocks.map(b => `
-            <div class="bg-white dark:bg-slate-800/80 p-3 rounded-xl border border-slate-200 dark:border-slate-700/70 text-xs sm:text-[13px] text-slate-700 dark:text-slate-200 leading-relaxed font-sans shadow-xs flex items-start space-x-2">
-              <span class="text-indigo-500 font-bold flex-shrink-0 mt-0.5">•</span>
-              <div class="flex-1 whitespace-pre-wrap break-words">${escapeHtml(b)}</div>
-            </div>
-          `).join('')}
-        </div>
-      `;
-    }
-
-    // ==========================================================
     // 営業モーダル（HOT/追客/返信 切り替え & 着手ロック & インライン編集）
     // ==========================================================
     function openLeadDetail(leadId) {
@@ -1826,7 +1803,7 @@
 
             <div>
               <label class="block font-bold text-slate-500 mb-1 text-xs">プロフィール・選曲傾向メモ</label>
-              <textarea id="editLeadVibe" rows="5" class="w-full p-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed font-sans" placeholder="改行で区切ると自動で読みやすいブロックに整形されます">${escapeHtml(lead.vibe_notes || '')}</textarea>
+              <textarea id="editLeadVibe" rows="5" class="w-full p-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed font-sans" placeholder="改行で整えて入力できます">${escapeHtml(lead.vibe_notes || '')}</textarea>
             </div>
 
             <div class="flex justify-end space-x-2 pt-3 border-t dark:border-slate-800">
@@ -1877,12 +1854,12 @@
         html += `
           <div class="py-4 space-y-4">
             <div>
-              <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center justify-between mb-1.5">
                 <label class="block text-xs font-bold text-slate-500">💡 プロフィール・選曲傾向（V-Stack）</label>
                 <button onclick="toggleEditLeadInfo()" class="text-[10px] text-blue-600 dark:text-blue-400 hover:underline font-semibold">メモを修正</button>
               </div>
-              <div class="max-h-52 overflow-y-auto pr-1">
-                ${formatVibeNotesBlocks(lead.vibe_notes)}
+              <div class="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 p-3.5 rounded-xl text-xs sm:text-[13px] text-slate-700 dark:text-slate-200 leading-relaxed font-sans max-h-52 overflow-y-auto whitespace-pre-wrap shadow-2xs">
+                ${escapeHtml(lead.vibe_notes || '自己紹介情報が登録されていません。')}
               </div>
             </div>
 
