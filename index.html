@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Project Flow - 進行管理</title>
+  <title>Project Flow - 進行管理 & リード同期</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -99,6 +99,9 @@
               <button onclick="openSalesTemplatesModal(); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium flex items-center space-x-2">
                 <span>📝 営業定型文マスター設定</span>
               </button>
+              <button onclick="openGhSyncConfigModal(); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium flex items-center space-x-2">
+                <span>⚡ GitHub同期 (Excel更新) 設定</span>
+              </button>
               <button onclick="switchTab('members'); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium flex items-center space-x-2">
                 <span>👥 所属メンバー管理</span>
               </button>
@@ -143,6 +146,9 @@
       <div class="py-2 space-y-1.5 text-sm font-medium">
         <button id="mobileViewToggleBtn" onclick="toggleAdminViewMode(); toggleMobileUserMenu();" class="hidden w-full text-left px-3.5 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-between touch-target-btn">
           <span>🔄 視点切替 (全案件 / マイ担当)</span>
+        </button>
+        <button onclick="openGhSyncConfigModal(); toggleMobileUserMenu();" class="w-full text-left px-3.5 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-between touch-target-btn">
+          <span>⚡ GitHub同期 (Excel更新) 設定</span>
         </button>
         <button onclick="openMyAccountModal(); toggleMobileUserMenu();" class="w-full text-left px-3.5 py-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-between touch-target-btn">
           <span>⚙️ マイアカウント設定</span>
@@ -223,11 +229,14 @@
       <!-- 営業・商談ボード -->
       <div id="salesSection" class="hidden space-y-3 sm:space-y-4">
         
-        <div class="flex items-center justify-between gap-2 bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
-          <div class="min-w-0 flex-1 flex items-center space-x-2">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+          <div class="min-w-0 flex-1 flex flex-wrap items-center gap-2">
             <h2 class="text-base sm:text-lg font-bold truncate">営業チケットプール</h2>
             <button onclick="openSalesTemplatesModal()" class="text-xs font-bold px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition flex items-center space-x-1" title="定型文の編集">
               <span>📝 定型文設定</span>
+            </button>
+            <button onclick="openGhSyncConfigModal()" class="text-xs font-bold px-2.5 py-1 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 transition flex items-center space-x-1" title="GitHub連携設定">
+              <span>⚡ Excel即時書き戻し設定</span>
             </button>
           </div>
 
@@ -235,8 +244,10 @@
             <div class="relative">
               <select id="leadStatusSelect" onchange="filterLeads(this.value)" class="text-xs font-bold pl-3 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500 appearance-none touch-target-btn cursor-pointer">
                 <option value="active" selected>🔥 対応中のみ (未停止)</option>
-                <option value="未対応（HOT）">🔥 未対応 HOT</option>
+                <option value="未対応（HOT）">🔥 未対応 HOT (同期新着)</option>
                 <option value="対応中">🎯 対応中 (着手済)</option>
+                <option value="1回目送信済">1回目送信済</option>
+                <option value="2回目送信済">2回目送信済</option>
                 <option value="先方返信あり（要対応）">📬 返信あり</option>
                 <option value="再送付">再送付</option>
                 <option value="対応待ち">対応待ち</option>
@@ -352,6 +363,10 @@
       <div class="w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-2"></div>
       <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">管理メニュー</h3>
       <div class="space-y-2 text-sm font-medium">
+        <button onclick="openGhSyncConfigModal(); closeMobileMoreSheet();" class="w-full text-left p-3.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-300 flex items-center justify-between touch-target-btn">
+          <span>⚡ GitHub同期 (Excel更新) 設定</span>
+          <span>➔</span>
+        </button>
         <button onclick="openSalesTemplatesModal(); closeMobileMoreSheet();" class="w-full text-left p-3.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 flex items-center justify-between touch-target-btn">
           <span>📝 営業定型文マスター設定</span>
           <span>➔</span>
@@ -713,6 +728,43 @@
     </div>
   </div>
 
+  <!-- モーダル: GitHub同期 (Excel営業ステータス自動更新) 設定 -->
+  <div id="ghSyncConfigModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-4 border border-slate-200 dark:border-slate-800 shadow-2xl">
+      <div class="flex items-center justify-between border-b dark:border-slate-800 pb-3">
+        <div class="flex items-center space-x-2">
+          <span class="text-xl">⚡</span>
+          <div>
+            <h3 class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100">GitHub Actions 逆同期設定</h3>
+            <p class="text-[10px] text-slate-400">営業ステータス更新時にDriveのExcel（P列）を即時書き換えます</p>
+          </div>
+        </div>
+        <button onclick="closeModal('ghSyncConfigModal')" class="text-slate-400 hover:text-slate-600 text-lg p-1">✕</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">GitHub ユーザー / オーナー名</label>
+          <input type="text" id="cfgGhOwner" placeholder="例: nozomi-t" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">リポジトリ名</label>
+          <input type="text" id="cfgGhRepo" placeholder="例: dev" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">GitHub Personal Access Token (classic: repo権限)</label>
+          <input type="password" id="cfgGhPat" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" class="w-full px-3 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg outline-none font-mono focus:ring-2 focus:ring-blue-500">
+          <p class="text-[10px] text-slate-400 mt-1">※トークンはブラウザのlocalStorageに安全に保持されます。</p>
+        </div>
+      </div>
+
+      <div class="flex justify-end space-x-2 pt-2 border-t dark:border-slate-800">
+        <button onclick="closeModal('ghSyncConfigModal')" class="px-4 py-2 border dark:border-slate-700 rounded-lg text-xs font-semibold">キャンセル</button>
+        <button onclick="saveGhSyncConfig()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-sm">保存する</button>
+      </div>
+    </div>
+  </div>
+
   <!-- モーダル: マイアカウント設定 -->
   <div id="myAccountModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-4 border border-slate-200 dark:border-slate-800">
@@ -854,6 +906,72 @@
       WARNING_FILE_COUNT: 100
     };
     let cachedStorageFilesForCleanup = [];
+
+    // --- GitHub Actions 逆同期用設定 ---
+    let ghSyncConfig = {
+      owner: localStorage.getItem('PF_GH_OWNER') || '',
+      repo: localStorage.getItem('PF_GH_REPO') || 'dev',
+      pat: localStorage.getItem('PF_GH_PAT') || ''
+    };
+
+    function openGhSyncConfigModal() {
+      document.getElementById('cfgGhOwner').value = ghSyncConfig.owner;
+      document.getElementById('cfgGhRepo').value = ghSyncConfig.repo;
+      document.getElementById('cfgGhPat').value = ghSyncConfig.pat;
+      openModal('ghSyncConfigModal');
+    }
+
+    function saveGhSyncConfig() {
+      const owner = document.getElementById('cfgGhOwner').value.trim();
+      const repo = document.getElementById('cfgGhRepo').value.trim();
+      const pat = document.getElementById('cfgGhPat').value.trim();
+
+      ghSyncConfig = { owner, repo, pat };
+      localStorage.setItem('PF_GH_OWNER', owner);
+      localStorage.setItem('PF_GH_REPO', repo);
+      localStorage.setItem('PF_GH_PAT', pat);
+
+      closeModal('ghSyncConfigModal');
+      alert('GitHub同期設定をブラウザに保存しました！');
+    }
+
+    // Google Drive上のExcel（P列）を書き換えるGitHub Actions（repository_dispatch）をキック
+    function triggerExcelStatusUpdate(clientName, newStatus) {
+      if (!clientName) return;
+      const { owner, repo, pat } = ghSyncConfig;
+      if (!owner || !repo || !pat) {
+        console.warn('[Sync Excel] GitHub PATまたは設定が未入力のため、Excel書き戻しActionsの呼び出しをスキップしました。');
+        return;
+      }
+
+      console.log(`[Sync Excel] Actionsキック送信: ${clientName} ➔ ${newStatus}`);
+
+      fetch(`https://api.github.com/repos/${owner}/${repo}/dispatches`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/vnd.github.v3+json',
+          'Authorization': `Bearer ${pat}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          event_type: 'update-lead-status',
+          client_payload: {
+            client_name: clientName,
+            new_status: newStatus
+          }
+        })
+      })
+      .then(res => {
+        if (res.ok) {
+          console.log(`[Sync Excel] Actionsが正常に起動しました（Excel更新中）: ${clientName}`);
+        } else {
+          console.error(`[Sync Excel] Actions起動失敗: HTTP ${res.status}`);
+        }
+      })
+      .catch(err => {
+        console.error('[Sync Excel] 通信エラー:', err);
+      });
+    }
 
     function detectTouchDevice() {
       const ua = navigator.userAgent || '';
@@ -1564,7 +1682,7 @@
       const st = lead.status;
       if (st === '未対応（HOT）') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-900">🔥 未対応HOT</span>';
       if (st === '対応中') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-900">🎯 対応中</span>';
-      if (st === '1回目送信済') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200 dark:border-sky-900">1回目送信済</span>';
+      if (st === '1回目送信済' || st === '送信済') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200 dark:border-sky-900">1回目送信済</span>';
       if (st === '2回目送信済') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-900">2回目送信済</span>';
       if (st === '再送付') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-900">再送付</span>';
       if (st === '対応待ち') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-900">対応待ち</span>';
@@ -1613,7 +1731,9 @@
 
         let subBadge = '';
         if (l.subscriber_count) {
-          const subText = l.subscriber_count >= 1000 
+          const subText = l.subscriber_count >= 10000 
+            ? `${(l.subscriber_count / 10000).toFixed(1)}万`
+            : l.subscriber_count >= 1000 
             ? `${(l.subscriber_count / 1000).toFixed(1)}k`
             : `${l.subscriber_count}`;
           subBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border dark:border-slate-700" title="登録者数: ${l.subscriber_count.toLocaleString()}人">👤 ${subText}</span>`;
@@ -1626,7 +1746,7 @@
                 ${subBadge}
                 <h4 class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100 truncate">${l.client_name}</h4>
               </div>
-              ${l.vibe_notes ? `<p class="text-[11px] text-slate-400 truncate line-clamp-1">${l.vibe_notes}</p>` : ''}
+              ${l.vibe_notes ? `<p class="text-[11px] text-slate-400 truncate line-clamp-2 leading-relaxed">${escapeHtml(l.vibe_notes)}</p>` : ''}
             </div>
             <div class="text-right space-y-1 flex-shrink-0">
               ${getLeadStatusBadge(l)}
@@ -1636,7 +1756,7 @@
 
           <div class="flex items-center justify-between text-xs pt-2 border-t border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400">
             <div class="text-[11px]">
-              ${isHot ? '<span class="text-rose-500 font-bold">🔥 新規未着手</span>' : (l.next_followup_at ? `次回: <span class="${isFollowupDue ? 'text-red-500 font-bold' : ''}">${l.next_followup_at}${isFollowupDue ? ' ⚠' : ''}</span>` : '次回: 未定')}
+              ${isHot ? '<span class="text-rose-500 font-bold">🔥 Excel同期・新規</span>' : (l.next_followup_at ? `次回: <span class="${isFollowupDue ? 'text-red-500 font-bold' : ''}">${l.next_followup_at}${isFollowupDue ? ' ⚠' : ''}</span>` : '次回: 未定')}
             </div>
             <div class="text-[11px] text-blue-600 dark:text-blue-400 font-medium">${isHot ? '確認・着手 ➔' : '詳細・追客 ➔'}</div>
           </div>
@@ -1831,7 +1951,7 @@
 
       let subBadge = '';
       if (lead.subscriber_count) {
-        subBadge = `<span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">YouTube: ${lead.subscriber_count.toLocaleString()}人</span>`;
+        subBadge = `<span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">YouTube登録: ${lead.subscriber_count.toLocaleString()}人</span>`;
       }
 
       let html = `
@@ -1855,7 +1975,7 @@
           <div class="py-4 space-y-4">
             <div>
               <div class="flex items-center justify-between mb-1.5">
-                <label class="block text-xs font-bold text-slate-500">💡 プロフィール・選曲傾向（V-Stack）</label>
+                <label class="block text-xs font-bold text-slate-500">💡 プロフィール・選曲傾向（V-Stack / スプシ連携）</label>
                 <button onclick="toggleEditLeadInfo()" class="text-[10px] text-blue-600 dark:text-blue-400 hover:underline font-semibold">メモを修正</button>
               </div>
               <div class="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 p-3.5 rounded-xl text-xs sm:text-[13px] text-slate-700 dark:text-slate-200 leading-relaxed font-sans max-h-52 overflow-y-auto whitespace-pre-wrap shadow-2xs">
@@ -1954,7 +2074,7 @@
     function renderDmComposerHTML(lead, targetStep) {
       const isReplied = lead.status === '先方返信あり（要対応）' || lead.status === 'ラリー中';
       const labelText = isReplied ? '商談ラリー メッセージ送信 / メモ' : `${targetStep}通目 アプローチ文面 / 返信メモ`;
-      const submitBtnText = isReplied ? '✓ メッセージ送信完了' : '✓ 送信完了';
+      const submitBtnText = isReplied ? '✓ 送信完了 (Excel反映)' : '✓ 送信完了 (Excel反映)';
 
       const defaultNextDate = new Date();
       defaultNextDate.setDate(defaultNextDate.getDate() + (isReplied ? 2 : 5));
@@ -2019,8 +2139,15 @@
 
     async function startHandlingLead(leadId) {
       try {
+        const lead = allLeads.find(l => l.id === leadId);
         const { error } = await supabaseClient.from('leads').update({ status: '対応中' }).eq('id', leadId);
         if (error) throw error;
+
+        // Drive上のExcel（P列）も「対応中」へ書き換えトリガー
+        if (lead) {
+          triggerExcelStatusUpdate(lead.client_name, '対応中');
+        }
+
         await loadLeads();
         openLeadDetail(leadId);
       } catch (err) {
@@ -2030,8 +2157,14 @@
 
     async function cancelHandlingLead(leadId) {
       try {
+        const lead = allLeads.find(l => l.id === leadId);
         const { error } = await supabaseClient.from('leads').update({ status: '未対応（HOT）' }).eq('id', leadId);
         if (error) throw error;
+
+        if (lead) {
+          triggerExcelStatusUpdate(lead.client_name, '未');
+        }
+
         await loadLeads();
         openLeadDetail(leadId);
       } catch (err) {
@@ -2042,8 +2175,14 @@
     async function skipLead(leadId) {
       if (!confirm('このリードを対象外（アーカイブ）にしますか？')) return;
       try {
+        const lead = allLeads.find(l => l.id === leadId);
         const { error } = await supabaseClient.from('leads').update({ status: '対応停止', stop_reason: '対象外スキップ' }).eq('id', leadId);
         if (error) throw error;
+
+        if (lead) {
+          triggerExcelStatusUpdate(lead.client_name, '見送り');
+        }
+
         closeModal('leadDetailModal');
         await loadLeads();
       } catch (err) {
@@ -2062,14 +2201,17 @@
       let nextStatus = lead.status;
       let nextSendCount = lead.send_count || 0;
       let logType = '';
+      let excelStatusVal = '送信済';
 
       if (isReplied) {
         nextStatus = '先方返信あり（要対応）';
         logType = 'メッセージ送信 (ラリー中)';
+        excelStatusVal = 'ラリー中';
       } else {
         nextSendCount = currentStep;
         nextStatus = currentStep === 1 ? '1回目送信済' : currentStep === 2 ? '2回目送信済' : '3回目送信済';
         logType = `${currentStep}通目送信`;
+        excelStatusVal = currentStep === 1 ? '送信済' : `${currentStep}回目送信済`;
       }
 
       const logs = lead.logs || [];
@@ -2089,7 +2231,11 @@
         }).eq('id', leadId);
 
         if (error) throw error;
-        alert('送信完了を記録しました！');
+
+        // Drive上のExcel（P列）へ即時反映トリガーをキック
+        triggerExcelStatusUpdate(lead.client_name, excelStatusVal);
+
+        alert('送信完了を記録し、Excel同期（Actions）をキックしました！');
         closeModal('leadDetailModal');
         await loadLeads();
       } catch (err) {
@@ -2123,6 +2269,10 @@
         }).eq('id', leadId);
 
         if (error) throw error;
+
+        // Drive上のExcel（P列）へ「返信あり」反映
+        triggerExcelStatusUpdate(lead.client_name, '返信あり');
+
         alert('返信ログを記録し、ステータスを「返信あり」に更新しました！');
         closeModal('leadDetailModal');
         await loadLeads();
@@ -2158,6 +2308,8 @@
         logs: logs
       }).eq('id', selectedLead.id);
 
+      triggerExcelStatusUpdate(selectedLead.client_name, '対応停止');
+
       alert('対応停止に更新しました');
       closeModal('leadDetailModal');
       loadLeads();
@@ -2177,6 +2329,8 @@
         status: '相談決定',
         logs: logs
       }).eq('id', selectedLead.id);
+
+      triggerExcelStatusUpdate(selectedLead.client_name, '相談決定');
 
       closeModal('leadDetailModal');
       loadLeads();
@@ -3614,7 +3768,7 @@
         send_count: 0,
         logs: [{
           type: 'created',
-          text: 'チケット起票',
+          text: 'チケット手動起票',
           at: new Date().toISOString()
         }]
       });
