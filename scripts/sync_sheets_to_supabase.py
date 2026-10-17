@@ -8,20 +8,13 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 from supabase import create_client, Client
 
-# ==========================================
-# 環境変数・設定
-# ==========================================
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://griosberitrswzkynewx.supabase.co")
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 GCP_SA_KEY_JSON = os.environ.get("GCP_SA_KEY_JSON")
 
-# 既存のxlsxファイルのID
 FILE_ID = "1Takp4W8W6k14cvyJCToMYVmhlN5m1vWf"
 SHEET_NAME = "候補リスト"
 
-# ==========================================
-# ヘルパー関数
-# ==========================================
 def parse_sub_count(val):
     if not val:
         return None
@@ -61,9 +54,6 @@ def download_xlsx_bytes():
     fh.seek(0)
     return fh
 
-# ==========================================
-# メイン同期処理
-# ==========================================
 def sync_leads():
     if not GCP_SA_KEY_JSON or not SUPABASE_KEY:
         raise ValueError("環境変数 GCP_SA_KEY_JSON または SUPABASE_SERVICE_ROLE_KEY が設定されていません。")
@@ -76,8 +66,6 @@ def sync_leads():
         raise ValueError(f"シート「{SHEET_NAME}」が見つかりません。利用可能: {wb.sheetnames}")
 
     ws = wb[SHEET_NAME]
-    
-    # ヘッダー行（1行目）の取得
     rows = list(ws.iter_rows(values_only=True))
     if not rows:
         print("シートが空です。")
@@ -87,7 +75,6 @@ def sync_leads():
     header_map = {name: idx for idx, name in enumerate(headers) if name}
     print(f"ヘッダー列: {list(header_map.keys())}")
 
-    # Supabase 接続 & 既存リードの名前一覧取得（重複防止）
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
     res = supabase.table("leads").select("client_name").execute()
     existing_names = set(r["client_name"] for r in (res.data or []) if r.get("client_name"))
@@ -95,7 +82,6 @@ def sync_leads():
 
     leads_to_insert = []
     
-    # 2行目以降をパース
     for row in rows[1:]:
         def get_val(col_name):
             idx = header_map.get(col_name)
@@ -107,7 +93,6 @@ def sync_leads():
         assignee = get_val("担当者")
         status_val = get_val("営業ステータス")
 
-        # 【抽出条件】O列が「れーた」かつ P列が「未」
         if assignee != "れーた" or status_val != "未":
             continue
 
