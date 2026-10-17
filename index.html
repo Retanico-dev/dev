@@ -1044,9 +1044,17 @@
       return logs.some(l => isLogItemUnread(l));
     }
 
-    function getProjectUnreadStatus(project) {
-      const validTasks = getFilteredTasksForProject(project);
-      return validTasks.some(t => getTaskUnreadStatus(t));
+    function getFilteredTasksForProject(project) {
+      const cat = getProjectCategory(project);
+      const allTasks = project.tasks || [];
+      if (cat === 'mv') {
+        return allTasks.filter(t => ['イラスト', '映像'].includes(t.title) || t.sort_order >= 90);
+      } else if (cat === 'music') {
+        return allTasks.filter(t => !['イラスト', '映像'].includes(t.title));
+      } else {
+        // 運営チケットは全タスク表示
+      return allTasks;
+      }
     }
 
     async function updateHeartbeat() {
@@ -1378,36 +1386,33 @@
       };
     }
 
+    // 案件カテゴリ判別
     function getProjectCategory(project) {
       if (project.category) return project.category;
       const titles = (project.tasks || []).map(t => t.title);
       const hasMusic = titles.some(t => ['作曲', '作詞', '編曲', 'レコーディング', 'ミキシング', 'マスタリング'].includes(t));
       const hasMv = titles.some(t => ['イラスト', '映像'].includes(t));
       if (hasMv && !hasMusic) return 'mv';
+      if (!hasMv && !hasMusic) return 'operation';
       return 'music';
     }
 
-    function getFilteredTasksForProject(project) {
-      const cat = getProjectCategory(project);
-      const allTasks = project.tasks || [];
-      if (cat === 'mv') {
-        return allTasks.filter(t => ['イラスト', '映像'].includes(t.title));
-      } else {
-        return allTasks.filter(t => !['イラスト', '映像'].includes(t.title));
-      }
-    }
-
+    // カテゴリバッジ表示
     function getCategoryBadgeHtml(cat) {
       if (cat === 'mv') {
         return '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800">🎬 MV</span>';
       }
+      if (cat === 'operation') {
+        return '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800">🛡️ 運営</span>';
+      }
       return '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800">🎵 楽曲</span>';
     }
 
-    function getRelatedProject(project) {
-      if (!project.group_id) return null;
-      return cachedCreativeProjects.find(p => p.group_id === project.group_id && p.id !== project.id);
-    }
+    // 同一グループ内の全関連プロジェクトを取得
+    function getRelatedProjects(project) {
+      if (!project.group_id) return [];
+      return cachedCreativeProjects.filter(p => p.group_id === project.group_id && p.id !== project.id);
+      }
 
     function handleCreativeFilterChange(key) {
       currentAndonFilter = key;
@@ -2371,23 +2376,21 @@
         ? `<a href="${p.drive_url}" target="_blank" class="text-[11px] px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-600 dark:text-slate-300 hover:underline">Drive ↗</a>`
         : '';
 
-      const relatedLinkContainer = document.getElementById('chatModalRelatedLink');
-      const relatedPrj = getRelatedProject(p);
-      if (relatedPrj) {
-        const relCat = getProjectCategory(relatedPrj);
-        const relCode = relatedPrj.ticket_code ? `[${relatedPrj.ticket_code}] ` : '';
-        const relLabel = relCat === 'mv' ? `🎬 関連: ${relCode}MVを開く` : `🎵 関連: ${relCode}楽曲を開く`;
-        relatedLinkContainer.innerHTML = `<button onclick="openProjectChatModal('${relatedPrj.id}')" class="text-xs px-2.5 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 transition touch-target-btn">
-          ${relLabel} ➔
-        </button>`;
-      } else if (isAdminOrMaster()) {
-        const addLabel = cat === 'music' ? '＋ 🎬 関連MVを追加' : '＋ 🎵 関連楽曲を追加';
-        relatedLinkContainer.innerHTML = `<button onclick="openAddRelatedModal('${p.id}')" class="text-xs px-2.5 py-1.5 rounded-lg border border-dashed border-indigo-300 dark:border-indigo-800 bg-indigo-50/60 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 font-semibold transition touch-target-btn">
-          ${addLabel}
-        </button>`;
-      } else {
-        relatedLinkContainer.innerHTML = '';
-      }
+    const relatedLinkContainer = document.getElementById('chatModalRelatedLink');
+    const relatedProjects = getRelatedProjects(p);
+
+    if (relatedProjects.length > 0) {
+      relatedLinkContainer.innerHTML = relatedProjects.map(relPrj => {
+        const relCat = getProjectCategory(relPrj);
+        const relCode = relPrj.ticket_code ? `[${relPrj.ticket_code}] ` : '';
+        const relLabel = relCat === 'mv' ? `🎬 ${relCode}MV` : (relCat === 'operation' ? `🛡️ ${relCode}運営` : `🎵 ${relCode}楽曲`);
+        return `<button onclick="openProjectChatModal('${relPrj.id}')" class="text-xs px-2.5 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 transition touch-target-btn">
+         ${relLabel} ➔
+       </button>`;
+      }).join(' ');
+    } else {
+      relatedLinkContainer.innerHTML = '';
+    }
 
       const delBtn = document.getElementById('chatModalDeleteBtn');
       if (delBtn) delBtn.classList.toggle('hidden', !isAdminOrMaster());
@@ -4046,127 +4049,185 @@
       renderMembersTable();
     }
 
-    async function createCreativeProject() {
-      const baseTitle = document.getElementById('newPrjTitle').value.trim();
-      const drive = document.getElementById('newPrjDrive').value.trim();
-      const startDateStr = document.getElementById('autoCalcStartDate').value;
-      const customCodeInput = document.getElementById('newPrjCustomCode').value.trim();
-      const createMusic = document.getElementById('checkCreateMusic').checked;
-      const createMv = document.getElementById('checkCreateMv').checked;
+async function createCreativeProject() {
+  const baseTitle = document.getElementById('newPrjTitle').value.trim();
+  const drive = document.getElementById('newPrjDrive').value.trim();
+  const startDateStr = document.getElementById('autoCalcStartDate').value;
+  const customCodeInput = document.getElementById('newPrjCustomCode').value.trim();
+  const createMusic = document.getElementById('checkCreateMusic').checked;
+  const createMv = document.getElementById('checkCreateMv').checked;
+  const createOps = document.getElementById('checkCreateOps')?.checked ?? false;
 
-      if (!baseTitle) return alert('案件名を入力してください');
-      if (!createMusic && !createMv) return alert('少なくとも1つのチケットを選択してください');
+  if (!baseTitle) return alert('案件名を入力してください');
+  if (!createMusic && !createMv && !createOps) return alert('少なくとも1つのチケットを選択してください');
 
-      const checkedKeys = new Set(
-        Array.from(document.querySelectorAll('#processCheckboxes input:checked')).map(cb => cb.value)
-      );
+  const checkedKeys = new Set(
+    Array.from(document.querySelectorAll('#processCheckboxes input:checked')).map(cb => cb.value)
+  );
 
-      const baseDate = new Date(startDateStr || new Date());
-      const addDays = (d, n) => {
-        const res = new Date(d);
-        res.setDate(res.getDate() + n);
-        return res;
-      };
-      const fmt = (d) => d.toISOString().split('T')[0];
-      const getD = (k) => {
-        const found = workflowMasters.find(w => w.key === k);
-        return found ? found.days : 0;
-      };
+  const baseDate = new Date(startDateStr || new Date());
+  const addDays = (d, n) => {
+    const res = new Date(d);
+    res.setDate(res.getDate() + n);
+    return res;
+  };
+  const fmt = (d) => d.toISOString().split('T')[0];
+  const getD = (k) => {
+    const found = workflowMasters.find(w => w.key === k);
+    return found ? found.days : 0;
+  };
 
-      const dates = {};
-      dates.compose = addDays(baseDate, getD('compose'));
-      dates.lyrics = addDays(dates.compose, getD('lyrics'));
-      dates.arrange = addDays(dates.compose, getD('arrange'));
-      const recStart = (dates.lyrics > dates.arrange) ? dates.lyrics : dates.arrange;
-      dates.rec = addDays(recStart, getD('rec'));
-      dates.mix = addDays(dates.rec, getD('mix'));
-      dates.mastering = addDays(dates.mix, getD('mastering'));
+  const dates = {};
+  dates.compose = addDays(baseDate, getD('compose'));
+  dates.lyrics = addDays(dates.compose, getD('lyrics'));
+  dates.arrange = addDays(dates.compose, getD('arrange'));
+  const recStart = (dates.lyrics > dates.arrange) ? dates.lyrics : dates.arrange;
+  dates.rec = addDays(recStart, getD('rec'));
+  dates.mix = addDays(dates.rec, getD('mix'));
+  dates.mastering = addDays(dates.mix, getD('mastering'));
 
-      dates.illust = addDays(baseDate, getD('illust'));
-      dates.movie = addDays(dates.illust, getD('movie'));
+  dates.illust = addDays(baseDate, getD('illust'));
+  dates.movie = addDays(dates.illust, getD('movie'));
 
-      const groupId = 'grp_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
-      
-      let baseCode = customCodeInput;
-      if (!baseCode) {
-        const { prefix, nextNumStr } = getNextTicketNumber(startDateStr);
-        baseCode = `${prefix}-${nextNumStr}`;
-      }
+  // 複数チケット作成時は共通のgroup_idでペア化
+  const selectedCount = (createMusic ? 1 : 0) + (createMv ? 1 : 0) + (createOps ? 1 : 0);
+  const groupId = selectedCount > 1 ? ('grp_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7)) : null;
 
-      const cleanBaseCode = baseCode.replace(/[MV]$/i, '');
-      const musicCode = `${cleanBaseCode}M`;
-      const mvCode = `${cleanBaseCode}V`;
+  let baseCode = customCodeInput;
+  if (!baseCode) {
+    const { prefix, nextNumStr } = getNextTicketNumber(startDateStr);
+    baseCode = `${prefix}-${nextNumStr}`;
+  }
 
-      if (createMusic) {
-        const { data: prjMusic, error: errM } = await supabaseClient.from('projects').insert({
-          type: 'creative',
-          title: baseTitle,
-          category: 'music',
-          ticket_code: musicCode,
-          group_id: (createMusic && createMv) ? groupId : null,
-          drive_url: drive || null,
-          status: '進行中'
-        }).select().single();
+  const cleanBaseCode = baseCode.replace(/[MVO]$/i, '');
+  const musicCode = `${cleanBaseCode}M`;
+  const mvCode = `${cleanBaseCode}V`;
+  const opsCode = `${cleanBaseCode}O`;
 
-        if (errM) return alert('楽曲チケット作成エラー: ' + errM.message);
+  // 1. 楽曲チケットの起票
+  if (createMusic) {
+    const { data: prjMusic, error: errM } = await supabaseClient.from('projects').insert({
+      type: 'creative',
+      title: baseTitle,
+      category: 'music',
+      ticket_code: musicCode,
+      group_id: groupId,
+      drive_url: drive || null,
+      status: '進行中'
+    }).select().single();
 
-        const musicTasks = [];
-        workflowMasters.filter(w => w.track === 'music').forEach(w => {
-          if (checkedKeys.has(w.key)) {
-            musicTasks.push({
-              project_id: prjMusic.id,
-              title: w.name,
-              deadline: fmt(dates[w.key]),
-              sort_order: w.order,
-              status: '未着手',
-              ball_holder: 'creator',
-              logs: []
-            });
-          }
+    if (errM) return alert('楽曲チケット作成エラー: ' + errM.message);
+
+    const musicTasks = [];
+    workflowMasters.filter(w => w.track === 'music').forEach(w => {
+      if (checkedKeys.has(w.key)) {
+        musicTasks.push({
+          project_id: prjMusic.id,
+          title: w.name,
+          deadline: fmt(dates[w.key]),
+          sort_order: w.order,
+          status: '未着手',
+          ball_holder: 'creator',
+          logs: []
         });
-        if (musicTasks.length > 0) {
-          await supabaseClient.from('tasks').insert(musicTasks);
-        }
       }
-
-      if (createMv) {
-        const { data: prjMv, error: errV } = await supabaseClient.from('projects').insert({
-          type: 'creative',
-          title: baseTitle,
-          category: 'mv',
-          ticket_code: mvCode,
-          group_id: (createMusic && createMv) ? groupId : null,
-          drive_url: drive || null,
-          status: '進行中'
-        }).select().single();
-
-        if (errV) return alert('MVチケット作成エラー: ' + errV.message);
-
-        const mvTasks = [];
-        workflowMasters.filter(w => w.track === 'mv').forEach(w => {
-          if (checkedKeys.has(w.key)) {
-            mvTasks.push({
-              project_id: prjMv.id,
-              title: w.name,
-              deadline: fmt(dates[w.key]),
-              sort_order: w.order,
-              status: '未着手',
-              ball_holder: 'creator',
-              logs: []
-            });
-          }
-        });
-        if (mvTasks.length > 0) {
-          await supabaseClient.from('tasks').insert(mvTasks);
-        }
-      }
-
-      closeModal('newProjectModal');
-      document.getElementById('newPrjTitle').value = '';
-      document.getElementById('newPrjDrive').value = '';
-      document.getElementById('newPrjCustomCode').value = '';
-      await loadCreativeProjects();
+    });
+    if (musicTasks.length > 0) {
+      await supabaseClient.from('tasks').insert(musicTasks);
     }
+  }
+
+  // 2. MVチケットの起票
+  if (createMv) {
+    const { data: prjMv, error: errV } = await supabaseClient.from('projects').insert({
+      type: 'creative',
+      title: baseTitle,
+      category: 'mv',
+      ticket_code: mvCode,
+      group_id: groupId,
+      drive_url: drive || null,
+      status: '進行中'
+    }).select().single();
+
+    if (errV) return alert('MVチケット作成エラー: ' + errV.message);
+
+    const mvTasks = [];
+    workflowMasters.filter(w => w.track === 'mv').forEach(w => {
+      if (checkedKeys.has(w.key)) {
+        mvTasks.push({
+          project_id: prjMv.id,
+          title: w.name,
+          deadline: fmt(dates[w.key]),
+          sort_order: w.order,
+          status: '未着手',
+          ball_holder: 'creator',
+          logs: []
+        });
+      }
+    });
+    if (mvTasks.length > 0) {
+      await supabaseClient.from('tasks').insert(mvTasks);
+    }
+  }
+
+  // 3. 運営チケットの起票
+  if (createOps) {
+    const { data: prjOps, error: errO } = await supabaseClient.from('projects').insert({
+      type: 'creative',
+      title: baseTitle,
+      category: 'operation',
+      ticket_code: opsCode,
+      group_id: groupId,
+      drive_url: drive || null,
+      status: '進行中'
+    }).select().single();
+
+    if (errO) return alert('運営チケット作成エラー: ' + errO.message);
+
+    // 運営タスク（デフォルト標準セット）
+    const in3Days = addDays(baseDate, 3);
+    const in7Days = addDays(baseDate, 7);
+    const in14Days = addDays(baseDate, 14);
+
+    const opsTasks = [
+      {
+        project_id: prjOps.id,
+        title: '契約書締結・条件確認',
+        deadline: fmt(in3Days),
+        sort_order: 1,
+        status: '未着手',
+        ball_holder: 'admin',
+        logs: []
+      },
+      {
+        project_id: prjOps.id,
+        title: '請求書送付・着金確認',
+        deadline: fmt(in7Days),
+        sort_order: 2,
+        status: '未着手',
+        ball_holder: 'admin',
+        logs: []
+      },
+      {
+        project_id: prjOps.id,
+        title: '納品確認・公開アナウンス',
+        deadline: fmt(in14Days),
+        sort_order: 3,
+        status: '未着手',
+        ball_holder: 'admin',
+        logs: []
+      }
+    ];
+
+    await supabaseClient.from('tasks').insert(opsTasks);
+  }
+
+  closeModal('newProjectModal');
+  document.getElementById('newPrjTitle').value = '';
+  document.getElementById('newPrjDrive').value = '';
+  document.getElementById('newPrjCustomCode').value = '';
+  await loadCreativeProjects();
+}
 
     function switchTab(tab) {
       currentActiveTab = tab;
