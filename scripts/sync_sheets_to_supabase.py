@@ -15,7 +15,6 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://griosberitrswzkynewx.supa
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 GCP_SA_KEY_JSON = os.environ.get("GCP_SA_KEY_JSON")
 
-# 既存のxlsxファイルのID
 FILE_ID = "1Takp4W8W6k14cvyJCToMYVmhlN5m1vWf"
 
 # ==========================================
@@ -71,22 +70,38 @@ def sync_leads():
     xlsx_bytes = download_xlsx_bytes()
     wb = openpyxl.load_workbook(xlsx_bytes, data_only=True)
 
-    # シート名に依存せず、一番左のシート（アクティブシート）を自動選択
     ws = wb.active
-    print(f"📄 対象シート: 「{ws.title}」を読み込みます (利用可能シート一覧: {wb.sheetnames})")
+    print(f"📄 対象シート: 「{ws.title}」")
     
-    # 全行を取得
-    rows = list(ws.iter_rows(values_only=True))
-    if not rows:
-        print("シートが空です。")
+    all_rows = list(ws.iter_rows(values_only=True))
+    if len(all_rows) < 2:
+        print("データが存在しません。")
         return
 
-    # ヘッダー行（1行目）の取得
-    headers = [str(h).strip() if h is not None else "" for h in rows[0]]
+    # 【重要】2行目（インデックス1）を見出し行として取得
+    header_row = all_rows[1]
+    headers = [str(h).strip() if h is not None else "" for h in header_row]
     header_map = {name: idx for idx, name in enumerate(headers) if name}
-    print(f"見出し列: {list(header_map.keys())}")
+    print(f"見出し列 (2行目): {list(header_map.keys())}")
 
-    # Supabase 接続 & 既存リードの名前一覧取得（重複防止）
+    # 列インデックスの特定ヘルパー
+    def find_col_idx(candidates):
+        for c in candidates:
+            for name, idx in header_map.items():
+                if c in name:
+                    return idx
+        return None
+
+    col_assignee = find_col_idx(["担当者", "担当"])
+    col_status = find_col_idx(["営業ステータス", "ステータス", "進捗"])
+    col_name = find_col_idx(["名前", "チャンネル名"])
+    col_twitter = find_col_idx(["X", "SNS", "Twitter"])
+    col_yt = find_col_idx(["Youtube", "YouTube"])
+    col_sub = find_col_idx(["登録者", "ファン数"])
+
+    print(f"🔍 検出列 -> 担当者: {col_assignee}, ステータス: {col_status}, 名前: {col_name}")
+
+    # 既存リードの重複チェック
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
     res = supabase.table("leads").select("client_name").execute()
     existing_names = set(r["client_name"] for r in (res.data or []) if r.get("client_name"))
@@ -94,43 +109,38 @@ def sync_leads():
 
     leads_to_insert = []
     
-    # 2行目以降をパース
-    for row in rows[1:]:
-        def get_val(col_name):
-            idx = header_map.get(col_name)
+    # 3行目以降（インデックス2〜）が実際のデータ
+    for row in all_rows[2:]:
+        def get_val(idx):
             if idx is not None and idx < len(row):
                 v = row[idx]
                 return str(v).strip() if v is not None else ""
             return ""
 
-        assignee = get_val("担当者")
-        status_val = get_val("営業ステータス")
+        assignee = get_val(col_assignee)
+        status_val = get_val(col_status)
+        name = get_val(col_name)
 
-        # 【抽出条件】O列が「れーた」かつ P列が「未」
-        if assignee != "れーた" or status_val != "未":
+        # 担当者「れーた」、ステータス「未」の判定（スペース除外・表記ゆれ対応）
+        is_reta = any(k in assignee for k in ["れーた", "れたす", "reta", "Reta"])
+        is_unsent = status_val.startswith("未") or status_val == "未"
+
+        if not is_reta or not is_unsent:
             continue
 
-        name = get_val("名前 / チャンネル名")
-        if not name or "（例）" in name:
+        if not name or "（例）" in name or name in existing_names:
             continue
 
-        if name in existing_names:
-            continue
-
-        twitter_id = parse_twitter_id(get_val("X / SNS"))
-        yt_url = get_val("Youtube") or None
-        sub_count = parse_sub_count(get_val("チャンネル登録者"))
+        twitter_id = parse_twitter_id(get_val(col_twitter))
+        yt_url = get_val(col_yt) or None
+        sub_count = parse_sub_count(get_val(col_sub))
 
         vibe_lines = []
-        affiliation = get_val("所属")
-        type_val = get_val("タイプ")
-        memo_val = get_val("メモ")
-        ref_video = get_val("参考動画")
-
-        if affiliation: vibe_lines.append(f"所属: {affiliation}")
-        if type_val: vibe_lines.append(f"タイプ: {type_val}")
-        if memo_val: vibe_lines.append(f"メモ: {memo_val}")
-        if ref_video: vibe_lines.append(f"参考動画: {ref_video}")
+        for extra in ["所属", "タイプ", "メモ", "参考動画"]:
+            e_idx = find_col_idx([extra])
+            val = get_val(e_idx)
+            if val:
+                vibe_lines.append(f"{extra}: {val}")
         vibe_notes = "\n".join(vibe_lines) if vibe_lines else None
 
         leads_to_insert.append({
@@ -143,7 +153,7 @@ def sync_leads():
             "send_count": 0,
             "logs": [{
                 "type": "imported",
-                "text": "Excel（担当:れーた / ステータス:未）より自動取り込み",
+                "text": f"Excel(2行目ヘッダー)より自動取り込み [担当:{assignee}]",
                 "at": "now()"
             }]
         })
@@ -151,6 +161,7 @@ def sync_leads():
 
     print(f"🎯 取り込み対象候補: {len(leads_to_insert)} 件")
 
+    # Supabaseへ50件ずつバッチインサート
     if leads_to_insert:
         chunk_size = 50
         for i in range(0, len(leads_to_insert), chunk_size):
