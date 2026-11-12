@@ -93,9 +93,6 @@
                 <span>🔄 視点切替</span>
                 <span id="pcDropdownViewTag" class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 font-semibold">全件</span>
               </button>
-              <button onclick="switchTab('master'); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium flex items-center space-x-2">
-                <span>🛠️ 工程マスター設定</span>
-              </button>
               <button onclick="openSalesTemplatesModal(); togglePcUserMenu();" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium flex items-center space-x-2">
                 <span>📝 営業定型文マスター設定</span>
               </button>
@@ -197,28 +194,25 @@
       <!-- 制作進行 -->
       <div id="creativeSection" class="space-y-3 sm:space-y-4">
         
-        <div class="flex items-center justify-between gap-2 bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+        <div class="flex items-center justify-between gap-2 p-3 sm:p-4">
           <div class="min-w-0 flex-1 flex items-center space-x-2">
-            <h2 class="text-base sm:text-lg font-bold truncate">制作ボード</h2>
+            <h2 class="text-base sm:text-lg font-bold truncate text-slate-900 dark:text-white">制作ボード</h2>
             <span id="creativeScopeBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-900 flex-shrink-0">全案件</span>
           </div>
           
-          <div class="flex items-center space-x-2 flex-shrink-0">
-            <div class="relative">
-              <select id="creativeStatusSelect" onchange="handleCreativeFilterChange(this.value)" class="text-xs font-bold pl-3 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500 appearance-none touch-target-btn cursor-pointer">
-                <option value="active" selected>⚡ 進行中のみ (未完了)</option>
-                <option value="overdue">🔴 遅延・超過</option>
-                <option value="review">🟡 確認待ち</option>
-                <option value="working">🔵 作業中</option>
-                <option value="unstarted">⚪ 未着手</option>
-                <option value="completed">🟢 完了のみ</option>
-                <option value="all">📁 すべて表示</option>
-              </select>
-              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400 text-xs">▼</div>
+          <div class="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
+            <div id="creativeStatusFilterBar" class="flex items-center gap-0.5 text-xs font-bold flex-wrap">
+              <span class="text-slate-500 dark:text-slate-400 mr-1">状態:</span>
+              <button type="button" data-filter-value="all" onclick="handleCreativeFilterChange('all')" class="px-3 py-1.5 rounded-full transition touch-target-btn">すべて</button>
+              <button type="button" data-filter-value="未対応" onclick="handleCreativeFilterChange('未対応')" class="px-3 py-1.5 rounded-full transition touch-target-btn">未対応</button>
+              <button type="button" data-filter-value="処理中" onclick="handleCreativeFilterChange('処理中')" class="px-3 py-1.5 rounded-full transition touch-target-btn">処理中</button>
+              <button type="button" data-filter-value="処理済み" onclick="handleCreativeFilterChange('処理済み')" class="px-3 py-1.5 rounded-full transition touch-target-btn">処理済み</button>
+              <button type="button" data-filter-value="完了" onclick="handleCreativeFilterChange('完了')" class="px-3 py-1.5 rounded-full transition touch-target-btn">完了</button>
+              <button type="button" data-filter-value="active" onclick="handleCreativeFilterChange('active')" class="px-3 py-1.5 rounded-full transition touch-target-btn">完了以外</button>
             </div>
 
             <button id="btnNewProjectTop" onclick="openModal('newProjectModal')" class="hidden px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-sm whitespace-nowrap touch-target-btn flex items-center space-x-1">
-              <span>＋</span><span class="hidden sm:inline">新規起票</span>
+              <span>＋</span><span class="hidden sm:inline">課題の追加</span>
             </button>
           </div>
         </div>
@@ -279,33 +273,6 @@
           </button>
         </div>
         <div id="allUpdatesLogsContainer" class="space-y-2.5 max-h-[600px] overflow-y-auto pr-1"></div>
-      </div>
-
-      <!-- 工程マスター設定 -->
-      <div id="masterSection" class="hidden space-y-4 max-w-3xl">
-        <div class="flex justify-between items-center gap-2">
-          <div>
-            <h2 class="text-base sm:text-lg font-bold">標準工程・仕掛日数設定</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">新規案件起票時の自動納期順算に連動します</p>
-          </div>
-          <button onclick="saveAllMasterDays()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm font-semibold transition shadow-sm whitespace-nowrap touch-target-btn">
-            一括保存
-          </button>
-        </div>
-        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-x-auto">
-          <table class="w-full text-xs sm:text-sm min-w-[500px]">
-            <thead>
-              <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 text-left">
-                <th class="py-3 px-4">ライン</th>
-                <th class="py-3 px-4">工程名</th>
-                <th class="py-3 px-4">先行条件</th>
-                <th class="py-3 px-4">標準所要日数</th>
-                <th class="py-3 px-4 text-right">操作</th>
-              </tr>
-            </thead>
-            <tbody id="masterTableBody"></tbody>
-          </table>
-        </div>
       </div>
 
       <!-- メンバー管理 -->
@@ -375,10 +342,6 @@
           <span>📦 ストレージ容量管理・整理</span>
           <span>➔</span>
         </button>
-        <button onclick="switchTab('master'); closeMobileMoreSheet();" class="w-full text-left p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-between touch-target-btn">
-          <span>🛠️ 工程マスター設定（標準日数）</span>
-          <span>➔</span>
-        </button>
         <button onclick="switchTab('members'); closeMobileMoreSheet();" class="w-full text-left p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-between touch-target-btn">
           <span>👥 所属メンバー管理</span>
           <span>➔</span>
@@ -396,15 +359,12 @@
       <div class="flex items-start justify-between border-b dark:border-slate-800 pb-2.5 flex-shrink-0 gap-2">
         <div class="min-w-0 flex-1">
           <div class="flex flex-wrap items-center gap-1.5">
-            <button id="chatModalCodeBadge" onclick="editCurrentTicketCode()" title="クリックして案件番号を編集" class="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border dark:border-slate-700 transition flex items-center space-x-1 cursor-pointer">
+            <span id="chatModalCodeBadge" class="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border dark:border-slate-700 flex items-center">
               <span id="chatModalCodeText"></span>
-              <span class="text-[9px] text-slate-400 opacity-60">✎</span>
-            </button>
-            <span id="chatModalCategoryBadge" class="text-[11px] font-bold px-1.5 py-0.5 rounded"></span>
+            </span>
             <h3 id="chatModalTitle" class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 truncate"></h3>
             <span id="chatModalDriveLink"></span>
           </div>
-          <div id="chatModalRelatedLink" class="mt-1 flex flex-wrap items-center gap-1.5"></div>
         </div>
         <div class="flex items-center space-x-1.5 flex-shrink-0">
           <button id="chatModalDeleteBtn" onclick="deleteCurrentProject()" class="hidden px-2.5 py-1 text-xs rounded bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-400 font-bold border border-red-200 dark:border-red-800 hover:bg-red-100 transition touch-target-btn">
@@ -415,169 +375,97 @@
       </div>
 
       <!-- モーダル内部コンテナ -->
-      <div class="flex-1 flex flex-col md:flex-row min-h-0 divide-y md:divide-y-0 md:divide-x dark:divide-slate-800 relative">
+      <div class="flex-1 flex flex-col min-h-0 relative">
 
-        <!-- 左ペイン: 進行パイプライン -->
-        <div class="w-full md:w-[36%] flex flex-col flex-shrink-0 bg-slate-50/70 dark:bg-slate-950/40 p-2.5 sm:p-3.5 overflow-hidden relative">
-          <div class="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400 pb-1.5 flex-shrink-0 border-b dark:border-slate-800/80">
-            <div class="flex items-center space-x-1.5">
-              <span class="tracking-wider uppercase text-[10px]">ROADMAP / 進行パイプライン</span>
-              <button type="button" onclick="toggleMobilePipeline()" id="btnToggleMobilePipeline" class="md:hidden text-[10px] px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-300 transition">
-                ▼ 工程を開く
-              </button>
+        <!-- 上段: 概要 -->
+        <div class="flex-shrink-0 border-b dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-950/40 p-2.5 sm:p-3.5">
+          <div class="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1">
+            <span class="tracking-wider uppercase text-[10px]">概要</span>
+            <button type="button" onclick="toggleDescriptionEdit()" class="text-blue-600 dark:text-blue-400 hover:underline p-1 touch-target-btn">編集</button>
+          </div>
+          <div id="chatModalDescriptionView" class="text-xs text-slate-600 dark:text-slate-300 whitespace-pre-wrap max-h-20 overflow-y-auto"></div>
+          <div id="chatModalDescriptionEditWrap" class="hidden space-y-1.5">
+            <textarea id="chatModalDescriptionInput" rows="3" class="w-full px-2.5 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs"></textarea>
+            <div class="flex justify-end space-x-1.5">
+              <button type="button" onclick="toggleDescriptionEdit(false)" class="px-2.5 py-1 text-[11px] rounded border dark:border-slate-700 touch-target-btn">キャンセル</button>
+              <button type="button" onclick="saveProjectDescription()" class="px-2.5 py-1 text-[11px] rounded bg-blue-600 text-white font-bold touch-target-btn">保存</button>
             </div>
-            <button id="btnOpenAddTaskBar" onclick="openAddTaskModal()" class="text-blue-600 dark:text-blue-400 hover:underline p-1 touch-target-btn">
-              ＋ 工程追加
+          </div>
+        </div>
+
+        <!-- 中段: 更新ログ -->
+        <div class="flex-1 flex flex-col min-h-0 bg-white dark:bg-slate-900 overflow-hidden">
+          <div class="flex-1 overflow-y-auto min-h-0 space-y-3 p-2 sm:p-3" id="chatModalTimeline"></div>
+        </div>
+
+        <!-- 下段: 状態編集 ＋ コメント -->
+        <div id="chatDropZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleFileDrop(event)" class="bg-slate-50 dark:bg-slate-800/50 p-2 sm:p-3 rounded-2xl border border-slate-200 dark:border-slate-800 transition space-y-2 flex-shrink-0 relative m-1 sm:m-2">
+
+          <div id="dropOverlay" class="hidden absolute inset-0 bg-blue-600/90 text-white rounded-2xl flex flex-col items-center justify-center font-bold text-xs pointer-events-none z-20 space-y-1">
+            <span>📥 ファイルをドロップして自動添付</span>
+          </div>
+
+          <div>
+            <textarea id="chatInputComment" rows="2" placeholder="メッセージを入力" class="w-full p-3 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 break-words leading-relaxed"></textarea>
+          </div>
+
+          <div id="attachedFilePreview" class="hidden flex items-center justify-between p-2.5 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg text-xs">
+            <div class="flex items-center space-x-2 truncate">
+              <span id="attachedFileIcon">📎</span>
+              <span id="attachedFileName" class="font-bold text-blue-700 dark:text-blue-300 truncate"></span>
+              <span id="attachedFileSize" class="text-[10px] text-slate-400"></span>
+            </div>
+            <button onclick="removeAttachedFile()" type="button" class="text-red-500 hover:text-red-700 text-xs font-bold px-2 py-1 touch-target-btn">✕ 削除</button>
+          </div>
+
+          <div class="flex items-center">
+            <label class="cursor-pointer inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-200 transition touch-target-btn">
+              <span>📎 添付</span>
+              <input type="file" id="fileInputPicker" onchange="handleFileInputChange(event)" accept="audio/mp3,audio/m4a,audio/*,image/*" class="hidden">
+            </label>
+          </div>
+
+          <!-- 常設進行設定バー -->
+          <div class="bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700 shadow-xs space-y-2 text-xs">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-0.5 font-bold">状態</label>
+                <select id="chatInputStatus" class="w-full px-2 py-1.5 border dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 font-bold outline-none text-[11px] truncate cursor-pointer">
+                  <option value="">-- 未設定 --</option>
+                  <option value="未対応">未対応</option>
+                  <option value="処理中">処理中</option>
+                  <option value="処理済み">処理済み</option>
+                  <option value="完了">完了</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-0.5 font-bold">担当者</label>
+                <select id="chatInputAssignee" class="w-full px-2 py-1.5 border dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 font-bold outline-none text-[11px] truncate cursor-pointer"></select>
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-0.5 font-bold">開始日</label>
+                <input type="date" id="chatInputStartDate" class="w-full px-2 py-1.5 border dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-lg text-[11px] font-mono outline-none">
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-0.5 font-bold">期限日</label>
+                <input type="date" id="chatInputDeadline" class="w-full px-2 py-1.5 border dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-lg text-[11px] font-mono outline-none">
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-center space-x-2">
+            <button onclick="closeModal('projectChatModal')" class="px-4 py-2 sm:py-1.5 border dark:border-slate-700 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition touch-target-btn">
+              キャンセル
+            </button>
+            <button onclick="handleChatSubmitClick()" id="btnSubmitChat" class="px-5 py-2 sm:py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-sm whitespace-nowrap touch-target-btn flex items-center justify-center">
+              登録 ➔
             </button>
           </div>
-          
-          <div id="chatModalTaskListContainer" class="hidden md:block flex-1 overflow-y-auto py-1.5 pr-1 space-y-0.5 max-h-48 md:max-h-none"></div>
-
-        </div>
-
-        <!-- 右ペイン: チャットログ ＆ 送信フォーム -->
-        <div class="w-full md:w-[64%] flex-1 flex flex-col min-h-0 bg-white dark:bg-slate-900 overflow-hidden pl-0 md:pl-3 pt-1.5 md:pt-0">
-          
-          <div class="flex-1 overflow-y-auto min-h-0 space-y-3 p-2 sm:p-3" id="chatModalTimeline"></div>
-
-          <div id="chatDropZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleFileDrop(event)" class="bg-slate-50 dark:bg-slate-800/50 p-2 sm:p-3 rounded-2xl border border-slate-200 dark:border-slate-800 transition space-y-2 flex-shrink-0 relative m-1 sm:m-2">
-            
-            <div id="dropOverlay" class="hidden absolute inset-0 bg-blue-600/90 text-white rounded-2xl flex flex-col items-center justify-center font-bold text-xs pointer-events-none z-20 space-y-1">
-              <span>📥 ファイルをドロップして自動添付</span>
-            </div>
-
-            <!-- 常設進行設定バー -->
-            <div class="bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700 shadow-xs space-y-2 text-xs">
-              <div class="flex items-center justify-between text-[11px] pb-1 border-b dark:border-slate-800">
-                <span class="font-bold text-slate-600 dark:text-slate-300 flex items-center space-x-1.5">
-                  <span class="text-slate-400">対象工程:</span>
-                  <span id="currentSelectedTaskTag" class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 font-extrabold cursor-pointer hover:underline" onclick="openCurrentTaskQuickEdit()" title="タップして担当者を変更"></span>
-                </span>
-                <span id="currentAssigneeDisplay" class="text-[10px] text-slate-400 truncate"></span>
-              </div>
-              <input type="hidden" id="chatInputTaskId">
-
-              <div class="grid grid-cols-3 gap-1.5 sm:gap-2">
-                <div>
-                  <label class="block text-[10px] text-slate-400 mb-0.5 font-bold">工程ステータス</label>
-                  <select id="chatInputStatus" onchange="handleStatusAutoAssist()" class="w-full px-2 py-1.5 border dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 font-bold outline-none text-[11px] truncate cursor-pointer">
-                    <option value="">(変更なし)</option>
-                    <option value="未着手">⚪ 未着手</option>
-                    <option value="作業中">🔵 作業中</option>
-                    <option value="提出・確認待ち">🟡 提出・確認待ち</option>
-                    <option value="リテイク">🟠 リテイク指示</option>
-                    <option value="完了">🟢 承認・完了</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-[10px] text-slate-400 mb-0.5 font-bold">ボール (手番)</label>
-                  <select id="chatInputBallHolder" class="w-full px-2 py-1.5 border dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 font-bold text-indigo-600 dark:text-indigo-400 outline-none text-[11px] truncate cursor-pointer">
-                    <option value="creator">👤 担当</option>
-                    <option value="admin">🛡️ 運営</option>
-                    <option value="client">🏢 先方</option>
-                    <option value="none">⚪ なし / 完了</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-[10px] text-slate-400 mb-0.5 font-bold">締切期日</label>
-                  <input type="date" id="chatInputDeadline" class="w-full px-2 py-1.5 border dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-lg text-[11px] font-mono outline-none">
-                </div>
-              </div>
-            </div>
-
-            <div id="attachedFilePreview" class="hidden flex items-center justify-between p-2.5 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg text-xs">
-              <div class="flex items-center space-x-2 truncate">
-                <span id="attachedFileIcon">📎</span>
-                <span id="attachedFileName" class="font-bold text-blue-700 dark:text-blue-300 truncate"></span>
-                <span id="attachedFileSize" class="text-[10px] text-slate-400"></span>
-              </div>
-              <button onclick="removeAttachedFile()" type="button" class="text-red-500 hover:text-red-700 text-xs font-bold px-2 py-1 touch-target-btn">✕ 削除</button>
-            </div>
-
-            <div class="relative">
-              <textarea id="chatInputComment" rows="2" placeholder="メッセージを入力... (音源・画像のD&D対応、URL共有)" class="w-full p-3 pb-12 sm:pb-9 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 break-words leading-relaxed"></textarea>
-              
-              <div class="absolute bottom-2 left-2 flex items-center space-x-2">
-                <label class="cursor-pointer inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-200 transition touch-target-btn">
-                  <span>📎 添付</span>
-                  <input type="file" id="fileInputPicker" onchange="handleFileInputChange(event)" accept="audio/mp3,audio/m4a,audio/*,image/*" class="hidden">
-                </label>
-              </div>
-
-              <div class="absolute bottom-2 right-2">
-                <button onclick="handleChatSubmitClick()" id="btnSubmitChat" class="px-5 py-2 sm:py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-sm whitespace-nowrap touch-target-btn flex items-center justify-center">
-                  送信 ➔
-                </button>
-              </div>
-            </div>
-
-          </div>
 
         </div>
 
       </div>
 
-    </div>
-  </div>
-
-  <!-- 工程クイック編集用オーバーレイ -->
-  <div id="taskQuickEditOverlay" class="hidden fixed inset-0 z-50 flex items-end md:items-center justify-center md:justify-start bg-black/60 backdrop-blur-xs md:backdrop-blur-none md:bg-transparent md:pointer-events-none" onclick="closeTaskQuickEditOverlay()">
-    <div class="bg-white dark:bg-slate-900 w-full md:w-80 md:ml-6 md:mt-[-120px] rounded-t-3xl md:rounded-2xl shadow-2xl border-t md:border border-slate-200 dark:border-slate-700 p-4 sm:p-5 space-y-3.5 animate-in slide-in-from-bottom md:slide-in-from-top-2 md:fade-in duration-200 text-xs md:pointer-events-auto" onclick="event.stopPropagation()">
-      
-      <div class="w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto md:hidden"></div>
-
-      <div class="flex items-center justify-between border-b dark:border-slate-800 pb-2">
-        <span class="font-bold text-sm text-slate-800 dark:text-slate-100 flex items-center space-x-1.5">
-          <span>⚙️ 工程編集:</span>
-          <span id="quickEditTaskTitle" class="text-blue-600 dark:text-blue-400 font-extrabold"></span>
-        </span>
-        <button onclick="closeTaskQuickEditOverlay()" class="text-slate-400 hover:text-slate-600 text-base p-1 touch-target-btn flex items-center justify-center">✕</button>
-      </div>
-
-      <div>
-        <label class="block text-[11px] text-slate-400 mb-1 font-bold">担当クリエイター</label>
-        <select id="quickEditAssigneeId" class="w-full px-3 py-2.5 border dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 font-semibold outline-none text-xs touch-target-btn cursor-pointer"></select>
-      </div>
-
-      <div>
-        <label class="block text-[11px] text-slate-400 mb-1 font-bold">締切期日</label>
-        <input type="date" id="quickEditDeadline" class="w-full px-3 py-2.5 border dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl text-xs outline-none font-mono touch-target-btn">
-      </div>
-
-      <div class="flex items-center justify-end space-x-2 pt-2 border-t dark:border-slate-800">
-        <button onclick="closeTaskQuickEditOverlay()" class="flex-1 sm:flex-none px-4 py-2.5 border dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-300 font-bold touch-target-btn">キャンセル</button>
-        <button onclick="saveTaskQuickEdit()" class="flex-1 sm:flex-none px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-sm touch-target-btn">変更を保存 ➔</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 後続工程の連動シフト確認モーダル -->
-  <div id="deadlineShiftModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-5 space-y-4 border border-slate-200 dark:border-slate-800 shadow-2xl animate-in fade-in zoom-in-95">
-      <div class="border-b dark:border-slate-800 pb-2.5">
-        <div class="text-amber-600 dark:text-amber-400 text-sm font-bold flex items-center space-x-1">
-          <span>📅</span>
-          <span>締切期日の変更を検知しました</span>
-        </div>
-        <p id="shiftModalLeadText" class="text-xs text-slate-600 dark:text-slate-300 mt-1 font-semibold"></p>
-      </div>
-
-      <div class="space-y-2">
-        <div class="flex items-center justify-between text-[11px] text-slate-500 font-bold">
-          <span>連動してスライドする後続工程:</span>
-          <span class="text-[10px] text-slate-400">※不要な工程はチェックを解除</span>
-        </div>
-        <div id="shiftCandidatesList" class="space-y-2 max-h-48 overflow-y-auto p-2 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800 text-xs"></div>
-      </div>
-
-      <div class="flex flex-col sm:flex-row items-center justify-end gap-2.5 pt-2 border-t dark:border-slate-800">
-        <button onclick="executeFinalChatSubmission(false)" class="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl border dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition touch-target-btn">
-          この工程のみ変更
-        </button>
-        <button onclick="executeFinalChatSubmission(true)" class="w-full sm:w-auto px-5 py-2.5 sm:py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-sm touch-target-btn">
-          チェック工程も連動して一括更新 ➔
-        </button>
-      </div>
     </div>
   </div>
 
@@ -620,44 +508,6 @@
     </div>
   </div>
 
-  <!-- モーダル: 途中工程追加 -->
-  <div id="addTaskModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full p-5 space-y-3.5 border border-slate-200 dark:border-slate-800 shadow-xl">
-      <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">＋ 工程の途中追加</h3>
-      <div>
-        <label class="block text-[11px] font-semibold text-slate-500 mb-1">追加する工程名 *</label>
-        <select id="addTaskNameSelect" onchange="handleAddTaskSelectChange()" class="w-full px-3 py-2.5 sm:py-2 border dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-800 font-bold"></select>
-      </div>
-      <div>
-        <label class="block text-[11px] font-semibold text-slate-500 mb-1">担当クリエイター (任意)</label>
-        <select id="addTaskAssigneeSelect" class="w-full px-3 py-2.5 sm:py-2 border dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-800 font-medium"></select>
-      </div>
-      <div>
-        <label class="block text-[11px] font-semibold text-slate-500 mb-1">締切期日 *</label>
-        <input type="date" id="addTaskDeadlineInput" class="w-full px-3 py-2.5 sm:py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs">
-      </div>
-      <div class="flex justify-end space-x-2 pt-2">
-        <button onclick="closeModal('addTaskModal')" class="px-3.5 py-2 border dark:border-slate-700 rounded-lg text-xs touch-target-btn">キャンセル</button>
-        <button onclick="submitAddCustomTask()" class="px-5 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold touch-target-btn">追加する</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- モーダル: 関連チケット後から追加 -->
-  <div id="addRelatedModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full p-5 space-y-3.5 border border-slate-200 dark:border-slate-800 shadow-xl">
-      <h3 id="addRelatedModalTitle" class="font-bold text-sm text-slate-800 dark:text-slate-100">関連チケットの追加</h3>
-      <p class="text-xs text-slate-500 leading-relaxed">既存の案件名・Driveリンクを引き継ぎ、ペアとなる関連チケットを起票します。</p>
-      <div>
-        <label class="block text-[11px] font-semibold text-slate-500 mb-1">着手予定日 *</label>
-        <input type="date" id="addRelatedStartDate" class="w-full px-3 py-2.5 sm:py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs">
-      </div>
-      <div class="flex justify-end space-x-2 pt-2">
-        <button onclick="closeModal('addRelatedModal')" class="px-3.5 py-2 border dark:border-slate-700 rounded-lg text-xs touch-target-btn">キャンセル</button>
-        <button onclick="submitCreateRelatedProject()" class="px-5 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold touch-target-btn">ペア起票 ➔</button>
-      </div>
-    </div>
-  </div>
 
   <!-- モーダル: 営業チケット起票 -->
   <div id="newLeadModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
@@ -826,51 +676,44 @@
   <!-- 新規案件起票モーダル -->
   <div id="newProjectModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-5 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto border border-slate-200 dark:border-slate-800">
-      <h3 class="font-bold text-base sm:text-lg">新規制作案件起票</h3>
-      
+      <h3 class="font-bold text-base sm:text-lg">課題の追加</h3>
+
       <div>
-        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">基本案件名 *</label>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">件名 *</label>
         <input type="text" id="newPrjTitle" class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="例: 【〇〇様】2nd Single 制作">
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">課題の詳細</label>
+        <textarea id="newPrjDescription" rows="4" class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="案件の背景や要望などを自由に記入"></textarea>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
-            案件識別番号 (指定可)
-          </label>
-          <div class="relative">
-            <input type="text" id="newPrjCustomCode" class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm font-mono font-bold" placeholder="例: 2610-1">
-          </div>
-          <span class="text-[10px] text-slate-400 mt-0.5 block">※末尾のM/Vは自動付与されます</span>
+          <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">状態</label>
+          <select id="newPrjStatus" class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm">
+            <option value="">-- 未設定 --</option>
+            <option value="未対応">未対応</option>
+            <option value="処理中">処理中</option>
+            <option value="処理済み">処理済み</option>
+            <option value="完了">完了</option>
+          </select>
         </div>
-
         <div>
-          <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">共有ドライブURL (任意)</label>
-          <input type="url" id="newPrjDrive" class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="https://drive.google.com/...">
+          <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">担当者</label>
+          <select id="newPrjAssignee" class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm"></select>
         </div>
       </div>
 
-      <div class="border-t dark:border-slate-800 pt-3 space-y-2">
-        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">作成するチケット（関連チケットとして連携）</label>
-        <div class="grid grid-cols-2 gap-2 text-xs">
-          <label class="flex items-center space-x-2 p-2.5 rounded-lg border dark:border-slate-700 bg-blue-50/50 dark:bg-blue-950/20 cursor-pointer touch-target-btn">
-            <input type="checkbox" id="checkCreateMusic" checked onchange="toggleTrackCheckboxes()" class="w-4 h-4 rounded text-blue-600">
-            <span class="font-bold text-blue-700 dark:text-blue-300">🎵 [楽曲]</span>
-          </label>
-          <label class="flex items-center space-x-2 p-2.5 rounded-lg border dark:border-slate-700 bg-purple-50/50 dark:bg-purple-950/20 cursor-pointer touch-target-btn">
-            <input type="checkbox" id="checkCreateMv" checked onchange="toggleTrackCheckboxes()" class="w-4 h-4 rounded text-purple-600">
-            <span class="font-bold text-purple-700 dark:text-purple-300">🎬 [MV]</span>
-          </label>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">開始日</label>
+          <input type="date" id="newPrjStartDate" class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm">
         </div>
-      </div>
-
-      <div class="border-t dark:border-slate-800 pt-3">
-        <div class="flex items-center justify-between mb-2">
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">着手日 & 工程組み込み</label>
-          <input type="date" id="autoCalcStartDate" onchange="syncSuggestedTicketNumber()" class="px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs">
+        <div>
+          <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">期限日</label>
+          <input type="date" id="newPrjDeadline" class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm">
         </div>
-        
-        <div id="processCheckboxes" class="space-y-2 max-h-48 overflow-y-auto p-2.5 bg-slate-50 dark:bg-slate-800 rounded-lg border dark:border-slate-700 text-xs"></div>
       </div>
 
       <div class="flex justify-end space-x-2 pt-2">
@@ -896,10 +739,6 @@
     let selectedProjectForChat = null;
     let cachedCreativeProjects = [];
     let pendingUploadFile = null;
-
-    let targetProjectForRelated = null;
-    let pendingDeadlineShiftContext = null;
-    let editingTaskIdForQuickOverlay = null;
 
     const STORAGE_LIMIT_CONFIG = {
       WARNING_SIZE_MB: 800,
@@ -1038,15 +877,9 @@
       return !readByList.includes(myId);
     }
 
-    function getTaskUnreadStatus(task) {
-      const logs = task.logs || [];
-      if (logs.length === 0) return false;
-      return logs.some(l => isLogItemUnread(l));
-    }
-
     function getProjectUnreadStatus(project) {
-      const validTasks = getFilteredTasksForProject(project);
-      return validTasks.some(t => getTaskUnreadStatus(t));
+      const logs = project.logs || [];
+      return logs.some(l => isLogItemUnread(l));
     }
 
     async function updateHeartbeat() {
@@ -1081,55 +914,12 @@
       return { prefix, nextNumStr };
     }
 
-    function syncSuggestedTicketNumber() {
-      const startDateStr = document.getElementById('autoCalcStartDate')?.value;
-      const { prefix, nextNumStr } = getNextTicketNumber(startDateStr);
-      const input = document.getElementById('newPrjCustomCode');
-      if (input && !input.value) {
-        input.value = `${prefix}-${nextNumStr}`;
-      }
-    }
-
-    async function editCurrentTicketCode() {
-      if (!selectedProjectForChat) return;
-      if (!isAdminOrMaster()) return alert('案件番号の編集は管理者権限のみ可能です');
-
-      const currentCode = selectedProjectForChat.ticket_code || '';
-      const newCode = prompt('案件番号（チケットコード）を編集してください:', currentCode);
-      if (newCode === null) return;
-      const trimmed = newCode.trim();
-      if (!trimmed) return alert('案件番号を空にすることはできません');
-
-      const { error } = await supabaseClient
-        .from('projects')
-        .update({ ticket_code: trimmed })
-        .eq('id', selectedProjectForChat.id);
-
-      if (error) {
-        alert('番号変更エラー: ' + error.message);
-        return;
-      }
-
-      selectedProjectForChat.ticket_code = trimmed;
-      document.getElementById('chatModalCodeText').innerText = trimmed;
-      await loadCreativeProjects();
-    }
-
-    function getBallHolderShortText(ballKey) {
-      if (ballKey === 'admin') return '運営確認中';
-      if (ballKey === 'client') return '先方確認中';
-      if (ballKey === 'none') return '完了';
-      return '担当制作中';
-    }
-
-    function getBallHolderTag(ballKey) {
-      if (ballKey === 'admin') {
-        return '<span class="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-900 ml-1">➔ 🛡️ 運営</span>';
-      }
-      if (ballKey === 'client') {
-        return '<span class="text-[10px] font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-1.5 py-0.5 rounded border border-purple-200 dark:border-purple-900 ml-1">➔ 🏢 先方</span>';
-      }
-      return '';
+    function populateNewPrjAssigneeSelect() {
+      const select = document.getElementById('newPrjAssignee');
+      if (!select) return;
+      select.innerHTML = '<option value="">-- 未割当 --</option>' + allProfiles.map(u => {
+        return `<option value="${u.id}">${getDisplayName(u)}</option>`;
+      }).join('');
     }
 
     async function compressImageToJpeg(file) {
@@ -1230,171 +1020,11 @@
       nameEl.innerText = finalFile.name;
       sizeEl.innerText = '(' + (finalFile.size / (1024 * 1024)).toFixed(2) + ' MB)';
       previewBox.classList.remove('hidden');
-
-      const statusSelect = document.getElementById('chatInputStatus');
-      if (statusSelect && !statusSelect.value) {
-        statusSelect.value = '提出・確認待ち';
-        handleStatusAutoAssist();
-      }
     }
 
     function removeAttachedFile() {
       pendingUploadFile = null;
       document.getElementById('attachedFilePreview').classList.add('hidden');
-    }
-
-    function handleStatusAutoAssist() {
-      const status = document.getElementById('chatInputStatus').value;
-      const ballSelect = document.getElementById('chatInputBallHolder');
-      if (!ballSelect) return;
-
-      if (status === '提出・確認待ち') {
-        ballSelect.value = 'admin';
-      } else if (status === 'リテイク' || status === '作業中' || status === '未着手') {
-        ballSelect.value = 'creator';
-      } else if (status === '完了') {
-        ballSelect.value = 'none';
-      }
-    }
-
-    function getActiveBallTasks(tasks) {
-      const taskMap = new Map();
-      tasks.forEach(t => taskMap.set(t.title, t));
-      const activeTasks = [];
-
-      const upstreamPaths = {
-        'マスタリング': [['ミキシング', 'レコーディング', '編曲', '作曲']],
-        'ミキシング': [
-          ['レコーディング', '編曲', '作曲'],
-          ['レコーディング', '作詞', '作曲']
-        ],
-        'レコーディング': [
-          ['編曲', '作曲'],
-          ['作詞', '作曲']
-        ],
-        '編曲': [['作曲']],
-        '作詞': [['作曲']],
-        '作曲': [],
-        '映像': [['イラスト']],
-        'イラスト': []
-      };
-
-      tasks.forEach(t => {
-        if (t.status === '完了') return;
-        if (t.status === '作業中' || t.status === '提出・確認待ち' || t.status === 'リテイク') {
-          activeTasks.push(t);
-          return;
-        }
-
-        const paths = upstreamPaths[t.title] || [];
-        let isReady = true;
-
-        for (const path of paths) {
-          let nearestParent = null;
-          for (const ancestorTitle of path) {
-            if (taskMap.has(ancestorTitle)) {
-              nearestParent = taskMap.get(ancestorTitle);
-              break;
-            }
-          }
-          if (nearestParent && nearestParent.status !== '完了') {
-            isReady = false;
-            break;
-          }
-        }
-
-        if (isReady) activeTasks.push(t);
-      });
-
-      return activeTasks;
-    }
-
-    function evaluateProjectAndon(project) {
-      const tasks = getFilteredTasksForProject(project);
-      const todayStr = new Date().toISOString().split('T')[0];
-
-      if (tasks.length > 0 && tasks.every(t => t.status === '完了')) {
-        return {
-          statusKey: 'completed',
-          label: '完了',
-          dot: '🟢',
-          badgeClass: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800',
-          activeItems: []
-        };
-      }
-
-      const activeTasks = getActiveBallTasks(tasks);
-
-      const activeItems = activeTasks.map(t => {
-        const assignee = allProfiles.find(u => u.id === t.assignee_id);
-        const isOverdue = t.deadline && t.deadline < todayStr && t.status !== '完了';
-        const ballKey = t.ball_holder || (t.status === '提出・確認待ち' ? 'admin' : 'creator');
-
-        return {
-          id: t.id,
-          taskTitle: t.title,
-          assigneeName: getDisplayName(assignee),
-          ballShort: getBallHolderShortText(ballKey),
-          ballKey: ballKey,
-          deadline: formatDeadlineStr(t.deadline),
-          isOverdue: isOverdue,
-          status: t.status
-        };
-      });
-
-      let statusKey = 'unstarted';
-      let label = '未着手';
-      let dot = '⚪';
-      let badgeClass = 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700';
-
-      if (activeItems.some(item => item.isOverdue)) {
-        statusKey = 'overdue';
-        label = '遅延';
-        dot = '🔴';
-        badgeClass = 'bg-red-50 text-red-700 dark:bg-red-950/60 dark:text-red-300 border border-red-200 dark:border-red-900';
-      } else if (activeItems.some(item => item.status === '提出・確認待ち' || item.ballKey === 'admin')) {
-        statusKey = 'review';
-        label = '確認中';
-        dot = '🟡';
-        badgeClass = 'bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-900';
-      } else if (activeItems.some(item => item.status === '作業中' || item.status === 'リテイク')) {
-        statusKey = 'working';
-        label = '作業中';
-        dot = '🔵';
-        badgeClass = 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-900';
-      } else if (activeItems.length === 0) {
-        statusKey = 'unstarted';
-        label = '未着手';
-        dot = '⚪';
-        badgeClass = 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700';
-      }
-
-      return {
-        statusKey: statusKey,
-        label: label,
-        dot: dot,
-        badgeClass: badgeClass,
-        activeItems: activeItems
-      };
-    }
-
-    function getProjectCategory(project) {
-      if (project.category) return project.category;
-      const titles = (project.tasks || []).map(t => t.title);
-      const hasMusic = titles.some(t => ['作曲', '作詞', '編曲', 'レコーディング', 'ミキシング', 'マスタリング'].includes(t));
-      const hasMv = titles.some(t => ['イラスト', '映像'].includes(t));
-      if (hasMv && !hasMusic) return 'mv';
-      return 'music';
-    }
-
-    function getFilteredTasksForProject(project) {
-      const cat = getProjectCategory(project);
-      const allTasks = project.tasks || [];
-      if (cat === 'mv') {
-        return allTasks.filter(t => ['イラスト', '映像'].includes(t.title));
-      } else {
-        return allTasks.filter(t => !['イラスト', '映像'].includes(t.title));
-      }
     }
 
     function getCategoryBadgeHtml(cat) {
@@ -1404,264 +1034,140 @@
       return '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800">🎵 楽曲</span>';
     }
 
-    function getRelatedProject(project) {
-      if (!project.group_id) return null;
-      return cachedCreativeProjects.find(p => p.group_id === project.group_id && p.id !== project.id);
-    }
-
     function handleCreativeFilterChange(key) {
       currentAndonFilter = key;
+      updateCreativeFilterBarUI();
       renderCreativeProjectsList();
+    }
+
+    function updateCreativeFilterBarUI() {
+      document.querySelectorAll('#creativeStatusFilterBar button[data-filter-value]').forEach(btn => {
+        const isActive = btn.getAttribute('data-filter-value') === currentAndonFilter;
+        btn.className = isActive
+          ? 'px-3 py-1.5 rounded-full transition touch-target-btn bg-slate-900 dark:bg-white text-white dark:text-slate-900'
+          : 'px-3 py-1.5 rounded-full transition touch-target-btn text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800';
+      });
+    }
+
+    function getProjectStatusBadgeHtml(status) {
+      const badgeClassMap = {
+        '未対応': 'bg-slate-500 text-white',
+        '処理中': 'bg-blue-500 text-white',
+        '処理済み': 'bg-teal-600 text-white',
+        '完了': 'bg-lime-700 text-white'
+      };
+      if (!status) return '<span class="text-slate-400">-</span>';
+      const cls = badgeClassMap[status] || badgeClassMap['未対応'];
+      return `<span class="px-3 py-1 rounded-md text-xs font-bold ${cls}">${status}</span>`;
+    }
+
+    function getProjectDeadlineHtml(p) {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const isOverdue = p.deadline && p.deadline < todayStr && p.status !== '完了';
+      const cls = isOverdue ? 'text-red-600 dark:text-red-400 font-bold' : '';
+      return `<span class="${cls}">${formatDeadlineStr(p.deadline)}${isOverdue ? ' 🔥' : ''}</span>`;
     }
 
     function renderCreativeProjectsList() {
       const container = document.getElementById('projectList');
       if (!container) return;
 
+      updateCreativeFilterBarUI();
+
       const isUserMode = !isAdminOrMaster() || adminViewMode === 'creator';
       const myId = currentUser ? currentUser.id : '';
 
       let targetProjects = cachedCreativeProjects.filter(p => {
         if (!isUserMode) return true;
-        const validTasks = getFilteredTasksForProject(p);
-        return validTasks.some(t => t.assignee_id === myId);
+        return p.assignee_id === myId;
       });
 
       const filtered = targetProjects.filter(p => {
-        const andon = evaluateProjectAndon(p);
         if (currentAndonFilter === 'active') {
-          return andon.statusKey !== 'completed';
+          return p.status !== '完了';
         }
         if (currentAndonFilter === 'all') {
           return true;
         }
-        return andon.statusKey === currentAndonFilter;
+        return p.status === currentAndonFilter;
       });
 
       if (filtered.length === 0) {
-        container.innerHTML = '<div class="p-8 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs">該当する制作案件はありません</div>';
+        container.innerHTML = '<div class="p-8 text-center text-slate-400 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">該当する制作案件はありません</div>';
         return;
       }
 
       const mobileCardsHtml = `<div class="block md:hidden space-y-3">` + filtered.map(p => {
-        const andon = evaluateProjectAndon(p);
         const hasUnread = getProjectUnreadStatus(p);
-        const cat = getProjectCategory(p);
-        const catBadge = getCategoryBadgeHtml(cat);
-        const relatedPrj = getRelatedProject(p);
-        const validTasks = getFilteredTasksForProject(p).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
-
-        const codeBadge = p.ticket_code 
-          ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border dark:border-slate-700">${p.ticket_code}</span>`
+        const assignee = allProfiles.find(u => u.id === p.assignee_id);
+        const unreadDot = hasUnread
+          ? '<span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse flex-shrink-0"></span>'
           : '';
+        const updatedAtDate = p.updated_at ? p.updated_at.split('T')[0] : null;
 
-        let latestLog = null;
-        let latestTaskTitle = '';
-        validTasks.forEach(t => {
-          (t.logs || []).forEach(l => {
-            if (!latestLog || new Date(l.at) > new Date(latestLog.at)) {
-              latestLog = l;
-              latestTaskTitle = t.title;
-            }
-          });
-        });
-
-        let latestLogHtml = '<span class="text-slate-400 italic">ログなし</span>';
-        if (latestLog) {
-          const dateStr = new Date(latestLog.at).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-          const textPreview = latestLog.comment || (latestLog.url ? '提出ファイルあり' : latestLog.type);
-          latestLogHtml = `<span class="font-semibold text-slate-700 dark:text-slate-300">[${latestTaskTitle}]</span> <span class="truncate">${textPreview}</span> <span class="text-[10px] text-slate-400 font-mono">(${dateStr})</span>`;
-        }
-
-        const unreadDot = hasUnread 
-          ? '<span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>'
-          : '';
-
-        let relatedLinkHtml = '';
-        if (relatedPrj) {
-          const relCat = getProjectCategory(relatedPrj);
-          const relLabel = relCat === 'mv' ? '🎬 MVへ' : '🎵 楽曲へ';
-          relatedLinkHtml = `<button onclick="event.stopPropagation(); openProjectChatModal('${relatedPrj.id}')" class="text-[10px] px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 font-semibold transition touch-target-btn">
-            ${relLabel} ➔
-          </button>`;
-        }
-
-        let activeSummaryHtml = '';
-        if (andon.statusKey === 'completed') {
-          activeSummaryHtml = '<div class="text-xs text-emerald-600 dark:text-emerald-400 font-bold">全工程完了</div>';
-        } else if (andon.activeItems.length === 0) {
-          activeSummaryHtml = '<div class="text-xs text-slate-400">未着手 / 待機中</div>';
-        } else {
-          activeSummaryHtml = andon.activeItems.map(item => {
-            const deadlineClass = item.isOverdue ? 'text-red-600 dark:text-red-400 font-bold' : 'text-slate-500 dark:text-slate-400';
-            const ballTag = getBallHolderTag(item.ballKey);
-
-            return `<div class="flex items-center justify-between text-xs py-0.5">
-              <div class="flex items-center space-x-1.5 truncate">
-                <span class="font-bold text-slate-800 dark:text-slate-100">${item.taskTitle}</span>
-                <span class="text-slate-400">·</span>
-                <span class="text-slate-600 dark:text-slate-300 font-medium">${item.assigneeName}</span>
-                ${ballTag}
-              </div>
-              <div class="text-[11px] ${deadlineClass} flex-shrink-0">
-                ${item.deadline}
-              </div>
-            </div>`;
-          }).join('');
-        }
-
-        return `<div onclick="openProjectChatModal('${p.id}')" class="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 cursor-pointer transition space-y-2.5 relative group flex flex-col justify-between active:scale-[0.99]">
-          <div class="space-y-2">
-            <div class="flex items-center justify-between gap-2">
-              <div class="flex items-center space-x-1.5 min-w-0">
-                ${unreadDot}
-                ${codeBadge}
-                ${catBadge}
-                <h3 class="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 truncate group-hover:text-blue-600 transition">${p.title}</h3>
-              </div>
-              <div class="flex items-center space-x-1.5 flex-shrink-0">
-                ${relatedLinkHtml}
-                <span class="px-2 py-0.5 rounded text-[11px] font-bold ${andon.badgeClass}">${andon.dot} ${andon.label}</span>
-              </div>
+        return `<div onclick="openProjectChatModal('${p.id}')" class="bg-white dark:bg-slate-900 p-3.5 sm:p-4 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-500 cursor-pointer transition space-y-2.5 active:scale-[0.99]">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center space-x-1.5 min-w-0">
+              ${unreadDot}
+              <span class="font-mono font-bold text-[11px] text-blue-600 dark:text-blue-400 flex-shrink-0">${p.ticket_code || '-'}</span>
+              <h3 class="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 truncate">${p.title}</h3>
             </div>
-
-            <div class="bg-slate-50 dark:bg-slate-800/40 p-2 sm:p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 space-y-1">
-              ${activeSummaryHtml}
-            </div>
+            <div class="flex-shrink-0">${getProjectStatusBadgeHtml(p.status)}</div>
           </div>
 
-          <div class="text-[11px] text-slate-500 flex items-center space-x-1.5 min-w-0 truncate pt-2 border-t border-slate-100 dark:border-slate-800/60">
-            <span class="text-xs flex-shrink-0">💬</span>
-            <div class="truncate">${latestLogHtml}</div>
+          <div class="grid grid-cols-3 gap-2 text-[11px] pt-2 border-t border-slate-100 dark:border-slate-800/60">
+            <div class="min-w-0">
+              <div class="text-slate-400 dark:text-slate-500">担当者</div>
+              <div class="text-slate-700 dark:text-slate-300 font-medium truncate">${getDisplayName(assignee)}</div>
+            </div>
+            <div class="min-w-0">
+              <div class="text-slate-400 dark:text-slate-500">期限日</div>
+              <div class="font-medium truncate">${getProjectDeadlineHtml(p)}</div>
+            </div>
+            <div class="min-w-0">
+              <div class="text-slate-400 dark:text-slate-500">更新日</div>
+              <div class="text-slate-700 dark:text-slate-300 font-medium truncate">${formatDeadlineStr(updatedAtDate)}</div>
+            </div>
           </div>
         </div>`;
       }).join('') + `</div>`;
 
       const pcTableHtml = `
-      <div class="hidden md:block bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+      <div class="hidden md:block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
         <table class="w-full text-xs text-left border-collapse table-fixed">
           <thead>
-            <tr class="bg-slate-50/75 dark:bg-slate-800/40 text-slate-400 font-semibold border-b border-slate-100 dark:border-slate-800">
-              <th class="py-3 px-3.5 w-36 lg:w-40">チケット / 区分</th>
-              <th class="py-3 px-3">案件名</th>
-              <th class="py-3 px-3 w-64 lg:w-72">ステータス</th>
-              <th class="py-3 px-3 w-28 text-center">期日</th>
-              <th class="hidden xl:table-cell py-3 px-3 w-64">最新ログ</th>
-              <th class="py-3 px-3.5 text-right w-16"></th>
+            <tr class="text-blue-600 dark:text-blue-400 font-bold border-b-2 border-slate-200 dark:border-slate-700">
+              <th class="py-3 px-3.5 w-[10%]">キー</th>
+              <th class="py-3 px-3 w-[32%]">件名</th>
+              <th class="py-3 px-3 w-[16%]">担当者</th>
+              <th class="py-3 px-3 w-[14%]">状態</th>
+              <th class="py-3 px-3 w-[14%] text-center">期限日</th>
+              <th class="py-3 px-3 w-[14%] text-center">更新日</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
-      ` + filtered.map(p => {
-        const andon = evaluateProjectAndon(p);
+      ` + filtered.map((p, idx) => {
         const hasUnread = getProjectUnreadStatus(p);
-        const cat = getProjectCategory(p);
-        const catBadge = getCategoryBadgeHtml(cat);
-        const relatedPrj = getRelatedProject(p);
-        const validTasks = getFilteredTasksForProject(p).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
-
-        const codeBadge = p.ticket_code 
-          ? `<span class="font-mono font-bold text-slate-700 dark:text-slate-200 text-xs">${p.ticket_code}</span>`
-          : '<span class="text-slate-400">-</span>';
-
-        let latestLog = null;
-        let latestTaskTitle = '';
-        validTasks.forEach(t => {
-          (t.logs || []).forEach(l => {
-            if (!latestLog || new Date(l.at) > new Date(latestLog.at)) {
-              latestLog = l;
-              latestTaskTitle = t.title;
-            }
-          });
-        });
-
-        let latestLogHtml = '<span class="text-slate-400 italic">-</span>';
-        if (latestLog) {
-          const dateStr = new Date(latestLog.at).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-          const textPreview = latestLog.comment || (latestLog.url ? '提出ファイルあり' : latestLog.type);
-          latestLogHtml = `<span class="font-semibold text-slate-700 dark:text-slate-300">[${latestTaskTitle}]</span> <span class="truncate text-slate-600 dark:text-slate-400">${textPreview}</span> <span class="text-[10px] text-slate-400 font-mono">(${dateStr})</span>`;
-        }
-
-        const unreadDot = hasUnread 
+        const assignee = allProfiles.find(u => u.id === p.assignee_id);
+        const unreadDot = hasUnread
           ? '<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse inline-block mr-1.5 flex-shrink-0"></span>'
           : '';
-
-        let relatedLinkHtml = '';
-        if (relatedPrj) {
-          const relCat = getProjectCategory(relatedPrj);
-          const relLabel = relCat === 'mv' ? '🎬 MV' : '🎵 楽曲';
-          relatedLinkHtml = `<button onclick="event.stopPropagation(); openProjectChatModal('${relatedPrj.id}')" class="text-[10px] px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 transition ml-1 flex-shrink-0" title="ペアチケットを開く">
-            🔗 ${relLabel}
-          </button>`;
-        }
-
-        let statusCombinedHtml = '';
-        let deadlineLineHtml = '';
-
-        if (andon.statusKey === 'completed') {
-          statusCombinedHtml = `
-            <div class="flex items-center space-x-1.5 truncate">
-              <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex-shrink-0">🟢 完了</span>
-              <span class="text-emerald-600 dark:text-emerald-400 font-bold truncate">全工程完了</span>
-            </div>
-          `;
-          deadlineLineHtml = '<span class="text-slate-400">-</span>';
-        } else if (andon.activeItems.length === 0) {
-          statusCombinedHtml = `
-            <div class="flex items-center space-x-1.5 truncate">
-              <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700 flex-shrink-0">⚪ 未着手</span>
-              <span class="text-slate-400 truncate">待機中</span>
-            </div>
-          `;
-          deadlineLineHtml = '<span class="text-slate-400">-</span>';
-        } else {
-          statusCombinedHtml = andon.activeItems.map(item => {
-            const ballTag = getBallHolderTag(item.ballKey);
-            return `
-              <div class="flex items-center space-x-1.5 truncate">
-                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${andon.badgeClass} flex-shrink-0">
-                  ${andon.dot} ${andon.label}
-                </span>
-                <span class="font-bold text-slate-800 dark:text-slate-100 flex-shrink-0">${item.taskTitle}</span>
-                <span class="text-slate-400 text-[10px] flex-shrink-0">·</span>
-                <span class="text-slate-600 dark:text-slate-300 truncate font-medium">${item.assigneeName}</span>
-                ${ballTag}
-              </div>
-            `;
-          }).join('');
-
-          deadlineLineHtml = andon.activeItems.map(item => {
-            const deadlineClass = item.isOverdue ? 'text-red-600 dark:text-red-400 font-bold' : 'text-slate-600 dark:text-slate-300';
-            return `<div class="${deadlineClass} text-center truncate">${item.deadline}</div>`;
-          }).join('');
-        }
+        const updatedAtDate = p.updated_at ? p.updated_at.split('T')[0] : null;
+        const rowBg = idx % 2 === 1 ? 'bg-amber-50/60 dark:bg-amber-950/10' : 'bg-white dark:bg-slate-900';
 
         return `
-          <tr onclick="openProjectChatModal('${p.id}')" class="hover:bg-blue-50/40 dark:hover:bg-slate-800/60 cursor-pointer transition group">
-            <td class="py-3 px-3.5 whitespace-nowrap">
-              <div class="flex items-center space-x-1.5">
-                ${catBadge}
-                ${codeBadge}
-              </div>
-            </td>
+          <tr onclick="openProjectChatModal('${p.id}')" class="${rowBg} hover:bg-blue-50/40 dark:hover:bg-slate-800/60 cursor-pointer transition group">
+            <td class="py-3 px-3.5 whitespace-nowrap font-mono font-bold text-blue-600 dark:text-blue-400">${p.ticket_code || '-'}</td>
             <td class="py-3 px-3">
-              <div class="min-w-0 pr-2">
+              <div class="min-w-0 flex items-center">
                 ${unreadDot}
                 <span class="font-bold text-sm text-slate-800 dark:text-slate-100 group-hover:text-blue-600 transition truncate">${p.title}</span>
-                ${relatedLinkHtml}
               </div>
             </td>
-            <td class="py-3 px-3">
-              <div class="min-w-0">${statusCombinedHtml}</div>
-            </td>
-            <td class="py-3 px-3 whitespace-nowrap">
-              ${deadlineLineHtml}
-            </td>
-            <td class="hidden xl:table-cell py-3 px-3 text-slate-500">
-              <div class="truncate text-[11px]">${latestLogHtml}</div>
-            </td>
-            <td class="py-3 px-3.5 text-right whitespace-nowrap">
-              <span class="text-blue-600 dark:text-blue-400 font-bold text-xs group-hover:underline">開く ➔</span>
-            </td>
+            <td class="py-3 px-3 truncate text-slate-600 dark:text-slate-300">${getDisplayName(assignee)}</td>
+            <td class="py-3 px-3">${getProjectStatusBadgeHtml(p.status)}</td>
+            <td class="py-3 px-3 text-center whitespace-nowrap">${getProjectDeadlineHtml(p)}</td>
+            <td class="py-3 px-3 text-center whitespace-nowrap">${formatDeadlineStr(updatedAtDate)}</td>
           </tr>
         `;
       }).join('') + `
@@ -1762,69 +1268,6 @@
           </div>
         </div>`;
       }).join('');
-    }
-
-    function getTaskStatusAppearance(task, todayStr) {
-      const isDone = task.status === '完了';
-      const isOverdue = task.deadline && task.deadline < todayStr && !isDone;
-      const ballKey = task.ball_holder || 'creator';
-
-      if (isDone) {
-        return {
-          dotColor: 'bg-emerald-500 ring-emerald-100 dark:ring-emerald-950',
-          titleColor: 'text-emerald-700 dark:text-emerald-300 line-through opacity-80',
-          tagLabel: '完了',
-          tagClass: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
-        };
-      }
-      if (isOverdue) {
-        return {
-          dotColor: 'bg-red-500 ring-red-100 dark:ring-red-950',
-          titleColor: 'text-red-600 dark:text-red-400 font-bold',
-          tagLabel: '遅延',
-          tagClass: 'bg-red-50 text-red-700 dark:bg-red-950/60 dark:text-red-300 border border-red-200 dark:border-red-900'
-        };
-      }
-      if (task.status === '提出・確認待ち' || ballKey === 'admin' || ballKey === 'client') {
-        return {
-          dotColor: 'bg-amber-500 ring-amber-100 dark:ring-amber-950',
-          titleColor: 'text-amber-700 dark:text-amber-300 font-bold',
-          tagLabel: '確認中',
-          tagClass: 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-900'
-        };
-      }
-      if (task.status === '作業中' || task.status === 'リテイク') {
-        return {
-          dotColor: 'bg-blue-500 ring-blue-100 dark:ring-blue-950',
-          titleColor: 'text-blue-700 dark:text-blue-300 font-bold',
-          tagLabel: '作業中',
-          tagClass: 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-900'
-        };
-      }
-
-      return {
-        dotColor: 'bg-slate-300 dark:bg-slate-600 ring-slate-100 dark:ring-slate-900',
-        titleColor: 'text-slate-600 dark:text-slate-400',
-        tagLabel: '未着手',
-        tagClass: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
-      };
-    }
-
-    function toggleMobilePipeline(forceOpen = null) {
-      const container = document.getElementById('chatModalTaskListContainer');
-      const btn = document.getElementById('btnToggleMobilePipeline');
-      if (!container || !btn) return;
-
-      const isHidden = container.classList.contains('hidden');
-      const shouldOpen = forceOpen !== null ? forceOpen : isHidden;
-
-      if (shouldOpen) {
-        container.classList.remove('hidden');
-        btn.innerText = '▲ 工程を閉じる';
-      } else {
-        container.classList.add('hidden');
-        btn.innerText = '▼ 工程を開く';
-      }
     }
 
     // ==========================================================
@@ -2344,9 +1787,7 @@
       if (!selectedProjectForChat) return;
 
       const p = selectedProjectForChat;
-      const cat = getProjectCategory(p);
-      const catEl = document.getElementById('chatModalCategoryBadge');
-      
+
       const codeBtn = document.getElementById('chatModalCodeBadge');
       const codeText = document.getElementById('chatModalCodeText');
       if (p.ticket_code) {
@@ -2356,209 +1797,75 @@
         codeBtn.classList.add('hidden');
       }
 
-      if (cat === 'mv') {
-        catEl.className = "text-[11px] font-bold px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 dark:bg-purple-950/70 dark:text-purple-300 border border-purple-200 dark:border-purple-800";
-        catEl.innerText = "🎬 MV";
-      } else {
-        catEl.className = "text-[11px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 border border-blue-200 dark:border-blue-800";
-        catEl.innerText = "🎵 楽曲";
-      }
-
       document.getElementById('chatModalTitle').innerText = p.title;
 
       const driveEl = document.getElementById('chatModalDriveLink');
-      driveEl.innerHTML = p.drive_url 
+      driveEl.innerHTML = p.drive_url
         ? `<a href="${p.drive_url}" target="_blank" class="text-[11px] px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-600 dark:text-slate-300 hover:underline">Drive ↗</a>`
         : '';
-
-      const relatedLinkContainer = document.getElementById('chatModalRelatedLink');
-      const relatedPrj = getRelatedProject(p);
-      if (relatedPrj) {
-        const relCat = getProjectCategory(relatedPrj);
-        const relCode = relatedPrj.ticket_code ? `[${relatedPrj.ticket_code}] ` : '';
-        const relLabel = relCat === 'mv' ? `🎬 関連: ${relCode}MVを開く` : `🎵 関連: ${relCode}楽曲を開く`;
-        relatedLinkContainer.innerHTML = `<button onclick="openProjectChatModal('${relatedPrj.id}')" class="text-xs px-2.5 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 transition touch-target-btn">
-          ${relLabel} ➔
-        </button>`;
-      } else if (isAdminOrMaster()) {
-        const addLabel = cat === 'music' ? '＋ 🎬 関連MVを追加' : '＋ 🎵 関連楽曲を追加';
-        relatedLinkContainer.innerHTML = `<button onclick="openAddRelatedModal('${p.id}')" class="text-xs px-2.5 py-1.5 rounded-lg border border-dashed border-indigo-300 dark:border-indigo-800 bg-indigo-50/60 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 font-semibold transition touch-target-btn">
-          ${addLabel}
-        </button>`;
-      } else {
-        relatedLinkContainer.innerHTML = '';
-      }
 
       const delBtn = document.getElementById('chatModalDeleteBtn');
       if (delBtn) delBtn.classList.toggle('hidden', !isAdminOrMaster());
 
-      renderPipelineTree(p);
+      renderProjectDescription(p);
+      toggleDescriptionEdit(false);
 
-      const tasks = getFilteredTasksForProject(p).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
-      if (tasks.length > 0) {
-        const activeTasks = getActiveBallTasks(tasks);
-        const targetTask = activeTasks.length > 0 
-          ? activeTasks[0] 
-          : (tasks.find(t => t.status !== '完了') || tasks[0]);
-        selectTaskForControl(targetTask.id);
-      }
+      document.getElementById('chatInputStatus').value = p.status || '';
 
-      toggleMobilePipeline(false);
-      renderProjectChatTimeline(p);
-
-      removeAttachedFile();
-      document.getElementById('chatInputStatus').value = '';
-      document.getElementById('chatInputComment').value = '';
-      closeTaskQuickEditOverlay();
-
-      openModal('projectChatModal');
-      autoMarkProjectTasksAsRead(p);
-      
-      setTimeout(scrollToLatestMessage, 60);
-    }
-
-    function renderPipelineTree(p) {
-      const tasks = getFilteredTasksForProject(p).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
-      const todayStr = new Date().toISOString().split('T')[0];
-
-      const taskListContainer = document.getElementById('chatModalTaskListContainer');
-      taskListContainer.innerHTML = `<div class="relative ml-2.5 pl-4 sm:pl-4 space-y-1 sm:space-y-2 border-l-2 border-slate-300 dark:border-slate-700 my-1 py-1">`
-        + tasks.map((t) => {
-            const appearance = getTaskStatusAppearance(t, todayStr);
-            const assignee = allProfiles.find(u => u.id === t.assignee_id);
-            const assigneeName = assignee ? getDisplayName(assignee) : '未設定';
-            const ballTag = getBallHolderTag(t.ball_holder || 'creator');
-
-            return `<div onclick="handlePipelineTaskClick('${t.id}')" class="relative group cursor-pointer flex items-center justify-between text-xs py-2 sm:py-1 px-2 rounded-lg hover:bg-white/80 dark:hover:bg-slate-800/80 transition -ml-2 touch-target-row active:bg-blue-50 dark:active:bg-blue-950/40">
-              <span class="absolute -left-[14px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full ring-2 ${appearance.dotColor} z-10"></span>
-              
-              <div class="flex items-center space-x-1.5 truncate pl-2">
-                <span class="px-1.5 py-0.2 rounded text-[10px] font-bold ${appearance.tagClass} flex-shrink-0">
-                  ${appearance.tagLabel}
-                </span>
-                <span class="${appearance.titleColor} font-bold sm:font-normal">${t.title}</span>
-                <span class="text-slate-400 text-[10px]">·</span>
-                <span class="text-slate-600 dark:text-slate-300 font-medium text-[11px] truncate">${assigneeName}</span>
-                ${ballTag}
-              </div>
-
-              <div class="flex items-center space-x-1.5 text-[11px] flex-shrink-0">
-                <span class="${t.deadline && t.deadline < todayStr && t.status !== '完了' ? 'text-red-500 font-bold' : 'text-slate-500 dark:text-slate-400'}">${formatDeadlineStr(t.deadline)}</span>
-              </div>
-            </div>`;
-          }).join('')
-        + `</div>`;
-    }
-
-    function handlePipelineTaskClick(taskId) {
-      selectTaskForControl(taskId);
-      openTaskQuickEditOverlay(taskId);
-    }
-
-    function selectTaskForControl(taskId) {
-      if (!selectedProjectForChat) return;
-      const targetTask = (selectedProjectForChat.tasks || []).find(t => t.id === taskId);
-      if (!targetTask) return;
-
-      document.getElementById('chatInputTaskId').value = taskId;
-      document.getElementById('currentSelectedTaskTag').innerText = `[${targetTask.title}]`;
-      
-      const assigneeObj = allProfiles.find(u => u.id === targetTask.assignee_id);
-      document.getElementById('currentAssigneeDisplay').innerText = `担当: ${getDisplayName(assigneeObj)}`;
-
-      document.getElementById('chatInputBallHolder').value = targetTask.ball_holder || 'creator';
-      document.getElementById('chatInputDeadline').value = targetTask.deadline || '';
-      document.getElementById('chatInputStatus').value = '';
-    }
-
-    function openCurrentTaskQuickEdit() {
-      const taskId = document.getElementById('chatInputTaskId').value;
-      if (taskId) openTaskQuickEditOverlay(taskId);
-    }
-
-    function openTaskQuickEditOverlay(taskId) {
-      if (!selectedProjectForChat) return;
-      const targetTask = (selectedProjectForChat.tasks || []).find(t => t.id === taskId);
-      if (!targetTask) return;
-
-      editingTaskIdForQuickOverlay = taskId;
-      document.getElementById('quickEditTaskTitle').innerText = targetTask.title;
-
-      const assigneeSelect = document.getElementById('quickEditAssigneeId');
+      const assigneeSelect = document.getElementById('chatInputAssignee');
       assigneeSelect.innerHTML = '<option value="">-- 未割当 --</option>' + allProfiles.map(u => {
         return `<option value="${u.id}">${getDisplayName(u)}</option>`;
       }).join('');
-      assigneeSelect.value = targetTask.assignee_id || '';
+      assigneeSelect.value = p.assignee_id || '';
 
-      document.getElementById('quickEditDeadline').value = targetTask.deadline || '';
-      document.getElementById('taskQuickEditOverlay').classList.remove('hidden');
+      document.getElementById('chatInputStartDate').value = p.start_date || '';
+      document.getElementById('chatInputDeadline').value = p.deadline || '';
+
+      renderProjectChatTimeline(p);
+
+      removeAttachedFile();
+      document.getElementById('chatInputComment').value = '';
+
+      openModal('projectChatModal');
+      autoMarkProjectLogsAsRead(p);
+
+      setTimeout(scrollToLatestMessage, 60);
     }
 
-    function closeTaskQuickEditOverlay() {
-      editingTaskIdForQuickOverlay = null;
-      const overlay = document.getElementById('taskQuickEditOverlay');
-      if (overlay) overlay.classList.add('hidden');
+    function renderProjectDescription(p) {
+      const viewEl = document.getElementById('chatModalDescriptionView');
+      viewEl.innerText = p.description || '概要はまだありません';
+      viewEl.classList.toggle('text-slate-400', !p.description);
+      viewEl.classList.toggle('italic', !p.description);
     }
 
-    async function saveTaskQuickEdit() {
-      if (!selectedProjectForChat || !editingTaskIdForQuickOverlay) return;
-      const taskId = editingTaskIdForQuickOverlay;
-      const newAssigneeId = document.getElementById('quickEditAssigneeId').value || null;
-      const newDeadline = document.getElementById('quickEditDeadline').value || null;
+    function toggleDescriptionEdit(show) {
+      const viewEl = document.getElementById('chatModalDescriptionView');
+      const editWrap = document.getElementById('chatModalDescriptionEditWrap');
+      const shouldShow = show === undefined ? editWrap.classList.contains('hidden') : show;
 
-      const targetTask = (selectedProjectForChat.tasks || []).find(t => t.id === taskId);
-      if (!targetTask) return;
-
-      const isAssigneeChanged = (targetTask.assignee_id || null) !== newAssigneeId;
-      const isDeadlineChanged = (targetTask.deadline || null) !== newDeadline;
-
-      if (!isAssigneeChanged && !isDeadlineChanged) {
-        closeTaskQuickEditOverlay();
-        return;
+      if (shouldShow && selectedProjectForChat) {
+        document.getElementById('chatModalDescriptionInput').value = selectedProjectForChat.description || '';
       }
 
-      const updateData = {};
-      if (isAssigneeChanged) updateData.assignee_id = newAssigneeId;
-      if (isDeadlineChanged) updateData.deadline = newDeadline;
+      viewEl.classList.toggle('hidden', shouldShow);
+      editWrap.classList.toggle('hidden', !shouldShow);
+    }
 
-      const logs = targetTask.logs || [];
-      const currentUserName = getCurrentUserIdentifier() || '担当者';
+    async function saveProjectDescription() {
+      if (!selectedProjectForChat) return;
+      const newDescription = document.getElementById('chatModalDescriptionInput').value.trim();
 
-      if (isAssigneeChanged) {
-        const newAssigneeObj = allProfiles.find(u => u.id === newAssigneeId);
-        logs.unshift({
-          type: '担当アサイン',
-          user: currentUserName,
-          comment: `担当者を「${getDisplayName(newAssigneeObj)}」に設定しました。`,
-          read_by: [currentUserName],
-          at: new Date().toISOString()
-        });
-      }
-      if (isDeadlineChanged) {
-        logs.unshift({
-          type: '期日変更',
-          user: currentUserName,
-          comment: `締切期日を「${newDeadline || '未設定'}」に変更しました。`,
-          read_by: [currentUserName],
-          at: new Date().toISOString()
-        });
-      }
-      updateData.logs = logs;
+      const { error } = await supabaseClient
+        .from('projects')
+        .update({ description: newDescription || null })
+        .eq('id', selectedProjectForChat.id);
 
-      const { error } = await supabaseClient.from('tasks').update(updateData).eq('id', taskId);
-      if (error) {
-        alert('更新エラー: ' + error.message);
-        return;
-      }
+      if (error) return alert('概要の保存エラー: ' + error.message);
 
-      targetTask.assignee_id = newAssigneeId;
-      targetTask.deadline = newDeadline;
-      targetTask.logs = logs;
-
-      closeTaskQuickEditOverlay();
-      selectTaskForControl(taskId);
-      renderPipelineTree(selectedProjectForChat);
-      renderProjectChatTimeline(selectedProjectForChat);
+      selectedProjectForChat.description = newDescription || null;
+      renderProjectDescription(selectedProjectForChat);
+      toggleDescriptionEdit(false);
       await loadCreativeProjects();
     }
 
@@ -2596,15 +1903,7 @@
       const timelineContainer = document.getElementById('chatModalTimeline');
       if (!timelineContainer) return;
 
-      const validTasks = getFilteredTasksForProject(project);
-      const allLogs = [];
-      validTasks.forEach(t => {
-        (t.logs || []).forEach(l => {
-          allLogs.push({ ...l, taskTitle: t.title, taskId: t.id });
-        });
-      });
-
-      allLogs.sort((a,b) => new Date(a.at) - new Date(b.at));
+      const allLogs = [...(project.logs || [])].sort((a,b) => new Date(a.at) - new Date(b.at));
 
       if (allLogs.length === 0) {
         timelineContainer.innerHTML = '<div class="text-center py-12 text-slate-400 text-xs italic">まだメッセージログはありません</div>';
@@ -2644,7 +1943,7 @@
               <div class="flex items-center space-x-1.5 text-[10px] text-slate-400 mb-1">
                 <span class="font-mono">${dateStr}</span>
                 <span class="font-bold text-slate-700 dark:text-slate-300">自分</span>
-                <span class="px-1.5 py-0.2 rounded font-semibold ${badgeStyle}">[${l.taskTitle}]</span>
+                ${l.type ? `<span class="px-1.5 py-0.2 rounded font-semibold ${badgeStyle}">${l.type}</span>` : ''}
               </div>
               <div class="p-3 sm:p-3 rounded-2xl rounded-tr-none bg-blue-600 text-white shadow-xs text-xs space-y-1">
                 ${formattedComment ? `<div class="font-normal whitespace-pre-wrap break-words leading-relaxed selection:bg-blue-800">${formattedComment}</div>` : ''}
@@ -2663,7 +1962,7 @@
             </div>
             <div class="max-w-[85%] flex flex-col items-start">
               <div class="flex items-center space-x-1.5 text-[10px] text-slate-400 mb-1">
-                <span class="px-1.5 py-0.2 rounded font-semibold ${badgeStyle}">[${l.taskTitle}]</span>
+                ${l.type ? `<span class="px-1.5 py-0.2 rounded font-semibold ${badgeStyle}">${l.type}</span>` : ''}
                 <span class="font-bold text-slate-700 dark:text-slate-300">${l.user || '担当者'}</span>
                 <span class="font-mono">${dateStr}</span>
                 ${unreadTag}
@@ -2679,87 +1978,24 @@
       }).join('');
     }
 
-    function handleChatSubmitClick() {
+    async function handleChatSubmitClick() {
       if (!selectedProjectForChat) return;
-
-      const taskId = document.getElementById('chatInputTaskId').value;
-      const newDeadline = document.getElementById('chatInputDeadline').value || null;
-      const targetTask = (selectedProjectForChat.tasks || []).find(t => t.id === taskId);
-      if (!targetTask) return;
-
-      const oldDeadline = targetTask.deadline || null;
-
-      if (newDeadline && oldDeadline && newDeadline !== oldDeadline) {
-        const oldTime = new Date(oldDeadline).getTime();
-        const newTime = new Date(newDeadline).getTime();
-        const diffDays = Math.round((newTime - oldTime) / (1000 * 60 * 60 * 24));
-
-        if (diffDays !== 0) {
-          const validTasks = getFilteredTasksForProject(selectedProjectForChat).sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
-          const currentOrder = targetTask.sort_order || 0;
-          const subsequentTasks = validTasks.filter(t => (t.sort_order || 0) > currentOrder && t.deadline);
-
-          if (subsequentTasks.length > 0) {
-            openDeadlineShiftModal(targetTask, oldDeadline, newDeadline, diffDays, subsequentTasks);
-            return;
-          }
-        }
-      }
-
-      executeFinalChatSubmission(false);
-    }
-
-    function openDeadlineShiftModal(targetTask, oldDeadline, newDeadline, diffDays, subsequentTasks) {
-      pendingDeadlineShiftContext = {
-        diffDays: diffDays,
-        subsequentTasks: subsequentTasks
-      };
-
-      const signStr = diffDays > 0 ? `+${diffDays}日 (後ろ倒し)` : `${diffDays}日 (前倒し)`;
-      document.getElementById('shiftModalLeadText').innerHTML = 
-        `「<span class="text-blue-600 dark:text-blue-400">${targetTask.title}</span>」の締切が <strong>${signStr}</strong> 変更されます。<br>` +
-        `<span class="text-[11px] font-normal text-slate-500 font-mono">（${formatDeadlineStr(oldDeadline)} ➔ ${formatDeadlineStr(newDeadline)}）</span>`;
-
-      const listContainer = document.getElementById('shiftCandidatesList');
-      listContainer.innerHTML = subsequentTasks.map(t => {
-        const curDate = new Date(t.deadline);
-        curDate.setDate(curDate.getDate() + diffDays);
-        const shiftedDateStr = curDate.toISOString().split('T')[0];
-
-        return `<label class="flex items-center justify-between p-2.5 rounded-lg bg-white dark:bg-slate-800 border dark:border-slate-700 cursor-pointer hover:border-blue-400 transition touch-target-row">
-          <div class="flex items-center space-x-2 truncate">
-            <input type="checkbox" value="${t.id}" data-shifted="${shiftedDateStr}" checked class="shift-task-checkbox w-4 h-4 rounded text-blue-600">
-            <span class="font-bold text-slate-800 dark:text-slate-100">${t.title}</span>
-          </div>
-          <div class="text-[11px] text-slate-500 font-mono flex items-center space-x-1">
-            <span>${formatDeadlineStr(t.deadline)}</span>
-            <span class="text-slate-400">➔</span>
-            <span class="font-bold text-blue-600 dark:text-blue-400">${formatDeadlineStr(shiftedDateStr)}</span>
-          </div>
-        </label>`;
-      }).join('');
-
-      openModal('deadlineShiftModal');
-    }
-
-    async function executeFinalChatSubmission(shouldShiftSubsequent) {
-      closeModal('deadlineShiftModal');
+      const p = selectedProjectForChat;
 
       const btn = document.getElementById('btnSubmitChat');
-      const taskId = document.getElementById('chatInputTaskId').value;
-      const newStatus = document.getElementById('chatInputStatus').value;
-      const newBallHolder = document.getElementById('chatInputBallHolder').value || 'creator';
+      const newStatus = document.getElementById('chatInputStatus').value || null;
+      const newAssigneeId = document.getElementById('chatInputAssignee').value || null;
+      const newStartDate = document.getElementById('chatInputStartDate').value || null;
       const newDeadline = document.getElementById('chatInputDeadline').value || null;
       let comment = document.getElementById('chatInputComment').value.trim();
 
-      const targetTask = (selectedProjectForChat.tasks || []).find(t => t.id === taskId);
-      if (!targetTask) return;
+      const isStatusChanged = (p.status || null) !== newStatus;
+      const isAssigneeChanged = (p.assignee_id || null) !== newAssigneeId;
+      const isStartDateChanged = (p.start_date || null) !== newStartDate;
+      const isDeadlineChanged = (p.deadline || null) !== newDeadline;
 
-      const isBallChanged = (targetTask.ball_holder || 'creator') !== newBallHolder;
-      const isDeadlineChanged = (targetTask.deadline || null) !== newDeadline;
-
-      if (!comment && !pendingUploadFile && !newStatus && !isBallChanged && !isDeadlineChanged) {
-        alert('メッセージを入力するか、添付ファイル、または進行設定を変更してください');
+      if (!comment && !pendingUploadFile && !isStatusChanged && !isAssigneeChanged && !isStartDateChanged && !isDeadlineChanged) {
+        alert('メッセージを入力するか、添付ファイル、または状態等を変更してください');
         return;
       }
 
@@ -2773,7 +2009,7 @@
           const fileExt = pendingUploadFile.name.split('.').pop();
           const cleanBase = pendingUploadFile.name.replace(/[^a-zA-Z0-9_-]/g, '_');
           const fileName = `${Date.now()}_${cleanBase}.${fileExt}`;
-          const filePath = `${selectedProjectForChat.id}/${fileName}`;
+          const filePath = `${p.id}/${fileName}`;
 
           const { error: uploadErr } = await supabaseClient
             .storage
@@ -2804,21 +2040,21 @@
 
         let logType = 'コメント';
         if (uploadedFileUrl || detectedUrl) logType = '提出';
-        else if (newStatus === 'リテイク') logType = 'リテイク指示';
-        else if (newStatus === '完了') logType = '承認・完了';
-        else if (newStatus === '作業中') logType = '作業着手';
-        else if (newStatus === '提出・確認待ち') logType = '提出・確認待ち';
-        else if (newStatus === '未着手') logType = 'ステータス更新';
-        else if (isBallChanged && !comment) {
-          logType = '手番変更';
-          comment = `ボールを「${getBallHolderShortText(newBallHolder)}」に渡しました。`;
+        else if (isStatusChanged && newStatus) logType = 'ステータス更新';
+        else if (isAssigneeChanged && !comment) {
+          logType = '担当アサイン';
+          const newAssigneeObj = allProfiles.find(u => u.id === newAssigneeId);
+          comment = `担当者を「${getDisplayName(newAssigneeObj)}」に設定しました。`;
         } else if (isDeadlineChanged && !comment) {
           logType = '期日変更';
-          comment = `締切期日を「${newDeadline || '未設定'}」に変更しました。`;
+          comment = `期限日を「${newDeadline || '未設定'}」に変更しました。`;
+        } else if (isStartDateChanged && !comment) {
+          logType = '開始日変更';
+          comment = `開始日を「${newStartDate || '未設定'}」に変更しました。`;
         }
 
-        const logs = targetTask.logs || [];
-        if (comment || uploadedFileUrl || detectedUrl || newStatus) {
+        const logs = p.logs || [];
+        if (comment || uploadedFileUrl || detectedUrl || isStatusChanged || isAssigneeChanged || isStartDateChanged || isDeadlineChanged) {
           logs.unshift({
             type: logType,
             user: currentUserName,
@@ -2830,43 +2066,25 @@
         }
 
         const updateData = { logs: logs };
-        if (detectedUrl) updateData.deliverable_url = detectedUrl;
-        if (newStatus) updateData.status = newStatus;
-        if (isBallChanged) updateData.ball_holder = newBallHolder;
+        if (isStatusChanged) updateData.status = newStatus;
+        if (isAssigneeChanged) updateData.assignee_id = newAssigneeId;
+        if (isStartDateChanged) updateData.start_date = newStartDate;
         if (isDeadlineChanged) updateData.deadline = newDeadline;
 
-        const { error: dbErr } = await supabaseClient.from('tasks').update(updateData).eq('id', taskId);
+        const { error: dbErr } = await supabaseClient.from('projects').update(updateData).eq('id', p.id);
         if (dbErr) throw dbErr;
 
-        if (detectedUrl) targetTask.deliverable_url = detectedUrl;
-        if (newStatus) targetTask.status = newStatus;
-        if (isBallChanged) targetTask.ball_holder = newBallHolder;
-        if (isDeadlineChanged) targetTask.deadline = newDeadline;
-        targetTask.logs = logs;
+        if (isStatusChanged) p.status = newStatus;
+        if (isAssigneeChanged) p.assignee_id = newAssigneeId;
+        if (isStartDateChanged) p.start_date = newStartDate;
+        if (isDeadlineChanged) p.deadline = newDeadline;
+        p.logs = logs;
 
-        if (shouldShiftSubsequent && pendingDeadlineShiftContext) {
-          const checkedBoxes = Array.from(document.querySelectorAll('.shift-task-checkbox:checked'));
-          const updatePromises = checkedBoxes.map(cb => {
-            const shiftTaskId = cb.value;
-            const shiftedDate = cb.getAttribute('data-shifted');
-            const targetSubTask = (selectedProjectForChat.tasks || []).find(t => t.id === shiftTaskId);
-            if (targetSubTask) targetSubTask.deadline = shiftedDate;
-            return supabaseClient.from('tasks').update({ deadline: shiftedDate }).eq('id', shiftTaskId);
-          });
-          if (updatePromises.length > 0) {
-            await Promise.all(updatePromises);
-          }
-        }
-
-        pendingDeadlineShiftContext = null;
         removeAttachedFile();
         document.getElementById('chatInputComment').value = '';
-        document.getElementById('chatInputStatus').value = '';
 
         await loadCreativeProjects();
-        renderPipelineTree(selectedProjectForChat);
-        selectTaskForControl(taskId);
-        renderProjectChatTimeline(selectedProjectForChat);
+        renderProjectChatTimeline(p);
         renderAllUpdatesLogs();
 
         setTimeout(scrollToLatestMessage, 100);
@@ -3009,32 +2227,19 @@
         if (storageErr) throw new Error('ストレージ削除エラー: ' + storageErr.message);
 
         for (const prj of cachedCreativeProjects) {
-          const tasks = prj.tasks || [];
+          if (!Array.isArray(prj.logs)) continue;
+          let isProjectUpdated = false;
 
-          for (const t of tasks) {
-            let isTaskUpdated = false;
-
-            if (t.deliverable_url && pathsToDelete.some(p => t.deliverable_url.includes(p))) {
-              t.deliverable_url = null;
-              isTaskUpdated = true;
+          prj.logs.forEach(l => {
+            if (l.url && pathsToDelete.some(p => l.url.includes(p))) {
+              l.url = null;
+              l.comment = (l.comment || '') + ' [※添付ファイルは容量整理のため削除されました]';
+              isProjectUpdated = true;
             }
+          });
 
-            if (Array.isArray(t.logs)) {
-              t.logs.forEach(l => {
-                if (l.url && pathsToDelete.some(p => l.url.includes(p))) {
-                  l.url = null;
-                  l.comment = (l.comment || '') + ' [※添付ファイルは容量整理のため削除されました]';
-                  isTaskUpdated = true;
-                }
-              });
-            }
-
-            if (isTaskUpdated) {
-              await supabaseClient.from('tasks').update({
-                deliverable_url: t.deliverable_url,
-                logs: t.logs
-              }).eq('id', t.id);
-            }
+          if (isProjectUpdated) {
+            await supabaseClient.from('projects').update({ logs: prj.logs }).eq('id', prj.id);
           }
         }
 
@@ -3051,263 +2256,44 @@
       }
     }
 
-    function openAddTaskModal() {
-      if (!selectedProjectForChat) return;
-      const p = selectedProjectForChat;
-      const cat = getProjectCategory(p);
-      const existingTaskTitles = (p.tasks || []).map(t => t.title);
-
-      const targetMasters = workflowMasters.filter(w => {
-        const isMatchCat = (cat === 'mv') ? (w.track === 'mv') : (w.track === 'music');
-        return isMatchCat && !existingTaskTitles.includes(w.name);
-      });
-
-      const select = document.getElementById('addTaskNameSelect');
-      if (targetMasters.length === 0) {
-        select.innerHTML = '<option value="">すべての標準工程が追加済みです</option>';
-      } else {
-        select.innerHTML = targetMasters.map(m => {
-          return `<option value="${m.name}" data-days="${m.days}">${m.name} (${m.days}日)</option>`;
-        }).join('');
-      }
-
-      const assigneeSelect = document.getElementById('addTaskAssigneeSelect');
-      if (assigneeSelect) {
-        assigneeSelect.innerHTML = '<option value="">-- 未割当 --</option>' + allProfiles.map(u => {
-          return `<option value="${u.id}">${getDisplayName(u)}</option>`;
-        }).join('');
-      }
-
-      handleAddTaskSelectChange();
-      openModal('addTaskModal');
-    }
-
-    function handleAddTaskSelectChange() {
-      const select = document.getElementById('addTaskNameSelect');
-      const opt = select.options[select.selectedIndex];
-      if (!opt) return;
-      const days = parseInt(opt.getAttribute('data-days'), 10) || 7;
-      const targetDate = new Date();
-      targetDate.setDate(targetDate.getDate() + days);
-      document.getElementById('addTaskDeadlineInput').value = targetDate.toISOString().split('T')[0];
-    }
-
-    async function submitAddCustomTask() {
-      if (!selectedProjectForChat) return;
-      const select = document.getElementById('addTaskNameSelect');
-      const taskName = select.value;
-      const deadline = document.getElementById('addTaskDeadlineInput').value;
-      const assigneeId = document.getElementById('addTaskAssigneeSelect')?.value || null;
-
-      if (!taskName) return alert('追加する工程がありません');
-      if (!deadline) return alert('締切日を入力してください');
-
-      const master = workflowMasters.find(w => w.name === taskName);
-      const sortOrder = master ? master.order : 99;
-
-      const { data: newTask, error } = await supabaseClient.from('tasks').insert({
-        project_id: selectedProjectForChat.id,
-        title: taskName,
-        assignee_id: assigneeId,
-        ball_holder: 'creator',
-        deadline: deadline,
-        sort_order: sortOrder,
-        status: '未着手',
-        logs: []
-      }).select().single();
-
-      if (error) {
-        alert('工程追加エラー: ' + error.message);
-        return;
-      }
-
-      closeModal('addTaskModal');
-      await loadCreativeProjects();
-      openProjectChatModal(selectedProjectForChat.id);
-      alert(`工程「${taskName}」を追加しました！`);
-    }
-
-    function openAddRelatedModal(projectId) {
-      targetProjectForRelated = cachedCreativeProjects.find(p => p.id === projectId);
-      if (!targetProjectForRelated) return;
-
-      const currentCat = getProjectCategory(targetProjectForRelated);
-      const targetLabel = (currentCat === 'music') ? '🎬 [イラスト/MV] チケット' : '🎵 [楽曲] チケット';
-      document.getElementById('addRelatedModalTitle').innerText = '関連チケット追加: ' + targetLabel;
-
-      const today = new Date();
-      document.getElementById('addRelatedStartDate').value = today.toISOString().split('T')[0];
-
-      openModal('addRelatedModal');
-    }
-
-    async function submitCreateRelatedProject() {
-      if (!targetProjectForRelated) return;
-      const p = targetProjectForRelated;
-      const currentCat = getProjectCategory(p);
-      const newCat = (currentCat === 'music') ? 'mv' : 'music';
-      const startDateStr = document.getElementById('addRelatedStartDate').value;
-      const baseDate = new Date(startDateStr || new Date());
-
-      let groupId = p.group_id;
-      if (!groupId) {
-        groupId = 'grp_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
-        await supabaseClient.from('projects').update({ group_id: groupId, category: currentCat }).eq('id', p.id);
-        p.group_id = groupId;
-        p.category = currentCat;
-      }
-
-      let newTicketCode = null;
-      if (p.ticket_code) {
-        const baseNum = p.ticket_code.replace(/[MV]$/, '');
-        newTicketCode = `${baseNum}${newCat === 'mv' ? 'V' : 'M'}`;
-      } else {
-        const { prefix, nextNumStr } = getNextTicketNumber(startDateStr);
-        newTicketCode = `${prefix}-${nextNumStr}${newCat === 'mv' ? 'V' : 'M'}`;
-      }
-
-      const { data: newPrj, error: prjErr } = await supabaseClient.from('projects').insert({
-        type: 'creative',
-        title: p.title,
-        category: newCat,
-        ticket_code: newTicketCode,
-        group_id: groupId,
-        drive_url: p.drive_url || null,
-        status: '進行中'
-      }).select().single();
-
-      if (prjErr) return alert('チケット作成エラー: ' + prjErr.message);
-
-      const addDays = (d, n) => {
-        const res = new Date(d);
-        res.setDate(res.getDate() + n);
-        return res;
-      };
-      const fmt = (d) => d.toISOString().split('T')[0];
-      const getD = (k) => {
-        const found = workflowMasters.find(w => w.key === k);
-        return found ? found.days : 0;
-      };
-
-      const dates = {};
-      if (newCat === 'music') {
-        dates.compose = addDays(baseDate, getD('compose'));
-        dates.lyrics = addDays(dates.compose, getD('lyrics'));
-        dates.arrange = addDays(dates.compose, getD('arrange'));
-        const recStart = (dates.lyrics > dates.arrange) ? dates.lyrics : dates.arrange;
-        dates.rec = addDays(recStart, getD('rec'));
-        dates.mix = addDays(dates.rec, getD('mix'));
-        dates.mastering = addDays(dates.mix, getD('mastering'));
-      } else {
-        dates.illust = addDays(baseDate, getD('illust'));
-        dates.movie = addDays(dates.illust, getD('movie'));
-      }
-
-      const tasksToInsert = [];
-      workflowMasters.filter(w => (newCat === 'mv' ? w.track === 'mv' : w.track === 'music')).forEach(w => {
-        tasksToInsert.push({
-          project_id: newPrj.id,
-          title: w.name,
-          deadline: fmt(dates[w.key]),
-          sort_order: w.order,
-          status: '未着手',
-          ball_holder: 'creator',
-          logs: []
-        });
-      });
-
-      if (tasksToInsert.length > 0) {
-        await supabaseClient.from('tasks').insert(tasksToInsert);
-      }
-
-      closeModal('addRelatedModal');
-      await loadCreativeProjects();
-      alert(`関連チケット [${newTicketCode}] を作成し、ペアとしてリンクしました！`);
-    }
-
     async function deleteCurrentProject() {
       if (!selectedProjectForChat) return;
       if (!isAdminOrMaster()) return alert('案件の削除は管理者権限のみ可能です');
 
       const p = selectedProjectForChat;
-      const relatedPrj = getRelatedProject(p);
 
-      if (relatedPrj) {
-        const choice = confirm(
-          `この案件には関連チケット「${relatedPrj.title}」が存在します。\n\n` +
-          `【OK】を押すと ➔ 関連チケットも含めて「案件全体を丸ごと削除」します。\n` +
-          `【キャンセル】を押すと ➔「このチケットのみ」の個別削除の確認に進みます。`
-        );
+      if (!confirm(`案件「${p.title}」を完全に削除しますか？\n※全タスク・ログ履歴も削除されます。`)) return;
 
-        if (choice) {
-          const doubleConfirm = confirm(`【最終確認】関連チケットを含む両方の案件・全工程ログを完全に削除します。よろしいですか？`);
-          if (!doubleConfirm) return;
-
-          await supabaseClient.from('projects').delete().in('id', [p.id, relatedPrj.id]);
-          closeModal('projectChatModal');
-          await loadCreativeProjects();
-          renderAllUpdatesLogs();
-          alert('関連チケットを含めて案件全体を削除しました。');
-          return;
-        } else {
-          const singleConfirm = confirm(`「${p.title}」のみを削除します（相方の関連チケットは残ります）。よろしいですか？`);
-          if (!singleConfirm) return;
-
-          await supabaseClient.from('projects').delete().eq('id', p.id);
-          closeModal('projectChatModal');
-          await loadCreativeProjects();
-          renderAllUpdatesLogs();
-          alert('このチケットのみを削除しました。');
-          return;
-        }
-      } else {
-        if (!confirm(`案件「${p.title}」を完全に削除しますか？\n※全タスク・ログ履歴も削除されます。`)) return;
-
-        await supabaseClient.from('projects').delete().eq('id', p.id);
-        closeModal('projectChatModal');
-        await loadCreativeProjects();
-        renderAllUpdatesLogs();
-        alert('案件を削除しました。');
-      }
+      await supabaseClient.from('projects').delete().eq('id', p.id);
+      closeModal('projectChatModal');
+      await loadCreativeProjects();
+      renderAllUpdatesLogs();
+      alert('案件を削除しました。');
     }
 
-    async function autoMarkProjectTasksAsRead(project) {
+    async function autoMarkProjectLogsAsRead(project) {
       const myId = getCurrentUserIdentifier();
-      if (!myId || !project) return;
+      if (!myId || !project || !project.logs) return;
 
-      const validTasks = getFilteredTasksForProject(project);
-      for (const t of validTasks) {
-        if (!t.logs) continue;
-        let changed = false;
-        const updated = t.logs.map(l => {
-          const readBy = Array.isArray(l.read_by) ? [...l.read_by] : [];
-          if (l.user !== myId && !readBy.includes(myId)) {
-            readBy.push(myId);
-            changed = true;
-            return { ...l, read_by: readBy };
-          }
-          return l;
-        });
-
-        if (changed) {
-          t.logs = updated;
-          await supabaseClient.from('tasks').update({ logs: updated }).eq('id', t.id);
+      let changed = false;
+      const updated = project.logs.map(l => {
+        const readBy = Array.isArray(l.read_by) ? [...l.read_by] : [];
+        if (l.user !== myId && !readBy.includes(myId)) {
+          readBy.push(myId);
+          changed = true;
+          return { ...l, read_by: readBy };
         }
+        return l;
+      });
+
+      if (changed) {
+        project.logs = updated;
+        await supabaseClient.from('projects').update({ logs: updated }).eq('id', project.id);
       }
+
       renderCreativeProjectsList();
       renderProjectChatTimeline(project);
     }
-
-    let workflowMasters = [
-      { key: 'compose', name: '作曲', days: 7, track: 'music', order: 1, depends: [] },
-      { key: 'lyrics', name: '作詞', days: 5, track: 'music', order: 2, depends: ['作曲'] },
-      { key: 'arrange', name: '編曲', days: 7, track: 'music', order: 3, depends: ['作曲'] },
-      { key: 'rec', name: 'レコーディング', days: 3, track: 'music', order: 4, depends: ['作詞', '編曲'] },
-      { key: 'mix', name: 'ミキシング', days: 5, track: 'music', order: 5, depends: ['レコーディング'] },
-      { key: 'mastering', name: 'マスタリング', days: 2, track: 'music', order: 6, depends: ['ミキシング'] },
-      { key: 'illust', name: 'イラスト', days: 14, track: 'mv', order: 1, depends: [] },
-      { key: 'movie', name: '映像', days: 10, track: 'mv', order: 2, depends: ['イラスト'] }
-    ];
 
     function handleFormSubmit(e) {
       e.preventDefault();
@@ -3480,7 +2466,6 @@
           
           document.getElementById('salesSection').classList.add('hidden');
           document.getElementById('updatesSection').classList.add('hidden');
-          document.getElementById('masterSection').classList.add('hidden');
           document.getElementById('membersSection').classList.add('hidden');
           document.getElementById('creativeSection').classList.remove('hidden');
           
@@ -3572,32 +2557,13 @@
     }
 
     async function loadDashboard() {
-      await Promise.all([loadMasterFromDB(), loadAllProfiles(), loadSalesTemplates()]);
-      renderMasterTable();
-      renderCheckboxes();
+      await Promise.all([loadAllProfiles(), loadSalesTemplates()]);
       await loadCreativeProjects();
       if (isAdminOrMaster()) {
         await loadLeads();
         renderMembersTable();
         renderAllUpdatesLogs();
         await checkStorageCapacityAndWarn(false);
-      }
-    }
-
-    async function loadMasterFromDB() {
-      try {
-        const { data } = await supabaseClient.from('process_masters').select('*');
-        if (data && data.length > 0) {
-          workflowMasters.forEach(w => {
-            const found = data.find(d => d.name === w.name);
-            if (found && typeof found.standard_days === 'number') {
-              w.days = found.standard_days;
-              w.db_id = found.id;
-            }
-          });
-        }
-      } catch (err) {
-        console.error("Master load error:", err);
       }
     }
 
@@ -3712,7 +2678,7 @@
     async function loadCreativeProjects() {
       const { data: prjs, error } = await supabaseClient
         .from('projects')
-        .select('*, tasks(*)')
+        .select('*')
         .eq('type', 'creative')
         .order('created_at', { ascending: false });
 
@@ -3789,17 +2755,11 @@
 
       const allTaskLogs = [];
       cachedCreativeProjects.forEach(p => {
-        const validTasks = getFilteredTasksForProject(p);
-        validTasks.forEach(t => {
-          (t.logs || []).forEach(l => {
-            allTaskLogs.push({
-              ...l,
-              projectTitle: p.title,
-              category: getProjectCategory(p),
-              taskTitle: t.title,
-              taskId: t.id,
-              projectId: p.id
-            });
+        (p.logs || []).forEach(l => {
+          allTaskLogs.push({
+            ...l,
+            projectTitle: p.title,
+            projectId: p.id
           });
         });
       });
@@ -3816,15 +2776,11 @@
         const dateStr = new Date(l.at).toLocaleString('ja-JP');
         const badgeColor = l.type === '提出' ? 'bg-blue-100 text-blue-700' : l.type === 'リテイク指示' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700';
         const formattedComment = formatMessageWithLinksAndMedia(l.comment || '');
-        const catBadge = getCategoryBadgeHtml(l.category);
 
         return `<div class="bg-white dark:bg-slate-900 p-3 sm:p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-1 hover:border-slate-300 dark:hover:border-slate-700 transition ${isUnread ? 'ring-1 ring-red-400' : ''}">
           <div class="flex flex-wrap items-center justify-between gap-1 text-[11px]">
             <div class="flex items-center space-x-1.5 min-w-0">
-              ${catBadge}
               <span class="font-bold text-slate-800 dark:text-slate-200 truncate">${l.projectTitle}</span>
-              <span class="text-slate-400">/</span>
-              <span class="text-blue-600 dark:text-blue-400 font-semibold truncate">[${l.taskTitle}]</span>
               ${isUnread ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500 text-white animate-pulse">NEW</span>' : ''}
             </div>
             <span class="text-slate-400 text-[10px] font-mono flex-shrink-0">${dateStr}</span>
@@ -3841,112 +2797,6 @@
       }).join('');
     }
 
-    function renderMasterTable() {
-      const tbody = document.getElementById('masterTableBody');
-      if (!tbody) return;
-      tbody.innerHTML = workflowMasters.map(w => {
-        const trackBadge = w.track === 'music' 
-          ? '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-900">🎵 楽曲</span>' 
-          : '<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-900">🎬 MV</span>';
-        const dependsText = w.depends.length > 0 ? w.depends.join(' ＋ ') : '着手日';
-
-        return `<tr class="border-b border-slate-100 dark:border-slate-800/60 last:border-b-0 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-          <td class="py-3 px-4">${trackBadge}</td>
-          <td class="py-3 px-4 font-medium">${w.name}</td>
-          <td class="py-3 px-4 text-slate-500 dark:text-slate-400 text-xs">${dependsText}</td>
-          <td class="py-3 px-4">
-            <div class="flex items-center space-x-1">
-              <input type="number" min="1" max="90" id="input_days_${w.key}" value="${w.days}" class="w-16 px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs font-bold text-center focus:ring-2 focus:ring-blue-500 outline-none">
-              <span class="text-xs text-slate-500">日</span>
-            </div>
-          </td>
-          <td class="py-3 px-4 text-right">
-            <button onclick="saveSingleMasterDay('${w.key}')" class="px-3 py-1.5 text-xs bg-slate-100 dark:bg-slate-800 hover:bg-blue-600 hover:text-white rounded-lg font-medium transition text-slate-700 dark:text-slate-300 touch-target-btn">保存</button>
-          </td>
-        </tr>`;
-      }).join('');
-    }
-
-    async function saveSingleMasterDay(key) {
-      const input = document.getElementById('input_days_' + key);
-      if (!input) return;
-      const newDays = parseInt(input.value, 10);
-      if (isNaN(newDays) || newDays < 1) return alert('1日以上で入力してください');
-
-      const target = workflowMasters.find(w => w.key === key);
-      if (!target) return;
-
-      target.days = newDays;
-
-      const { error } = await supabaseClient
-        .from('process_masters')
-        .upsert({ name: target.name, standard_days: newDays }, { onConflict: 'name' });
-
-      if (error) {
-        alert('保存エラー: ' + error.message);
-      } else {
-        renderCheckboxes();
-        alert(`「${target.name}」の標準日数を ${newDays} 日に更新しました！`);
-      }
-    }
-
-    async function saveAllMasterDays() {
-      const updates = [];
-      workflowMasters.forEach(w => {
-        const input = document.getElementById('input_days_' + w.key);
-        if (input) {
-          const val = parseInt(input.value, 10);
-          if (!isNaN(val) && val > 0) {
-            w.days = val;
-            updates.push({ name: w.name, standard_days: val });
-          }
-        }
-      });
-
-      if (updates.length === 0) return;
-
-      const { error } = await supabaseClient
-        .from('process_masters')
-        .upsert(updates, { onConflict: 'name' });
-
-      if (error) {
-        alert('一括保存エラー: ' + error.message);
-      } else {
-        renderCheckboxes();
-        alert('すべての標準工程日数を保存しました！');
-      }
-    }
-
-    function renderCheckboxes() {
-      const checkContainer = document.getElementById('processCheckboxes');
-      if (!checkContainer) return;
-
-      const createMusic = document.getElementById('checkCreateMusic')?.checked ?? true;
-      const createMv = document.getElementById('checkCreateMv')?.checked ?? true;
-
-      checkContainer.innerHTML = workflowMasters.map(w => {
-        const isMusic = w.track === 'music';
-        const tag = isMusic ? '🎵 [楽曲]' : '🎬 [イラスト/MV]';
-        const isHidden = (isMusic && !createMusic) || (!isMusic && !createMv);
-
-        return `<label class="flex items-center space-x-2.5 cursor-pointer py-1 ${isHidden ? 'opacity-30 pointer-events-none' : ''} touch-target-row">
-          <input type="checkbox" value="${w.key}" data-name="${w.name}" data-days="${w.days}" data-track="${w.track}" ${isHidden ? '' : 'checked'} class="w-4 h-4 rounded text-blue-600">
-          <span class="text-xs text-slate-700 dark:text-slate-300 font-medium">${tag} ${w.name} (${w.days}日)</span>
-        </label>`;
-      }).join('');
-
-      const today = new Date();
-      const todayStr = today.toISOString().split('T')[0];
-      const startEl = document.getElementById('autoCalcStartDate');
-      if (startEl && !startEl.value) {
-        startEl.value = todayStr;
-      }
-      syncSuggestedTicketNumber();
-    }
-
-    function toggleTrackCheckboxes() {
-      renderCheckboxes();
-    }
 
     function renderMembersTable() {
       const tbody = document.getElementById('membersTableBody');
@@ -4047,130 +2897,57 @@
     }
 
     async function createCreativeProject() {
-      const baseTitle = document.getElementById('newPrjTitle').value.trim();
-      const drive = document.getElementById('newPrjDrive').value.trim();
-      const startDateStr = document.getElementById('autoCalcStartDate').value;
-      const customCodeInput = document.getElementById('newPrjCustomCode').value.trim();
-      const createMusic = document.getElementById('checkCreateMusic').checked;
-      const createMv = document.getElementById('checkCreateMv').checked;
+      const title = document.getElementById('newPrjTitle').value.trim();
+      const description = document.getElementById('newPrjDescription').value.trim();
+      const status = document.getElementById('newPrjStatus').value || null;
+      const assigneeId = document.getElementById('newPrjAssignee').value || null;
+      const startDate = document.getElementById('newPrjStartDate').value || null;
+      const deadline = document.getElementById('newPrjDeadline').value || null;
 
-      if (!baseTitle) return alert('案件名を入力してください');
-      if (!createMusic && !createMv) return alert('少なくとも1つのチケットを選択してください');
+      if (!title) return alert('件名を入力してください');
 
-      const checkedKeys = new Set(
-        Array.from(document.querySelectorAll('#processCheckboxes input:checked')).map(cb => cb.value)
-      );
+      const maxAttempts = 5;
+      let lastError = null;
 
-      const baseDate = new Date(startDateStr || new Date());
-      const addDays = (d, n) => {
-        const res = new Date(d);
-        res.setDate(res.getDate() + n);
-        return res;
-      };
-      const fmt = (d) => d.toISOString().split('T')[0];
-      const getD = (k) => {
-        const found = workflowMasters.find(w => w.key === k);
-        return found ? found.days : 0;
-      };
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        await loadCreativeProjects();
+        const { prefix, nextNumStr } = getNextTicketNumber(startDate);
+        const ticketCode = `${prefix}-${nextNumStr}`;
 
-      const dates = {};
-      dates.compose = addDays(baseDate, getD('compose'));
-      dates.lyrics = addDays(dates.compose, getD('lyrics'));
-      dates.arrange = addDays(dates.compose, getD('arrange'));
-      const recStart = (dates.lyrics > dates.arrange) ? dates.lyrics : dates.arrange;
-      dates.rec = addDays(recStart, getD('rec'));
-      dates.mix = addDays(dates.rec, getD('mix'));
-      dates.mastering = addDays(dates.mix, getD('mastering'));
-
-      dates.illust = addDays(baseDate, getD('illust'));
-      dates.movie = addDays(dates.illust, getD('movie'));
-
-      const groupId = 'grp_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
-      
-      let baseCode = customCodeInput;
-      if (!baseCode) {
-        const { prefix, nextNumStr } = getNextTicketNumber(startDateStr);
-        baseCode = `${prefix}-${nextNumStr}`;
-      }
-
-      const cleanBaseCode = baseCode.replace(/[MV]$/i, '');
-      const musicCode = `${cleanBaseCode}M`;
-      const mvCode = `${cleanBaseCode}V`;
-
-      if (createMusic) {
-        const { data: prjMusic, error: errM } = await supabaseClient.from('projects').insert({
+        const { error } = await supabaseClient.from('projects').insert({
           type: 'creative',
-          title: baseTitle,
-          category: 'music',
-          ticket_code: musicCode,
-          group_id: (createMusic && createMv) ? groupId : null,
-          drive_url: drive || null,
-          status: '進行中'
-        }).select().single();
-
-        if (errM) return alert('楽曲チケット作成エラー: ' + errM.message);
-
-        const musicTasks = [];
-        workflowMasters.filter(w => w.track === 'music').forEach(w => {
-          if (checkedKeys.has(w.key)) {
-            musicTasks.push({
-              project_id: prjMusic.id,
-              title: w.name,
-              deadline: fmt(dates[w.key]),
-              sort_order: w.order,
-              status: '未着手',
-              ball_holder: 'creator',
-              logs: []
-            });
-          }
+          title: title,
+          description: description || null,
+          ticket_code: ticketCode,
+          status: status,
+          assignee_id: assigneeId,
+          start_date: startDate,
+          deadline: deadline
         });
-        if (musicTasks.length > 0) {
-          await supabaseClient.from('tasks').insert(musicTasks);
+
+        if (!error) {
+          closeModal('newProjectModal');
+          document.getElementById('newPrjTitle').value = '';
+          document.getElementById('newPrjDescription').value = '';
+          document.getElementById('newPrjStatus').value = '';
+          document.getElementById('newPrjAssignee').value = '';
+          document.getElementById('newPrjStartDate').value = '';
+          document.getElementById('newPrjDeadline').value = '';
+          await loadCreativeProjects();
+          return;
         }
+
+        lastError = error;
+        const isDuplicate = error.code === '23505' || /duplicate key|already exists/i.test(error.message || '');
+        if (!isDuplicate) break;
       }
 
-      if (createMv) {
-        const { data: prjMv, error: errV } = await supabaseClient.from('projects').insert({
-          type: 'creative',
-          title: baseTitle,
-          category: 'mv',
-          ticket_code: mvCode,
-          group_id: (createMusic && createMv) ? groupId : null,
-          drive_url: drive || null,
-          status: '進行中'
-        }).select().single();
-
-        if (errV) return alert('MVチケット作成エラー: ' + errV.message);
-
-        const mvTasks = [];
-        workflowMasters.filter(w => w.track === 'mv').forEach(w => {
-          if (checkedKeys.has(w.key)) {
-            mvTasks.push({
-              project_id: prjMv.id,
-              title: w.name,
-              deadline: fmt(dates[w.key]),
-              sort_order: w.order,
-              status: '未着手',
-              ball_holder: 'creator',
-              logs: []
-            });
-          }
-        });
-        if (mvTasks.length > 0) {
-          await supabaseClient.from('tasks').insert(mvTasks);
-        }
-      }
-
-      closeModal('newProjectModal');
-      document.getElementById('newPrjTitle').value = '';
-      document.getElementById('newPrjDrive').value = '';
-      document.getElementById('newPrjCustomCode').value = '';
-      await loadCreativeProjects();
+      alert('起票エラー: ' + (lastError ? lastError.message : '不明なエラー'));
     }
 
     function switchTab(tab) {
       currentActiveTab = tab;
-      ['creative', 'sales', 'updates', 'master', 'members'].forEach(t => {
+      ['creative', 'sales', 'updates', 'members'].forEach(t => {
         const el = document.getElementById(t + 'Section');
         if (el) el.classList.toggle('hidden', t !== tab);
 
@@ -4213,10 +2990,10 @@
       }
     }
 
-    function openModal(id) { 
-      document.getElementById(id).classList.remove('hidden'); 
+    function openModal(id) {
+      document.getElementById(id).classList.remove('hidden');
       if (id === 'newProjectModal') {
-        syncSuggestedTicketNumber();
+        populateNewPrjAssigneeSelect();
       }
     }
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
