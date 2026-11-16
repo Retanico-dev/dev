@@ -362,8 +362,16 @@
             <span id="chatModalCodeBadge" class="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border dark:border-slate-700 flex items-center">
               <span id="chatModalCodeText"></span>
             </span>
-            <h3 id="chatModalTitle" class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 truncate"></h3>
+            <div id="chatModalTitleView" class="flex items-center gap-1 min-w-0">
+              <h3 id="chatModalTitle" class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 truncate"></h3>
+              <button type="button" onclick="toggleTitleEdit(true)" class="flex-shrink-0 text-[11px] text-slate-400 hover:text-blue-500 font-semibold p-1 touch-target-btn" title="件名を編集">✎</button>
+            </div>
             <span id="chatModalDriveLink"></span>
+          </div>
+          <div id="chatModalTitleEditWrap" class="hidden mt-1.5 flex items-center gap-1.5">
+            <input type="text" id="chatModalTitleInput" maxlength="200" onkeydown="handleTitleInputKey(event)" class="flex-1 min-w-0 px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500" placeholder="件名">
+            <button type="button" onclick="toggleTitleEdit(false)" class="flex-shrink-0 px-2.5 py-1 text-[11px] rounded border dark:border-slate-700 touch-target-btn">キャンセル</button>
+            <button type="button" id="chatModalTitleSaveBtn" onclick="saveProjectTitle()" class="flex-shrink-0 px-2.5 py-1 text-[11px] rounded bg-blue-600 text-white font-bold touch-target-btn">保存</button>
           </div>
         </div>
         <div class="flex items-center space-x-1.5 flex-shrink-0">
@@ -1807,6 +1815,7 @@
       const delBtn = document.getElementById('chatModalDeleteBtn');
       if (delBtn) delBtn.classList.toggle('hidden', !isAdminOrMaster());
 
+      toggleTitleEdit(false);
       renderProjectDescription(p);
       toggleDescriptionEdit(false);
 
@@ -1830,6 +1839,77 @@
       autoMarkProjectLogsAsRead(p);
 
       setTimeout(scrollToLatestMessage, 60);
+    }
+
+    function toggleTitleEdit(show) {
+      const viewEl = document.getElementById('chatModalTitleView');
+      const editWrap = document.getElementById('chatModalTitleEditWrap');
+      const input = document.getElementById('chatModalTitleInput');
+
+      if (show && selectedProjectForChat) {
+        input.value = selectedProjectForChat.title || '';
+      }
+
+      viewEl.classList.toggle('hidden', !!show);
+      editWrap.classList.toggle('hidden', !show);
+
+      if (show) {
+        input.focus();
+        input.select();
+      }
+    }
+
+    function handleTitleInputKey(e) {
+      if (e.isComposing || e.keyCode === 229) return; // IME変換中のEnterは無視
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        saveProjectTitle();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleTitleEdit(false);
+      }
+    }
+
+    async function saveProjectTitle() {
+      const p = selectedProjectForChat;
+      if (!p) return;
+
+      const newTitle = document.getElementById('chatModalTitleInput').value.trim();
+      if (!newTitle) return alert('件名を入力してください');
+
+      const oldTitle = p.title || '';
+      if (newTitle === oldTitle) return toggleTitleEdit(false);
+
+      const btn = document.getElementById('chatModalTitleSaveBtn');
+      btn.disabled = true;
+
+      const currentUserName = getCurrentUserIdentifier() || '担当者';
+      const logs = [{
+        type: '件名変更',
+        user: currentUserName,
+        url: null,
+        comment: `件名を「${oldTitle}」から「${newTitle}」に変更しました。`,
+        read_by: [currentUserName],
+        at: new Date().toISOString()
+      }, ...(p.logs || [])];
+
+      const { error } = await supabaseClient
+        .from('projects')
+        .update({ title: newTitle, logs })
+        .eq('id', p.id);
+
+      btn.disabled = false;
+      if (error) return alert('件名の保存エラー: ' + error.message);
+
+      p.title = newTitle;
+      p.logs = logs;
+      document.getElementById('chatModalTitle').innerText = newTitle;
+      toggleTitleEdit(false);
+
+      await loadCreativeProjects();
+      renderProjectChatTimeline(p);
+      renderAllUpdatesLogs();
     }
 
     function renderProjectDescription(p) {
