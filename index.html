@@ -918,7 +918,7 @@
       const select = document.getElementById('newPrjAssignee');
       if (!select) return;
       select.innerHTML = '<option value="">-- 未割当 --</option>' + allProfiles.map(u => {
-        return `<option value="${u.id}">${getDisplayName(u)}</option>`;
+        return `<option value="${u.id}">${escapeHtml(getDisplayName(u))}</option>`;
       }).join('');
     }
 
@@ -1058,7 +1058,7 @@
       };
       if (!status) return '<span class="text-slate-400">-</span>';
       const cls = badgeClassMap[status] || badgeClassMap['未対応'];
-      return `<span class="px-3 py-1 rounded-md text-xs font-bold ${cls}">${status}</span>`;
+      return `<span class="px-3 py-1 rounded-md text-xs font-bold ${cls}">${escapeHtml(status)}</span>`;
     }
 
     function getProjectDeadlineHtml(p) {
@@ -1109,8 +1109,8 @@
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center space-x-1.5 min-w-0">
               ${unreadDot}
-              <span class="font-mono font-bold text-[11px] text-blue-600 dark:text-blue-400 flex-shrink-0">${p.ticket_code || '-'}</span>
-              <h3 class="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 truncate">${p.title}</h3>
+              <span class="font-mono font-bold text-[11px] text-blue-600 dark:text-blue-400 flex-shrink-0">${escapeHtml(p.ticket_code || '-')}</span>
+              <h3 class="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 truncate">${escapeHtml(p.title)}</h3>
             </div>
             <div class="flex-shrink-0">${getProjectStatusBadgeHtml(p.status)}</div>
           </div>
@@ -1118,7 +1118,7 @@
           <div class="grid grid-cols-3 gap-2 text-[11px] pt-2 border-t border-slate-100 dark:border-slate-800/60">
             <div class="min-w-0">
               <div class="text-slate-400 dark:text-slate-500">担当者</div>
-              <div class="text-slate-700 dark:text-slate-300 font-medium truncate">${getDisplayName(assignee)}</div>
+              <div class="text-slate-700 dark:text-slate-300 font-medium truncate">${escapeHtml(getDisplayName(assignee))}</div>
             </div>
             <div class="min-w-0">
               <div class="text-slate-400 dark:text-slate-500">期限日</div>
@@ -1157,14 +1157,14 @@
 
         return `
           <tr onclick="openProjectChatModal('${p.id}')" class="${rowBg} hover:bg-blue-50/40 dark:hover:bg-slate-800/60 cursor-pointer transition group">
-            <td class="py-3 px-3.5 whitespace-nowrap font-mono font-bold text-blue-600 dark:text-blue-400">${p.ticket_code || '-'}</td>
+            <td class="py-3 px-3.5 whitespace-nowrap font-mono font-bold text-blue-600 dark:text-blue-400">${escapeHtml(p.ticket_code || '-')}</td>
             <td class="py-3 px-3">
               <div class="min-w-0 flex items-center">
                 ${unreadDot}
-                <span class="font-bold text-sm text-slate-800 dark:text-slate-100 group-hover:text-blue-600 transition truncate">${p.title}</span>
+                <span class="font-bold text-sm text-slate-800 dark:text-slate-100 group-hover:text-blue-600 transition truncate">${escapeHtml(p.title)}</span>
               </div>
             </td>
-            <td class="py-3 px-3 truncate text-slate-600 dark:text-slate-300">${getDisplayName(assignee)}</td>
+            <td class="py-3 px-3 truncate text-slate-600 dark:text-slate-300">${escapeHtml(getDisplayName(assignee))}</td>
             <td class="py-3 px-3">${getProjectStatusBadgeHtml(p.status)}</td>
             <td class="py-3 px-3 text-center whitespace-nowrap">${getProjectDeadlineHtml(p)}</td>
             <td class="py-3 px-3 text-center whitespace-nowrap">${formatDeadlineStr(updatedAtDate)}</td>
@@ -1194,8 +1194,8 @@
       if (st === '対応待ち') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-900">対応待ち</span>';
       if (st === '先方返信あり（要対応）' || st === 'ラリー中') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">📬 返信あり</span>';
       if (st === '相談決定') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-900 font-extrabold">🎉 相談決定</span>';
-      if (st === '対応停止' || st === '失注・停止') return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">停止 (${lead.stop_reason || ''})</span>`;
-      return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">${st}</span>`;
+      if (st === '対応停止' || st === '失注・停止') return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">停止 (${escapeHtml(lead.stop_reason || '')})</span>`;
+      return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">${escapeHtml(st)}</span>`;
     }
 
     function getLeadPhaseBadge(lead) {
@@ -1250,7 +1250,7 @@
             <div class="min-w-0 flex-1 space-y-1">
               <div class="flex items-center space-x-1.5">
                 ${subBadge}
-                <h4 class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100 truncate">${l.client_name}</h4>
+                <h4 class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100 truncate">${escapeHtml(l.client_name)}</h4>
               </div>
               ${l.vibe_notes ? `<p class="text-[11px] text-slate-400 truncate line-clamp-2 leading-relaxed">${escapeHtml(l.vibe_notes)}</p>` : ''}
             </div>
@@ -1383,13 +1383,13 @@
 
       let linksHtml = '';
       if (lead.twitter_id) {
-        linksHtml += `<a href="https://x.com/${lead.twitter_id}" target="_blank" class="px-2.5 py-1 bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300 rounded text-xs font-semibold hover:underline touch-target-btn">X ↗</a>`;
+        linksHtml += `<a href="https://x.com/${escapeHtml(lead.twitter_id)}" target="_blank" class="px-2.5 py-1 bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300 rounded text-xs font-semibold hover:underline touch-target-btn">X ↗</a>`;
       }
-      if (lead.youtube_url) {
-        linksHtml += `<a href="${lead.youtube_url}" target="_blank" class="px-2.5 py-1 bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-300 rounded text-xs font-semibold hover:underline touch-target-btn">YouTube ↗</a>`;
+      if (safeUrl(lead.youtube_url)) {
+        linksHtml += `<a href="${safeUrl(lead.youtube_url)}" target="_blank" class="px-2.5 py-1 bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-300 rounded text-xs font-semibold hover:underline touch-target-btn">YouTube ↗</a>`;
       }
       if (lead.contact_email) {
-        linksHtml += `<a href="mailto:${lead.contact_email}" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded text-xs font-semibold hover:underline touch-target-btn">Mail ↗</a>`;
+        linksHtml += `<a href="mailto:${escapeHtml(lead.contact_email)}" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded text-xs font-semibold hover:underline touch-target-btn">Mail ↗</a>`;
       }
 
       let subBadge = '';
@@ -1532,7 +1532,7 @@
             <div class="flex items-center space-x-1.5">
               <select id="modalTemplateSelector" onchange="applyTemplateToCustomBox()" class="text-[11px] px-2 py-1 border dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 max-w-[140px] truncate cursor-pointer">
                 <option value="">定型文を挿入...</option>
-                ${salesTemplates.map(t => `<option value="${t.id}">${t.title}</option>`).join('')}
+                ${salesTemplates.map(t => `<option value="${t.id}">${escapeHtml(t.title)}</option>`).join('')}
               </select>
             </div>
           </div>
@@ -1724,6 +1724,13 @@
       }
     }
 
+    // http(s) のURLだけを許可し、属性に埋め込めるようエスケープして返す（javascript: 等を排除）
+    function safeUrl(url) {
+      if (!url) return '';
+      const u = String(url).trim();
+      return /^https?:\/\//i.test(u) ? escapeHtml(u) : '';
+    }
+
     function escapeHtml(str) {
       if (!str) return '';
       return String(str)
@@ -1800,8 +1807,8 @@
       document.getElementById('chatModalTitle').innerText = p.title;
 
       const driveEl = document.getElementById('chatModalDriveLink');
-      driveEl.innerHTML = p.drive_url
-        ? `<a href="${p.drive_url}" target="_blank" class="text-[11px] px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-600 dark:text-slate-300 hover:underline">Drive ↗</a>`
+      driveEl.innerHTML = safeUrl(p.drive_url)
+        ? `<a href="${safeUrl(p.drive_url)}" target="_blank" class="text-[11px] px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-600 dark:text-slate-300 hover:underline">Drive ↗</a>`
         : '';
 
       const delBtn = document.getElementById('chatModalDeleteBtn');
@@ -1814,7 +1821,7 @@
 
       const assigneeSelect = document.getElementById('chatInputAssignee');
       assigneeSelect.innerHTML = '<option value="">-- 未割当 --</option>' + allProfiles.map(u => {
-        return `<option value="${u.id}">${getDisplayName(u)}</option>`;
+        return `<option value="${u.id}">${escapeHtml(getDisplayName(u))}</option>`;
       }).join('');
       assigneeSelect.value = p.assignee_id || '';
 
@@ -1873,7 +1880,8 @@
       if (!text) return '';
       const urlRegex = /(https?:\/\/[^\s]+)/g;
 
-      return text.replace(urlRegex, (url) => {
+      // 先に全体をHTMLエスケープしてからURLだけをリンク化する（XSS対策）
+      return escapeHtml(text).replace(urlRegex, (url) => {
         const cleanUrl = url.trim();
         const lower = cleanUrl.toLowerCase();
         
@@ -1943,7 +1951,7 @@
               <div class="flex items-center space-x-1.5 text-[10px] text-slate-400 mb-1">
                 <span class="font-mono">${dateStr}</span>
                 <span class="font-bold text-slate-700 dark:text-slate-300">自分</span>
-                ${l.type ? `<span class="px-1.5 py-0.2 rounded font-semibold ${badgeStyle}">${l.type}</span>` : ''}
+                ${l.type ? `<span class="px-1.5 py-0.2 rounded font-semibold ${badgeStyle}">${escapeHtml(l.type)}</span>` : ''}
               </div>
               <div class="p-3 sm:p-3 rounded-2xl rounded-tr-none bg-blue-600 text-white shadow-xs text-xs space-y-1">
                 ${formattedComment ? `<div class="font-normal whitespace-pre-wrap break-words leading-relaxed selection:bg-blue-800">${formattedComment}</div>` : ''}
@@ -1952,18 +1960,18 @@
               ${readStatusHtml}
             </div>
             <div class="w-7 h-7 sm:w-6 sm:h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] sm:text-[10px] font-bold flex-shrink-0 mt-4">
-              ${userInitial}
+              ${escapeHtml(userInitial)}
             </div>
           </div>`;
         } else {
           return `<div class="flex justify-start space-x-2 pr-6 sm:pr-10">
             <div class="w-7 h-7 sm:w-6 sm:h-6 rounded-full bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center text-[11px] sm:text-[10px] font-bold flex-shrink-0 mt-4">
-              ${userInitial}
+              ${escapeHtml(userInitial)}
             </div>
             <div class="max-w-[85%] flex flex-col items-start">
               <div class="flex items-center space-x-1.5 text-[10px] text-slate-400 mb-1">
-                ${l.type ? `<span class="px-1.5 py-0.2 rounded font-semibold ${badgeStyle}">${l.type}</span>` : ''}
-                <span class="font-bold text-slate-700 dark:text-slate-300">${l.user || '担当者'}</span>
+                ${l.type ? `<span class="px-1.5 py-0.2 rounded font-semibold ${badgeStyle}">${escapeHtml(l.type)}</span>` : ''}
+                <span class="font-bold text-slate-700 dark:text-slate-300">${escapeHtml(l.user || '担当者')}</span>
                 <span class="font-mono">${dateStr}</span>
                 ${unreadTag}
               </div>
@@ -2174,10 +2182,10 @@
 
         return `<label class="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-slate-800 border dark:border-slate-700 cursor-pointer hover:border-slate-400 transition touch-target-row">
           <div class="flex items-center space-x-2 min-w-0 flex-1">
-            <input type="checkbox" checked value="${f.path}" onchange="updateCleanupCount()" class="cleanup-file-checkbox w-4 h-4 rounded text-blue-600 flex-shrink-0">
+            <input type="checkbox" checked value="${escapeHtml(f.path)}" onchange="updateCleanupCount()" class="cleanup-file-checkbox w-4 h-4 rounded text-blue-600 flex-shrink-0">
             <div class="min-w-0">
-              <div class="font-bold text-slate-800 dark:text-slate-100 truncate">${f.name}</div>
-              <div class="text-[10px] text-slate-400 truncate">案件: ${prjTitle} ｜ 作成: ${dateStr}</div>
+              <div class="font-bold text-slate-800 dark:text-slate-100 truncate">${escapeHtml(f.name)}</div>
+              <div class="text-[10px] text-slate-400 truncate">案件: ${escapeHtml(prjTitle)} ｜ 作成: ${dateStr}</div>
             </div>
           </div>
           <span class="font-mono text-[11px] text-amber-600 dark:text-amber-400 font-bold ml-2 flex-shrink-0">${sizeStr}</span>
@@ -2599,7 +2607,7 @@
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center space-x-2 flex-1 min-w-0">
                 <span class="text-slate-400 font-mono text-[10px]">#${t.sort_order || (idx + 1)}</span>
-                <input type="text" id="tpl_title_${t.id}" value="${t.title || ''}" placeholder="タイトル（例: 初回DM）" class="flex-1 font-bold px-2.5 py-1.5 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-xs outline-none focus:ring-1 focus:ring-blue-500">
+                <input type="text" id="tpl_title_${t.id}" value="${escapeHtml(t.title || '')}" placeholder="タイトル（例: 初回DM）" class="flex-1 font-bold px-2.5 py-1.5 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-xs outline-none focus:ring-1 focus:ring-blue-500">
               </div>
               <div class="flex items-center space-x-1.5 flex-shrink-0">
                 <input type="number" id="tpl_order_${t.id}" value="${t.sort_order ?? (idx + 1)}" title="表示順" class="w-12 text-center px-1.5 py-1.5 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono outline-none">
@@ -2608,7 +2616,7 @@
               </div>
             </div>
             <div>
-              <textarea id="tpl_body_${t.id}" rows="4" placeholder="定型文本文... {name} と記述すると相手の名前に変換されます" class="w-full p-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs font-mono outline-none focus:ring-1 focus:ring-blue-500 break-words">${t.body || ''}</textarea>
+              <textarea id="tpl_body_${t.id}" rows="4" placeholder="定型文本文... {name} と記述すると相手の名前に変換されます" class="w-full p-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs font-mono outline-none focus:ring-1 focus:ring-blue-500 break-words">${escapeHtml(t.body || '')}</textarea>
             </div>
           </div>
         `;
@@ -2780,14 +2788,14 @@
         return `<div class="bg-white dark:bg-slate-900 p-3 sm:p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-1 hover:border-slate-300 dark:hover:border-slate-700 transition ${isUnread ? 'ring-1 ring-red-400' : ''}">
           <div class="flex flex-wrap items-center justify-between gap-1 text-[11px]">
             <div class="flex items-center space-x-1.5 min-w-0">
-              <span class="font-bold text-slate-800 dark:text-slate-200 truncate">${l.projectTitle}</span>
+              <span class="font-bold text-slate-800 dark:text-slate-200 truncate">${escapeHtml(l.projectTitle)}</span>
               ${isUnread ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500 text-white animate-pulse">NEW</span>' : ''}
             </div>
             <span class="text-slate-400 text-[10px] font-mono flex-shrink-0">${dateStr}</span>
           </div>
           <div class="flex items-center space-x-2 text-xs">
-            <span class="font-bold px-1.5 py-0.5 rounded text-[10px] ${badgeColor}">${l.type}</span>
-            <span class="text-slate-500 font-medium">${l.user || '不明'}</span>
+            <span class="font-bold px-1.5 py-0.5 rounded text-[10px] ${badgeColor}">${escapeHtml(l.type)}</span>
+            <span class="text-slate-500 font-medium">${escapeHtml(l.user || '不明')}</span>
           </div>
           ${formattedComment ? `<div class="text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-pre-wrap break-words pl-1.5 border-l-2 border-slate-200 dark:border-slate-700">${formattedComment}</div>` : ''}
           <div class="text-right pt-0.5">
@@ -2843,11 +2851,11 @@
           <td class="p-3.5">
             <div class="flex items-center space-x-2">
               ${masterUser ? onlineBadge : ''}
-              <span class="font-bold text-slate-800 dark:text-slate-100">${u.name || '未設定'}</span>
+              <span class="font-bold text-slate-800 dark:text-slate-100">${escapeHtml(u.name || '未設定')}</span>
             </div>
           </td>
-          <td class="p-3.5 font-mono text-xs text-blue-600 dark:text-blue-400 font-semibold">${u.user_id || '-'}</td>
-          <td class="p-3.5 text-slate-500 dark:text-slate-400">${u.email || '-'}</td>
+          <td class="p-3.5 font-mono text-xs text-blue-600 dark:text-blue-400 font-semibold">${escapeHtml(u.user_id || '-')}</td>
+          <td class="p-3.5 text-slate-500 dark:text-slate-400">${escapeHtml(u.email || '-')}</td>
           <td class="p-3.5"><span class="px-2.5 py-1 rounded-md text-xs font-semibold ${badgeClass}">${roleName}</span></td>
           ${masterUser ? `<td class="p-3.5 text-slate-400 text-xs font-mono">${lastActiveText}</td>` : ''}
         </tr>`;
