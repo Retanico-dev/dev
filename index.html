@@ -538,6 +538,10 @@
         <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">連絡先メールアドレス（任意）</label>
         <input type="email" id="leadContactEmail" class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="contact@example.com">
       </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">担当者</label>
+        <select id="leadAssignee" class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm"></select>
+      </div>
       <div class="flex justify-end space-x-2 pt-2">
         <button onclick="closeModal('newLeadModal')" class="px-4 py-2.5 border dark:border-slate-700 rounded-lg text-xs sm:text-sm touch-target-btn">キャンセル</button>
         <button onclick="createLeadTicket()" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-xs sm:text-sm font-medium touch-target-btn">起票</button>
@@ -928,6 +932,14 @@
       }).join('');
     }
 
+    function populateLeadAssigneeSelect() {
+      const select = document.getElementById('leadAssignee');
+      if (!select) return;
+      select.innerHTML = '<option value="">-- 未割当 --</option>' + allProfiles.map(u => {
+        return `<option value="${u.id}">${escapeHtml(getDisplayName(u))}</option>`;
+      }).join('');
+    }
+
     async function compressImageToJpeg(file) {
       return new Promise((resolve) => {
         const reader = new FileReader();
@@ -1240,6 +1252,7 @@
         const isHandling = l.status === '対応中';
         const isFollowupDue = l.next_followup_at && l.next_followup_at <= todayStr && l.status !== '対応停止' && l.status !== '相談決定';
         const phaseBadge = getLeadPhaseBadge(l);
+        const leadAssignee = l.assignee_id ? allProfiles.find(u => u.id === l.assignee_id) : null;
 
         return `<div onclick="openLeadDetail('${l.id}')" class="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-xl border ${isHandling ? 'border-indigo-500/80 ring-1 ring-indigo-500/40 bg-indigo-50/20 dark:bg-indigo-950/20' : 'border-slate-200 dark:border-slate-800'} shadow-sm hover:border-blue-500 cursor-pointer transition space-y-2.5 relative touch-target-row active:scale-[0.99]">
           <div class="flex justify-between items-start gap-2">
@@ -1256,8 +1269,9 @@
           </div>
 
           <div class="flex items-center justify-between text-xs pt-2 border-t border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400">
-            <div class="text-[11px]">
-              ${isHot ? '' : (l.next_followup_at ? `次回: <span class="${isFollowupDue ? 'text-red-500 font-bold' : ''}">${l.next_followup_at}${isFollowupDue ? ' ⚠' : ''}</span>` : '次回: 未定')}
+            <div class="text-[11px] flex items-center gap-2 min-w-0">
+              <span class="truncate ${leadAssignee ? 'text-slate-600 dark:text-slate-300' : 'text-slate-400'}">👤 ${leadAssignee ? escapeHtml(getDisplayName(leadAssignee)) : '未割当'}</span>
+              ${isHot ? '' : `<span class="flex-shrink-0">${l.next_followup_at ? `次回: <span class="${isFollowupDue ? 'text-red-500 font-bold' : ''}">${l.next_followup_at}${isFollowupDue ? ' ⚠' : ''}</span>` : '次回: 未定'}</span>`}
             </div>
             <div class="text-[11px] text-blue-600 dark:text-blue-400 font-medium">${isHot ? '確認・着手 ➔' : '詳細・追客 ➔'}</div>
           </div>
@@ -1275,6 +1289,33 @@
       isEditingLeadInfo = false;
       renderCurrentLeadDetailModal();
       openModal('leadDetailModal');
+    }
+
+    async function updateLeadAssignee(leadId, assigneeId) {
+      const lead = allLeads.find(l => l.id === leadId);
+      if (!lead) return;
+
+      const newId = assigneeId || null;
+      if ((lead.assignee_id || null) === newId) return;
+
+      const newAssignee = allProfiles.find(u => u.id === newId);
+      const logs = [{
+        type: '担当変更',
+        text: newId ? `担当者を「${getDisplayName(newAssignee)}」に設定しました。` : '担当者を未割当に戻しました。',
+        at: new Date().toISOString()
+      }, ...(lead.logs || [])];
+
+      const { error } = await supabaseClient.from('leads').update({ assignee_id: newId, logs }).eq('id', leadId);
+      if (error) {
+        const sel = document.getElementById('leadAssigneeSelect');
+        if (sel) sel.value = lead.assignee_id || '';
+        return alert('担当者の更新エラー: ' + error.message);
+      }
+
+      lead.assignee_id = newId;
+      lead.logs = logs;
+      // 入力中のDM文面を消さないよう、モーダルは再描画せず一覧のみ更新
+      renderLeadsGrid();
     }
 
     function renderCurrentLeadDetailModal() {
@@ -1402,6 +1443,13 @@
             <div class="flex items-center space-x-2 mt-1">
               <h3 class="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100">${escapeHtml(lead.client_name)}</h3>
               <button onclick="toggleEditLeadInfo()" class="text-[11px] text-slate-400 hover:text-blue-500 font-semibold p-1" title="情報を編集">✎ 編集</button>
+            </div>
+            <div class="flex items-center gap-1.5 mt-1.5 text-xs">
+              <label for="leadAssigneeSelect" class="text-slate-500 dark:text-slate-400 font-medium">担当者</label>
+              <select id="leadAssigneeSelect" onchange="updateLeadAssignee('${lead.id}', this.value)" class="px-2 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">-- 未割当 --</option>
+                ${allProfiles.map(u => `<option value="${u.id}" ${u.id === lead.assignee_id ? 'selected' : ''}>${escapeHtml(getDisplayName(u))}</option>`).join('')}
+              </select>
             </div>
           </div>
           <div class="flex flex-wrap items-center gap-1.5">${linksHtml}</div>
@@ -2799,10 +2847,11 @@
       const twitter = document.getElementById('leadTwitterId').value.trim().replace(/^@/, '');
       const yt = document.getElementById('leadYoutubeUrl').value.trim();
       const email = document.getElementById('leadContactEmail').value.trim();
+      const assigneeId = document.getElementById('leadAssignee').value || null;
 
       if (!name) return alert('相手の名前を入力してください');
 
-      const { error } = await supabaseClient.from('leads').insert({
+      const newLead = {
         client_name: name,
         twitter_id: twitter || null,
         youtube_url: yt || null,
@@ -2814,7 +2863,10 @@
           text: 'チケット手動起票',
           at: new Date().toISOString()
         }]
-      });
+      };
+      if (assigneeId) newLead.assignee_id = assigneeId;
+
+      const { error } = await supabaseClient.from('leads').insert(newLead);
 
       if (error) return alert('起票失敗: ' + error.message);
 
@@ -2823,6 +2875,7 @@
       document.getElementById('leadTwitterId').value = '';
       document.getElementById('leadYoutubeUrl').value = '';
       document.getElementById('leadContactEmail').value = '';
+      document.getElementById('leadAssignee').value = '';
       loadLeads();
     }
 
@@ -3071,6 +3124,9 @@
       document.getElementById(id).classList.remove('hidden');
       if (id === 'newProjectModal') {
         populateNewPrjAssigneeSelect();
+      }
+      if (id === 'newLeadModal') {
+        populateLeadAssigneeSelect();
       }
     }
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
