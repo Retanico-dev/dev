@@ -2783,7 +2783,9 @@
 
       allLeads.forEach(lead => {
         const isReplied = lead.status === '先方返信あり（要対応）' || lead.status === 'ラリー中' || lead.status === '相談決定';
-        if (!isReplied && lead.status === '対応待ち' && lead.send_count >= 3 && lead.last_sent_at) {
+        // 3通目送信後のステータスは「3回目送信済」（「対応待ち」は旧データ互換のため残す）
+        const isAfterFinalSend = lead.status === '3回目送信済' || lead.status === '対応待ち';
+        if (!isReplied && isAfterFinalSend && lead.send_count >= 3 && lead.last_sent_at) {
           const sentDate = new Date(lead.last_sent_at);
           if (sentDate <= sevenDaysAgo) {
             lead.status = '対応停止';
