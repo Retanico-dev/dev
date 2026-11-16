@@ -238,7 +238,7 @@
             <div class="relative">
               <select id="leadStatusSelect" onchange="filterLeads(this.value)" class="text-xs font-bold pl-3 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500 appearance-none touch-target-btn cursor-pointer">
                 <option value="active" selected>🔥 対応中のみ (未停止)</option>
-                <option value="未対応（HOT）">🔥 未対応 HOT (同期新着)</option>
+                <option value="未対応（HOT）">🔥 未対応</option>
                 <option value="対応中">🎯 対応中 (着手済)</option>
                 <option value="1回目送信済">1回目送信済</option>
                 <option value="2回目送信済">2回目送信済</option>
@@ -1192,7 +1192,7 @@
 
     function getLeadStatusBadge(lead) {
       const st = lead.status;
-      if (st === '未対応（HOT）') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-900">🔥 未対応HOT</span>';
+      if (st === '未対応（HOT）') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-900">🔥 未対応</span>';
       if (st === '対応中') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-900">🎯 対応中</span>';
       if (st === '1回目送信済' || st === '送信済') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200 dark:border-sky-900">1回目送信済</span>';
       if (st === '2回目送信済') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-900">2回目送信済</span>';
@@ -1241,21 +1241,10 @@
         const isFollowupDue = l.next_followup_at && l.next_followup_at <= todayStr && l.status !== '対応停止' && l.status !== '相談決定';
         const phaseBadge = getLeadPhaseBadge(l);
 
-        let subBadge = '';
-        if (l.subscriber_count) {
-          const subText = l.subscriber_count >= 10000 
-            ? `${(l.subscriber_count / 10000).toFixed(1)}万`
-            : l.subscriber_count >= 1000 
-            ? `${(l.subscriber_count / 1000).toFixed(1)}k`
-            : `${l.subscriber_count}`;
-          subBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border dark:border-slate-700" title="登録者数: ${l.subscriber_count.toLocaleString()}人">👤 ${subText}</span>`;
-        }
-
         return `<div onclick="openLeadDetail('${l.id}')" class="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-xl border ${isHandling ? 'border-indigo-500/80 ring-1 ring-indigo-500/40 bg-indigo-50/20 dark:bg-indigo-950/20' : 'border-slate-200 dark:border-slate-800'} shadow-sm hover:border-blue-500 cursor-pointer transition space-y-2.5 relative touch-target-row active:scale-[0.99]">
           <div class="flex justify-between items-start gap-2">
             <div class="min-w-0 flex-1 space-y-1">
               <div class="flex items-center space-x-1.5">
-                ${subBadge}
                 <h4 class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100 truncate">${escapeHtml(l.client_name)}</h4>
               </div>
               ${l.vibe_notes ? `<p class="text-[11px] text-slate-400 truncate line-clamp-2 leading-relaxed">${escapeHtml(l.vibe_notes)}</p>` : ''}
@@ -1268,7 +1257,7 @@
 
           <div class="flex items-center justify-between text-xs pt-2 border-t border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400">
             <div class="text-[11px]">
-              ${isHot ? '<span class="text-rose-500 font-bold">🔥 Excel同期・新規</span>' : (l.next_followup_at ? `次回: <span class="${isFollowupDue ? 'text-red-500 font-bold' : ''}">${l.next_followup_at}${isFollowupDue ? ' ⚠' : ''}</span>` : '次回: 未定')}
+              ${isHot ? '' : (l.next_followup_at ? `次回: <span class="${isFollowupDue ? 'text-red-500 font-bold' : ''}">${l.next_followup_at}${isFollowupDue ? ' ⚠' : ''}</span>` : '次回: 未定')}
             </div>
             <div class="text-[11px] text-blue-600 dark:text-blue-400 font-medium">${isHot ? '確認・着手 ➔' : '詳細・追客 ➔'}</div>
           </div>
@@ -1458,7 +1447,7 @@
             <div class="bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 px-3.5 py-2 rounded-xl text-xs text-indigo-700 dark:text-indigo-300 flex items-center justify-between">
               <span>🎯 現在、初回アプローチ対応中です</span>
               <button onclick="cancelHandlingLead('${lead.id}')" class="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-white underline">
-                着手を解除（HOTに戻す）
+                着手を解除（未対応に戻す）
               </button>
             </div>
 
