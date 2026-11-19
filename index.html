@@ -236,6 +236,15 @@
 
           <div class="flex items-center space-x-2 flex-shrink-0">
             <div class="relative">
+              <select id="leadAssigneeSelect" onchange="filterLeadsByAssignee(this.value)" class="text-xs font-bold pl-3 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500 appearance-none touch-target-btn cursor-pointer" title="担当者で絞り込み">
+                <option value="all" selected>👥 全担当者</option>
+                <option value="me">👤 自分の担当</option>
+                <option value="none">未割当</option>
+              </select>
+              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400 text-xs">▼</div>
+            </div>
+
+            <div class="relative">
               <select id="leadStatusSelect" onchange="filterLeads(this.value)" class="text-xs font-bold pl-3 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500 appearance-none touch-target-btn cursor-pointer">
                 <option value="active" selected>🔥 対応中のみ (未停止)</option>
                 <option value="未対応（HOT）">🔥 未対応</option>
@@ -741,6 +750,10 @@
 
     let allLeads = [];
     let currentFilterStatus = 'active';
+    // 営業チケットの担当者フィルター: 'all' | 'me' | 'none' | <profile id>
+    let currentLeadAssigneeFilter = (() => {
+      try { return localStorage.getItem('PF_LEAD_ASSIGNEE_FILTER') || 'all'; } catch (e) { return 'all'; }
+    })();
     let currentAndonFilter = 'active';
     let currentActiveTab = 'creative';
     let selectedLead = null;
@@ -1202,6 +1215,38 @@
       renderLeadsGrid();
     }
 
+    function filterLeadsByAssignee(value) {
+      currentLeadAssigneeFilter = value;
+      try { localStorage.setItem('PF_LEAD_ASSIGNEE_FILTER', value); } catch (e) {}
+      renderLeadsGrid();
+    }
+
+    // 担当者プルダウンの選択肢をメンバー一覧から組み立てる
+    function renderLeadAssigneeFilterOptions() {
+      const select = document.getElementById('leadAssigneeSelect');
+      if (!select) return;
+      const myId = currentUser ? currentUser.id : '';
+      const others = allProfiles.filter(u => u.id !== myId);
+      select.innerHTML =
+        '<option value="all">👥 全担当者</option>' +
+        '<option value="me">👤 自分の担当</option>' +
+        '<option value="none">未割当</option>' +
+        (others.length ? '<option disabled>──────</option>' : '') +
+        others.map(u => `<option value="${escapeHtml(u.id)}">${escapeHtml(getDisplayName(u))}</option>`).join('');
+      // 保存済みの選択がメンバーから消えていたら全担当者に戻す
+      const valid = ['all', 'me', 'none'].includes(currentLeadAssigneeFilter) || others.some(u => u.id === currentLeadAssigneeFilter);
+      if (!valid) currentLeadAssigneeFilter = 'all';
+      select.value = currentLeadAssigneeFilter;
+    }
+
+    function matchesLeadAssigneeFilter(lead) {
+      const f = currentLeadAssigneeFilter;
+      if (f === 'all') return true;
+      if (f === 'none') return !lead.assignee_id;
+      if (f === 'me') return !!currentUser && lead.assignee_id === currentUser.id;
+      return lead.assignee_id === f;
+    }
+
     function getLeadStatusBadge(lead) {
       const st = lead.status;
       if (st === '未対応（HOT）') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-900">🔥 未対応</span>';
@@ -1231,6 +1276,7 @@
       if (!container) return;
 
       const filtered = allLeads.filter(l => {
+        if (!matchesLeadAssigneeFilter(l)) return false;
         if (currentFilterStatus === 'active') {
           return l.status !== '対応停止' && l.status !== '失注・停止';
         }
@@ -2693,6 +2739,7 @@
     async function loadAllProfiles() {
       const { data } = await supabaseClient.from('profiles').select('*').order('created_at', { ascending: false });
       allProfiles = data || [];
+      renderLeadAssigneeFilterOptions();
     }
 
     async function loadSalesTemplates() {
