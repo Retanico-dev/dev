@@ -389,25 +389,24 @@
       <!-- モーダル内部コンテナ -->
       <div class="flex-1 flex flex-col min-h-0 relative">
 
-        <!-- 上段: 概要 -->
-        <div class="flex-shrink-0 border-b dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-950/40 p-2.5 sm:p-3.5">
-          <div class="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1">
-            <span class="tracking-wider uppercase text-[10px]">概要</span>
-            <button type="button" onclick="toggleDescriptionEdit()" class="text-blue-600 dark:text-blue-400 hover:underline p-1 touch-target-btn">編集</button>
-          </div>
-          <div id="chatModalDescriptionView" class="text-xs text-slate-600 dark:text-slate-300 whitespace-pre-wrap max-h-20 overflow-y-auto"></div>
-          <div id="chatModalDescriptionEditWrap" class="hidden space-y-1.5">
-            <textarea id="chatModalDescriptionInput" rows="3" class="w-full px-2.5 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs"></textarea>
-            <div class="flex justify-end space-x-1.5">
-              <button type="button" onclick="toggleDescriptionEdit(false)" class="px-2.5 py-1 text-[11px] rounded border dark:border-slate-700 touch-target-btn">キャンセル</button>
-              <button type="button" onclick="saveProjectDescription()" class="px-2.5 py-1 text-[11px] rounded bg-blue-600 text-white font-bold touch-target-btn">保存</button>
+        <!-- 上段: 概要（折りたたみ）＋ 更新ログ を1つのスクロールにまとめる -->
+        <div id="chatModalScrollArea" class="flex-1 overflow-y-auto min-h-0 bg-white dark:bg-slate-900 p-2 sm:p-3 space-y-3">
+          <details id="chatModalDescriptionDetails" class="group pb-2 border-b dark:border-slate-800">
+            <summary class="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400 cursor-pointer select-none list-none">
+              <span class="flex items-center gap-1"><span class="inline-block text-[9px] transition-transform group-open:rotate-90">▶</span>概要</span>
+              <button type="button" onclick="event.preventDefault(); toggleDescriptionEdit()" class="text-blue-600 dark:text-blue-400 hover:underline p-1 touch-target-btn">編集</button>
+            </summary>
+            <div id="chatModalDescriptionView" class="mt-1.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 p-3 rounded-xl text-xs text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap break-words"></div>
+            <div id="chatModalDescriptionEditWrap" class="hidden mt-1.5 space-y-1.5">
+              <textarea id="chatModalDescriptionInput" rows="6" class="w-full px-2.5 py-2 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs"></textarea>
+              <div class="flex justify-end space-x-1.5">
+                <button type="button" onclick="toggleDescriptionEdit(false)" class="px-2.5 py-1 text-[11px] rounded border dark:border-slate-700 touch-target-btn">キャンセル</button>
+                <button type="button" onclick="saveProjectDescription()" class="px-2.5 py-1 text-[11px] rounded bg-blue-600 text-white font-bold touch-target-btn">保存</button>
+              </div>
             </div>
-          </div>
-        </div>
+          </details>
 
-        <!-- 中段: 更新ログ -->
-        <div class="flex-1 flex flex-col min-h-0 bg-white dark:bg-slate-900 overflow-hidden">
-          <div class="flex-1 overflow-y-auto min-h-0 space-y-3 p-2 sm:p-3" id="chatModalTimeline"></div>
+          <div class="space-y-3" id="chatModalTimeline"></div>
         </div>
 
         <!-- 下段: 状態編集 ＋ コメント -->
@@ -1714,6 +1713,8 @@
       toggleTitleEdit(false);
       renderProjectDescription(p);
       toggleDescriptionEdit(false);
+      // ログがまだ無い課題は概要を開いた状態で表示
+      document.getElementById('chatModalDescriptionDetails').open = !(p.logs && p.logs.length);
 
       document.getElementById('chatInputStatus').value = p.status || '';
 
@@ -1822,6 +1823,7 @@
 
       if (shouldShow && selectedProjectForChat) {
         document.getElementById('chatModalDescriptionInput').value = selectedProjectForChat.description || '';
+        document.getElementById('chatModalDescriptionDetails').open = true;
       }
 
       viewEl.classList.toggle('hidden', shouldShow);
@@ -1870,7 +1872,7 @@
     }
 
     function scrollToLatestMessage() {
-      const container = document.getElementById('chatModalTimeline');
+      const container = document.getElementById('chatModalScrollArea');
       if (container) {
         container.scrollTop = container.scrollHeight;
       }
