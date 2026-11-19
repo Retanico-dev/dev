@@ -563,8 +563,9 @@
   <!-- モーダル: 営業チケット詳細・DM操作（HOT/追客/返信 切り替え & 着手ロック & インライン編集） -->
   <!-- ========================================================== -->
   <div id="leadDetailModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full p-4 sm:p-6 space-y-4 border border-slate-200 dark:border-slate-800 max-h-[92vh] overflow-y-auto shadow-2xl">
-      <div id="leadModalDynamicContainer">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full p-4 sm:p-6 border border-slate-200 dark:border-slate-800 max-h-[92vh] flex flex-col overflow-hidden shadow-2xl">
+      <!-- 画面が低いときは履歴だけが縮み、下部の入力欄とボタンは常に表示 -->
+      <div id="leadModalDynamicContainer" class="flex flex-col flex-1 min-h-0 overflow-y-auto">
         <!-- JSで動的レンダリング -->
       </div>
     </div>
@@ -1447,7 +1448,7 @@
       }
 
       return `
-        <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2 border-b dark:border-slate-800 pb-3">
+        <div class="flex-shrink-0 flex flex-col sm:flex-row sm:items-start justify-between gap-2 border-b dark:border-slate-800 pb-3">
           <div class="min-w-0">
             <div class="flex items-center space-x-2">
               ${getLeadStatusBadge(lead)}
@@ -1466,16 +1467,16 @@
           </div>
         </div>
 
-        <details class="py-2 border-b dark:border-slate-800 group" ${lead.status === '未対応（HOT）' ? 'open' : ''}>
+        <details class="flex-shrink-0 py-2 border-b dark:border-slate-800 group" ${lead.status === '未対応（HOT）' ? 'open' : ''}>
           <summary class="text-[11px] font-bold text-slate-500 dark:text-slate-400 cursor-pointer select-none">プロフィール・メモ</summary>
           <div class="mt-1.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 p-3 rounded-xl text-xs text-slate-700 dark:text-slate-200 leading-relaxed max-h-40 overflow-y-auto whitespace-pre-wrap">${escapeHtml(lead.vibe_notes || '自己紹介情報が登録されていません。')}</div>
         </details>
 
-        <div id="leadModalTimeline" class="space-y-2 max-h-[40vh] overflow-y-auto py-3 pr-1">
+        <div id="leadModalTimeline" class="flex-1 min-h-[6rem] space-y-2 overflow-y-auto py-3 pr-1">
           ${renderLeadTimelineHTML(lead)}
         </div>
 
-        <div class="bg-slate-50 dark:bg-slate-800/50 p-2 sm:p-3 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
+        <div class="flex-shrink-0 bg-slate-50 dark:bg-slate-800/50 p-2 sm:p-3 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
           <div class="flex items-center justify-between gap-2">
             <button onclick="copyModalDmText()" type="button" class="px-3 py-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-[11px] font-semibold hover:bg-slate-300 dark:hover:bg-slate-600 transition touch-target-btn">📋 コピー</button>
             <select id="modalTemplateSelector" onchange="applyTemplateToCustomBox()" class="text-[11px] px-2 py-1 border dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 max-w-[160px] truncate cursor-pointer">
