@@ -1890,68 +1890,49 @@
       timelineContainer.innerHTML = allLogs.map(l => {
         const isUnread = isLogItemUnread(l);
         const dateStr = new Date(l.at).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-        const isMyPost = (l.user === getCurrentUserIdentifier());
-        const userInitial = (l.user || 'U').charAt(0).toUpperCase();
+        const unreadTag = isUnread ? '<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse inline-block"></span>' : '';
+
+        // 担当・日付・件名の変更など、本文のない自動ログは1行で控えめに表示（営業チケットと同じ形式）
+        const isSystemLog = ['担当アサイン', '期日変更', '開始日変更', '件名変更'].includes(l.type) || l.comment === '更新を行いました。';
+        if (isSystemLog) {
+          return `<div class="text-[11px] text-slate-400 flex flex-wrap items-baseline gap-x-1.5 px-1">
+            <span class="font-mono">${dateStr}</span>
+            ${l.user ? `<span class="font-semibold">${escapeHtml(l.user)}</span>` : ''}
+            ${l.type ? `<span class="px-1.5 rounded bg-slate-100 dark:bg-slate-800 font-semibold">${escapeHtml(l.type)}</span>` : ''}
+            <span class="whitespace-pre-wrap break-words text-slate-500 dark:text-slate-400">${escapeHtml(l.comment || '')}</span>
+            ${unreadTag}
+          </div>`;
+        }
 
         let badgeStyle = 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300';
         if (l.type === '提出') badgeStyle = 'bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300';
         else if (l.type === 'リテイク指示') badgeStyle = 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300';
         else if (l.type === '承認・完了') badgeStyle = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300';
+        // 「コメント」は通常の書き込みなのでバッジを出さない
+        const showBadge = l.type && l.type !== 'コメント';
 
-        const unreadTag = isUnread ? '<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse inline-block ml-1"></span>' : '';
-
-        let formattedComment = formatMessageWithLinksAndMedia(l.comment || '');
+        const formattedComment = formatMessageWithLinksAndMedia(l.comment || '');
         let separateUrlHtml = '';
         if (l.url && !(l.comment && l.comment.includes(l.url))) {
           separateUrlHtml = `<div class="mt-1">${formatMessageWithLinksAndMedia(l.url)}</div>`;
         }
 
         const readMembers = (l.read_by || []).filter(name => name !== l.user);
-        let readStatusHtml = '';
-        if (readMembers.length > 0) {
-          readStatusHtml = `<div class="text-[9px] text-slate-400 mt-1 text-right">
-            <span>✓ 既読 ${readMembers.length}人</span>
-          </div>`;
-        }
+        const readStatusHtml = readMembers.length > 0
+          ? `<span class="ml-auto text-[9px] text-slate-400">✓ 既読 ${readMembers.length}人</span>`
+          : '';
 
-        if (isMyPost) {
-          return `<div class="flex justify-end space-x-2 pl-6 sm:pl-10">
-            <div class="max-w-[85%] flex flex-col items-end">
-              <div class="flex items-center space-x-1.5 text-[10px] text-slate-400 mb-1">
-                <span class="font-mono">${dateStr}</span>
-                <span class="font-bold text-slate-700 dark:text-slate-300">自分</span>
-                ${l.type ? `<span class="px-1.5 py-0.2 rounded font-semibold ${badgeStyle}">${escapeHtml(l.type)}</span>` : ''}
-              </div>
-              <div class="p-3 sm:p-3 rounded-2xl rounded-tr-none bg-blue-600 text-white shadow-xs text-xs space-y-1">
-                ${formattedComment ? `<div class="font-normal whitespace-pre-wrap break-words leading-relaxed selection:bg-blue-800">${formattedComment}</div>` : ''}
-                ${separateUrlHtml}
-              </div>
-              ${readStatusHtml}
-            </div>
-            <div class="w-7 h-7 sm:w-6 sm:h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] sm:text-[10px] font-bold flex-shrink-0 mt-4">
-              ${escapeHtml(userInitial)}
-            </div>
-          </div>`;
-        } else {
-          return `<div class="flex justify-start space-x-2 pr-6 sm:pr-10">
-            <div class="w-7 h-7 sm:w-6 sm:h-6 rounded-full bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center text-[11px] sm:text-[10px] font-bold flex-shrink-0 mt-4">
-              ${escapeHtml(userInitial)}
-            </div>
-            <div class="max-w-[85%] flex flex-col items-start">
-              <div class="flex items-center space-x-1.5 text-[10px] text-slate-400 mb-1">
-                ${l.type ? `<span class="px-1.5 py-0.2 rounded font-semibold ${badgeStyle}">${escapeHtml(l.type)}</span>` : ''}
-                <span class="font-bold text-slate-700 dark:text-slate-300">${escapeHtml(l.user || '担当者')}</span>
-                <span class="font-mono">${dateStr}</span>
-                ${unreadTag}
-              </div>
-              <div class="p-3 sm:p-3 rounded-2xl rounded-tl-none bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-xs text-xs space-y-1 border border-slate-200/60 dark:border-slate-700/60">
-                ${formattedComment ? `<div class="font-normal whitespace-pre-wrap break-words leading-relaxed">${formattedComment}</div>` : ''}
-                ${separateUrlHtml}
-              </div>
-              ${readStatusHtml}
-            </div>
-          </div>`;
-        }
+        return `<div class="p-3 bg-white dark:bg-slate-800 rounded-xl border ${isUnread ? 'border-red-300 dark:border-red-800' : 'border-slate-200 dark:border-slate-700'}">
+          <div class="flex items-center gap-1.5 text-[10px] text-slate-400 mb-1">
+            <span class="font-mono">${dateStr}</span>
+            <span class="font-bold text-slate-600 dark:text-slate-300">${escapeHtml(l.user || '担当者')}</span>
+            ${showBadge ? `<span class="px-1.5 rounded font-semibold ${badgeStyle}">${escapeHtml(l.type)}</span>` : ''}
+            ${unreadTag}
+            ${readStatusHtml}
+          </div>
+          ${formattedComment ? `<div class="text-xs text-slate-700 dark:text-slate-200 whitespace-pre-wrap break-words leading-relaxed">${formattedComment}</div>` : ''}
+          ${separateUrlHtml}
+        </div>`;
       }).join('');
     }
 
