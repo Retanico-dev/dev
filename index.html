@@ -247,9 +247,7 @@
               <select id="leadStatusSelect" onchange="filterLeads(this.value)" class="text-xs font-bold pl-3 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500 appearance-none touch-target-btn cursor-pointer">
                 <option value="active" selected>🔥 対応中のみ (未停止)</option>
                 <option value="未対応（HOT）">🔥 未対応</option>
-                <option value="対応中">🎯 対応中 (着手済)</option>
-                <option value="1回目送信済">1回目送信済</option>
-                <option value="2回目送信済">2回目送信済</option>
+                <option value="対応中">🎯 対応中</option>
                 <option value="先方返信あり（要対応）">📬 返信あり</option>
                 <option value="相談決定">🎉 相談決定</option>
                 <option value="対応停止">停止のみ</option>
@@ -1263,7 +1261,7 @@
       if (lead.status === '相談決定') {
         return '<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">相談中</span>';
       }
-      return `<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">追客: ${lead.send_count || 0}/3</span>`;
+      return '';
     }
 
     function renderLeadsGrid() {
@@ -1314,7 +1312,7 @@
               <span class="truncate ${leadAssignee ? 'text-slate-600 dark:text-slate-300' : 'text-slate-400'}">👤 ${leadAssignee ? escapeHtml(getDisplayName(leadAssignee)) : '未割当'}</span>
               ${isHot ? '' : `<span class="flex-shrink-0">${l.next_followup_at ? `次回: <span class="${isFollowupDue ? 'text-red-500 font-bold' : ''}">${l.next_followup_at}${isFollowupDue ? ' ⚠' : ''}</span>` : '次回: 未定'}</span>`}
             </div>
-            <div class="text-[11px] text-blue-600 dark:text-blue-400 font-medium">${isHot ? '確認・着手 ➔' : '詳細・追客 ➔'}</div>
+            <div class="text-[11px] text-blue-600 dark:text-blue-400 font-medium">詳細 ➔</div>
           </div>
         </div>`;
       }).join('');
@@ -1330,6 +1328,7 @@
       isEditingLeadInfo = false;
       renderCurrentLeadDetailModal();
       openModal('leadDetailModal');
+      scrollLeadTimelineToBottom();
     }
 
     async function updateLeadAssignee(leadId, assigneeId) {
@@ -1343,6 +1342,7 @@
       const logs = [{
         type: '担当変更',
         text: newId ? `担当者を「${getDisplayName(newAssignee)}」に設定しました。` : '担当者を未割当に戻しました。',
+        user: getCurrentUserIdentifier(),
         at: new Date().toISOString()
       }, ...(lead.logs || [])];
 
@@ -1355,8 +1355,8 @@
 
       lead.assignee_id = newId;
       lead.logs = logs;
-      // 入力中のDM文面を消さないよう、モーダルは再描画せず一覧のみ更新
       renderLeadsGrid();
+      rerenderLeadModalKeepingDraft();
     }
 
     function renderCurrentLeadDetailModal() {
@@ -1454,10 +1454,6 @@
         `;
       }
 
-      const isHot = lead.status === '未対応（HOT）';
-      const isHandling = lead.status === '対応中';
-      const isReplied = lead.status === '先方返信あり（要対応）' || lead.status === 'ラリー中';
-
       let linksHtml = '';
       if (lead.twitter_id) {
         linksHtml += `<a href="https://x.com/${escapeHtml(lead.twitter_id)}" target="_blank" class="px-2.5 py-1 bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300 rounded text-xs font-semibold hover:underline touch-target-btn">X ↗</a>`;
@@ -1474,9 +1470,9 @@
         subBadge = `<span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">YouTube登録: ${lead.subscriber_count.toLocaleString()}人</span>`;
       }
 
-      let html = `
+      return `
         <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2 border-b dark:border-slate-800 pb-3">
-          <div>
+          <div class="min-w-0">
             <div class="flex items-center space-x-2">
               ${getLeadStatusBadge(lead)}
               ${subBadge}
@@ -1485,166 +1481,132 @@
               <h3 class="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100">${escapeHtml(lead.client_name)}</h3>
               <button onclick="toggleEditLeadInfo()" class="text-[11px] text-slate-400 hover:text-blue-500 font-semibold p-1" title="情報を編集">✎ 編集</button>
             </div>
-            <div class="flex items-center gap-1.5 mt-1.5 text-xs">
-              <label for="leadAssigneeSelect" class="text-slate-500 dark:text-slate-400 font-medium">担当者</label>
-              <select id="leadAssigneeSelect" onchange="updateLeadAssignee('${lead.id}', this.value)" class="px-2 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="">-- 未割当 --</option>
-                ${allProfiles.map(u => `<option value="${u.id}" ${u.id === lead.assignee_id ? 'selected' : ''}>${escapeHtml(getDisplayName(u))}</option>`).join('')}
-              </select>
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-1.5 text-xs">
+              <div class="flex items-center gap-1.5">
+                <label for="leadStatusChangeSelect" class="text-slate-500 dark:text-slate-400 font-medium">状態</label>
+                <select id="leadStatusChangeSelect" onchange="changeLeadStatus('${lead.id}', this.value)" class="px-2 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
+                  ${renderLeadStatusOptions(lead)}
+                </select>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <label for="leadAssigneeSelect" class="text-slate-500 dark:text-slate-400 font-medium">担当者</label>
+                <select id="leadAssigneeSelect" onchange="updateLeadAssignee('${lead.id}', this.value)" class="px-2 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="">-- 未割当 --</option>
+                  ${allProfiles.map(u => `<option value="${u.id}" ${u.id === lead.assignee_id ? 'selected' : ''}>${escapeHtml(getDisplayName(u))}</option>`).join('')}
+                </select>
+              </div>
             </div>
           </div>
           <div class="flex flex-wrap items-center gap-1.5">${linksHtml}</div>
         </div>
-      `;
 
-      if (isHot) {
-        html += `
-          <div class="py-4 space-y-4">
-            <div>
-              <div class="flex items-center justify-between mb-1.5">
-                <label class="block text-xs font-bold text-slate-500">💡 プロフィール・選曲傾向（V-Stack / スプシ連携）</label>
-                <button onclick="toggleEditLeadInfo()" class="text-[10px] text-blue-600 dark:text-blue-400 hover:underline font-semibold">メモを修正</button>
-              </div>
-              <div class="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 p-3.5 rounded-xl text-xs sm:text-[13px] text-slate-700 dark:text-slate-200 leading-relaxed font-sans max-h-52 overflow-y-auto whitespace-pre-wrap shadow-2xs">
-                ${escapeHtml(lead.vibe_notes || '自己紹介情報が登録されていません。')}
-              </div>
-            </div>
+        <details class="py-2 border-b dark:border-slate-800 group">
+          <summary class="text-[11px] font-bold text-slate-500 dark:text-slate-400 cursor-pointer select-none">プロフィール・メモ</summary>
+          <div class="mt-1.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 p-3 rounded-xl text-xs text-slate-700 dark:text-slate-200 leading-relaxed max-h-40 overflow-y-auto whitespace-pre-wrap">${escapeHtml(lead.vibe_notes || '自己紹介情報が登録されていません。')}</div>
+        </details>
 
-            <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 p-4 rounded-xl flex items-center justify-between gap-2">
-              <div>
-                <div class="text-xs font-bold text-amber-800 dark:text-amber-300">重複アプローチ防止ロック</div>
-                <div class="text-[11px] text-amber-700 dark:text-amber-400 mt-0.5">着手ボタンを押すと「対応中」となり、DM作成パネルがアンロックされます。</div>
-              </div>
-              <button onclick="startHandlingLead('${lead.id}')" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-sm whitespace-nowrap touch-target-btn">
-                🔥 着手してDMを作成
-              </button>
-            </div>
+        <div id="leadModalTimeline" class="space-y-2 max-h-[40vh] overflow-y-auto py-3 pr-1">
+          ${renderLeadTimelineHTML(lead)}
+        </div>
+
+        <div class="bg-slate-50 dark:bg-slate-800/50 p-2.5 sm:p-3 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
+          <div class="flex justify-end">
+            <select id="modalTemplateSelector" onchange="applyTemplateToCustomBox()" class="text-[11px] px-2 py-1 border dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 max-w-[160px] truncate cursor-pointer">
+              <option value="">定型文を挿入...</option>
+              ${salesTemplates.map(t => `<option value="${t.id}">${escapeHtml(t.title)}</option>`).join('')}
+            </select>
           </div>
-
-          <div class="flex justify-between items-center pt-3 border-t dark:border-slate-800">
-            <button onclick="skipLead('${lead.id}')" class="text-xs text-rose-500 hover:underline">
-              このリードをスキップ（対象外）
-            </button>
-            <button onclick="closeModal('leadDetailModal')" class="px-5 py-2 border dark:border-slate-700 rounded-lg text-xs touch-target-btn">
-              閉じる
-            </button>
-          </div>
-        `;
-      } else if (isHandling) {
-        html += `
-          <div class="py-3 space-y-3">
-            <div class="bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 px-3.5 py-2 rounded-xl text-xs text-indigo-700 dark:text-indigo-300 flex items-center justify-between">
-              <span>🎯 現在、初回アプローチ対応中です</span>
-              <button onclick="cancelHandlingLead('${lead.id}')" class="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-white underline">
-                着手を解除（未対応に戻す）
-              </button>
-            </div>
-
-            ${renderDmComposerHTML(lead, 1)}
-          </div>
-          <div class="flex justify-end pt-2 border-t dark:border-slate-800">
-            <button onclick="closeModal('leadDetailModal')" class="px-5 py-2 border dark:border-slate-700 rounded-lg text-xs touch-target-btn">閉じる</button>
-          </div>
-        `;
-      } else {
-        const logs = lead.logs || [];
-        const logsHtml = logs.length > 0 
-          ? logs.map(lg => {
-              const dateStr = new Date(lg.at).toLocaleString('ja-JP');
-              return `<div class="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-lg border dark:border-slate-700">
-                <div class="flex justify-between text-[10px] text-slate-400 mb-0.5 font-bold"><span>${escapeHtml(lg.type)}</span><span>${dateStr}</span></div>
-                <div class="text-slate-700 dark:text-slate-300 font-mono text-[11px] whitespace-pre-wrap break-words">${escapeHtml(lg.text)}</div>
-              </div>`;
-            }).join('')
-          : '<div class="text-slate-400 text-center py-2">ログはありません</div>';
-
-        const phaseInfoText = isReplied 
-          ? '<span class="text-emerald-600 dark:text-emerald-400 font-bold">💬 商談ラリー中（追客カウント対象外）</span>' 
-          : `送信回数: ${lead.send_count || 0}/3回`;
-
-        html += `
-          <div class="space-y-3 pt-2">
-            <div>
-              <div class="flex items-center justify-between mb-1.5">
-                <span class="text-xs font-bold text-slate-500">これまでのアプローチ・やり取り履歴</span>
-                <span class="text-[11px] text-slate-400">${phaseInfoText} ｜ 次回予定: ${lead.next_followup_at || '未定'}</span>
-              </div>
-              <div class="space-y-1.5 max-h-36 overflow-y-auto text-xs pr-1">${logsHtml}</div>
-            </div>
-
-            ${renderDmComposerHTML(lead, (lead.send_count || 1) + 1)}
-
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-t dark:border-slate-800 pt-3">
-              <div class="flex items-center space-x-2">
-                <select id="stopReasonSelect" class="text-xs px-2.5 py-2 border dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800">
-                  <option value="直近の相談予定なし">直近の相談予定なし</option>
-                  <option value="追客上限">追客上限</option>
-                </select>
-                <button onclick="markLeadStopped()" class="px-3 py-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-medium hover:bg-slate-300 transition whitespace-nowrap touch-target-btn">
-                  対応停止
-                </button>
-              </div>
-              <button onclick="markLeadConsultation()" class="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition shadow-sm text-center touch-target-btn">
-                🎉 相談決定 ➔ 制作起票
-              </button>
-            </div>
-          </div>
-          <div class="flex justify-end pt-2 border-t dark:border-slate-800">
-            <button onclick="closeModal('leadDetailModal')" class="px-5 py-2 border dark:border-slate-700 rounded-lg text-xs touch-target-btn">閉じる</button>
-          </div>
-        `;
-      }
-
-      return html;
-    }
-
-    function renderDmComposerHTML(lead, targetStep) {
-      const isReplied = lead.status === '先方返信あり（要対応）' || lead.status === 'ラリー中';
-      const labelText = isReplied ? '商談ラリー メッセージ送信 / メモ' : `${targetStep}通目 アプローチ文面 / 返信メモ`;
-      const submitBtnText = isReplied ? '✓ 送信完了 (Excel反映)' : '✓ 送信完了 (Excel反映)';
-
-      const defaultNextDate = new Date();
-      defaultNextDate.setDate(defaultNextDate.getDate() + (isReplied ? 2 : 5));
-      const nextDateStr = defaultNextDate.toISOString().split('T')[0];
-
-      return `
-        <div class="space-y-3 bg-blue-50/50 dark:bg-blue-950/20 p-3.5 rounded-2xl border border-blue-100 dark:border-blue-900/40">
-          <div class="flex items-center justify-between">
-            <label class="text-xs font-bold text-blue-900 dark:text-blue-300">
-              ${labelText}
-            </label>
-            <div class="flex items-center space-x-1.5">
-              <select id="modalTemplateSelector" onchange="applyTemplateToCustomBox()" class="text-[11px] px-2 py-1 border dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 max-w-[140px] truncate cursor-pointer">
-                <option value="">定型文を挿入...</option>
-                ${salesTemplates.map(t => `<option value="${t.id}">${escapeHtml(t.title)}</option>`).join('')}
-              </select>
-            </div>
-          </div>
-
-          <textarea id="modalDmMessageBox" rows="5" class="w-full p-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 break-words leading-relaxed font-sans" placeholder="${isReplied ? '相手への返信文面、またはやり取りのメモを入力...' : '送信するDM文面、または先方から受け取った返信内容を入力...'}"></textarea>
-
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
-            <button onclick="copyModalDmText()" type="button" class="px-3.5 py-2 bg-slate-800 dark:bg-slate-700 text-white rounded-lg text-xs font-bold hover:bg-slate-700 transition shadow touch-target-btn flex items-center justify-center space-x-1.5">
-              <span>📋 文面をコピー</span>
-            </button>
-
-            <div class="flex items-center space-x-2">
-              <div class="flex items-center space-x-1 text-xs text-slate-500">
-                <span>次回:</span>
-                <input type="date" id="modalDmNextDate" value="${nextDateStr}" class="px-2 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs font-mono">
-              </div>
-              ${!isReplied ? `
-                <button onclick="recordDirectReply('${lead.id}')" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-sm whitespace-nowrap touch-target-btn">
-                  💬 返信を記録
-                </button>
-              ` : ''}
-              <button onclick="completeDmSendCustom('${lead.id}', ${targetStep})" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-sm whitespace-nowrap touch-target-btn">
-                ${submitBtnText}
-              </button>
+          <textarea id="modalDmMessageBox" rows="4" class="w-full p-3 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 break-words leading-relaxed font-sans" placeholder="送ったDM、先方からの返信、メモなどを入力"></textarea>
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <button onclick="copyModalDmText()" type="button" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-semibold hover:bg-slate-300 dark:hover:bg-slate-600 transition touch-target-btn">📋 コピー</button>
+            <div class="flex items-center gap-2">
+              <label class="flex items-center gap-1 text-xs text-slate-500">
+                <span>次回</span>
+                <input type="date" id="modalDmNextDate" value="${escapeHtml(lead.next_followup_at || '')}" class="px-2 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs font-mono">
+              </label>
+              <button onclick="addLeadRecord('${lead.id}')" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-sm whitespace-nowrap touch-target-btn">記録</button>
             </div>
           </div>
         </div>
+
+        <div class="flex items-center justify-between pt-3">
+          ${lead.status === '相談決定'
+            ? `<button onclick="openProjectFromLead()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition shadow-sm touch-target-btn">制作案件を起票 ➔</button>`
+            : '<span></span>'}
+          <button onclick="closeModal('leadDetailModal')" class="px-5 py-2 border dark:border-slate-700 rounded-lg text-xs touch-target-btn">閉じる</button>
+        </div>
       `;
+    }
+
+    // 状態プルダウンの選択肢。停止は理由ごとに分ける（stop:理由）
+    const LEAD_STATUS_CHOICES = [
+      { value: '未対応（HOT）', label: '未対応' },
+      { value: '対応中', label: '対応中' },
+      { value: '先方返信あり（要対応）', label: '返信あり' },
+      { value: '相談決定', label: '相談決定' },
+      { value: 'stop:直近の相談予定なし', label: '停止（直近の相談予定なし）' },
+      { value: 'stop:追客上限', label: '停止（追客上限）' },
+      { value: 'stop:対象外スキップ', label: '停止（対象外）' }
+    ];
+
+    function getLeadStatusChoiceValue(lead) {
+      if (lead.status === '対応停止' || lead.status === '失注・停止') return 'stop:' + (lead.stop_reason || '直近の相談予定なし');
+      if (lead.status === 'ラリー中') return '先方返信あり（要対応）';
+      return lead.status;
+    }
+
+    function renderLeadStatusOptions(lead) {
+      const current = getLeadStatusChoiceValue(lead);
+      let html = '';
+      // 旧フローの状態（1回目送信済 など）は、そのまま表示だけする
+      if (!LEAD_STATUS_CHOICES.some(c => c.value === current)) {
+        html += `<option value="${escapeHtml(current)}" selected disabled>${escapeHtml(lead.status)}</option>`;
+      }
+      html += LEAD_STATUS_CHOICES.map(c => `<option value="${escapeHtml(c.value)}" ${c.value === current ? 'selected' : ''}>${escapeHtml(c.label)}</option>`).join('');
+      return html;
+    }
+
+    function renderLeadTimelineHTML(lead) {
+      const logs = [...(lead.logs || [])].sort((a, b) => new Date(a.at) - new Date(b.at));
+      if (logs.length === 0) {
+        return '<div class="text-center py-8 text-slate-400 text-xs">まだ記録はありません</div>';
+      }
+      return logs.map(lg => {
+        const dateStr = new Date(lg.at).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        // 状態変更・担当変更などのシステムログは1行で控えめに表示（旧フローの「1通目送信」「返信受信」等は本文として表示）
+        const isSystemLog = ['状態変更', '担当変更', '次回予定', '対応停止', '相談決定'].includes(lg.type);
+        if (isSystemLog) {
+          return `<div class="text-[11px] text-slate-400 flex flex-wrap items-baseline gap-x-1.5 px-1">
+            <span class="font-mono">${dateStr}</span>
+            ${lg.user ? `<span class="font-semibold">${escapeHtml(lg.user)}</span>` : ''}
+            <span class="px-1.5 rounded bg-slate-100 dark:bg-slate-800 font-semibold">${escapeHtml(lg.type || '')}</span>
+            <span class="whitespace-pre-wrap break-words text-slate-500 dark:text-slate-400">${escapeHtml(lg.text || '')}</span>
+          </div>`;
+        }
+        return `<div class="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div class="flex items-center gap-1.5 text-[10px] text-slate-400 mb-1">
+            <span class="font-mono">${dateStr}</span>
+            <span class="font-bold text-slate-600 dark:text-slate-300">${escapeHtml(lg.user || '')}</span>
+            ${lg.type && lg.type !== '記録' ? `<span class="px-1.5 rounded bg-slate-100 dark:bg-slate-700 font-semibold">${escapeHtml(lg.type)}</span>` : ''}
+          </div>
+          <div class="text-xs text-slate-700 dark:text-slate-200 whitespace-pre-wrap break-words leading-relaxed">${escapeHtml(lg.text || '')}</div>
+        </div>`;
+      }).join('');
+    }
+
+    // モーダルを再描画しても入力途中のテキストを消さない
+    function rerenderLeadModalKeepingDraft() {
+      const box = document.getElementById('modalDmMessageBox');
+      const draft = box ? box.value : '';
+      renderCurrentLeadDetailModal();
+      const newBox = document.getElementById('modalDmMessageBox');
+      if (newBox) newBox.value = draft;
+      scrollLeadTimelineToBottom();
+    }
+
+    function scrollLeadTimelineToBottom() {
+      const tl = document.getElementById('leadModalTimeline');
+      if (tl) tl.scrollTop = tl.scrollHeight;
     }
 
     function applyTemplateToCustomBox() {
@@ -1655,6 +1617,7 @@
         const replaced = t.body.replace(/\{name\}/g, selectedLead.client_name);
         document.getElementById('modalDmMessageBox').value = replaced;
       }
+      select.value = '';
     }
 
     function copyModalDmText() {
@@ -1664,148 +1627,75 @@
       alert('文面をクリップボードにコピーしました！');
     }
 
-    async function startHandlingLead(leadId) {
-      try {
-        const lead = allLeads.find(l => l.id === leadId);
-        const { error } = await supabaseClient.from('leads').update({ status: '対応中' }).eq('id', leadId);
-        if (error) throw error;
-
-        // Drive上のExcel（P列）も「対応中」へ書き換えトリガー
-        if (lead) {
-          triggerExcelStatusUpdate(lead.client_name, '対応中');
-        }
-
-        await loadLeads();
-        openLeadDetail(leadId);
-      } catch (err) {
-        alert('着手ステータスの更新に失敗しました: ' + err.message);
-      }
-    }
-
-    async function cancelHandlingLead(leadId) {
-      try {
-        const lead = allLeads.find(l => l.id === leadId);
-        const { error } = await supabaseClient.from('leads').update({ status: '未対応（HOT）' }).eq('id', leadId);
-        if (error) throw error;
-
-        if (lead) {
-          triggerExcelStatusUpdate(lead.client_name, '未');
-        }
-
-        await loadLeads();
-        openLeadDetail(leadId);
-      } catch (err) {
-        alert('解除に失敗しました: ' + err.message);
-      }
-    }
-
-    async function skipLead(leadId) {
-      if (!confirm('このリードを対象外（アーカイブ）にしますか？')) return;
-      try {
-        const lead = allLeads.find(l => l.id === leadId);
-        const { error } = await supabaseClient.from('leads').update({ status: '対応停止', stop_reason: '対象外スキップ' }).eq('id', leadId);
-        if (error) throw error;
-
-        if (lead) {
-          triggerExcelStatusUpdate(lead.client_name, '見送り');
-        }
-
-        closeModal('leadDetailModal');
-        await loadLeads();
-      } catch (err) {
-        alert('スキップ更新に失敗しました: ' + err.message);
-      }
-    }
-
-    async function completeDmSendCustom(leadId, currentStep) {
+    // テキストボックスの内容を履歴に記録（状態は変えない）
+    async function addLeadRecord(leadId) {
       const lead = allLeads.find(l => l.id === leadId);
       if (!lead) return;
 
-      const message = document.getElementById('modalDmMessageBox').value.trim();
-      const nextDate = document.getElementById('modalDmNextDate').value;
-      const isReplied = lead.status === '先方返信あり（要対応）' || lead.status === 'ラリー中';
+      const box = document.getElementById('modalDmMessageBox');
+      const text = box.value.trim();
+      const nextDate = document.getElementById('modalDmNextDate').value || null;
+      const isDateChanged = (lead.next_followup_at || null) !== nextDate;
+      if (!text && !isDateChanged) return alert('記録する内容を入力してください');
 
-      let nextStatus = lead.status;
-      let nextSendCount = lead.send_count || 0;
-      let logType = '';
-      let excelStatusVal = '送信済';
+      const newLogs = [];
+      if (text) newLogs.push({ type: '記録', text, user: getCurrentUserIdentifier(), at: new Date().toISOString() });
+      if (isDateChanged) newLogs.push({ type: '次回予定', text: nextDate ? `次回予定を ${nextDate} に設定` : '次回予定を解除', user: getCurrentUserIdentifier(), at: new Date().toISOString() });
+      const logs = [...newLogs, ...(lead.logs || [])];
 
-      if (isReplied) {
-        nextStatus = '先方返信あり（要対応）';
-        logType = 'メッセージ送信 (ラリー中)';
-        excelStatusVal = 'ラリー中';
-      } else {
-        nextSendCount = currentStep;
-        nextStatus = currentStep === 1 ? '1回目送信済' : currentStep === 2 ? '2回目送信済' : '3回目送信済';
-        logType = `${currentStep}通目送信`;
-        excelStatusVal = currentStep === 1 ? '送信済' : `${currentStep}回目送信済`;
-      }
+      const { error } = await supabaseClient.from('leads').update({ logs, next_followup_at: nextDate }).eq('id', leadId);
+      if (error) return alert('記録エラー: ' + error.message);
 
-      const logs = lead.logs || [];
-      logs.unshift({
-        type: logType,
-        text: message || `${logType}完了（次回期日: ${nextDate || '未設定'}）`,
-        at: new Date().toISOString()
-      });
-
-      try {
-        const { error } = await supabaseClient.from('leads').update({
-          status: nextStatus,
-          send_count: nextSendCount,
-          next_followup_at: nextDate || null,
-          last_sent_at: new Date().toISOString(),
-          logs: logs
-        }).eq('id', leadId);
-
-        if (error) throw error;
-
-        // Drive上のExcel（P列）へ即時反映トリガーをキック
-        triggerExcelStatusUpdate(lead.client_name, excelStatusVal);
-
-        alert('送信完了を記録し、Excel同期（Actions）をキックしました！');
-        closeModal('leadDetailModal');
-        await loadLeads();
-      } catch (err) {
-        alert('記録エラー: ' + err.message);
-      }
+      lead.logs = logs;
+      lead.next_followup_at = nextDate;
+      box.value = '';
+      renderLeadsGrid();
+      rerenderLeadModalKeepingDraft();
     }
 
-    async function recordDirectReply(leadId) {
+    async function changeLeadStatus(leadId, choiceValue) {
       const lead = allLeads.find(l => l.id === leadId);
       if (!lead) return;
 
-      const replyMemo = document.getElementById('modalDmMessageBox').value.trim();
-      if (!replyMemo) {
-        alert('ボックスに先方からの返信内容やメモを入力してください');
-        return;
-      }
+      const isStop = choiceValue.startsWith('stop:');
+      const newStatus = isStop ? '対応停止' : choiceValue;
+      const newStopReason = isStop ? choiceValue.slice(5) : null;
+      const label = (LEAD_STATUS_CHOICES.find(c => c.value === choiceValue) || {}).label || newStatus;
 
-      const nextDate = document.getElementById('modalDmNextDate').value;
-      const logs = lead.logs || [];
-      logs.unshift({
-        type: '返信受信',
-        text: replyMemo,
+      const logs = [{
+        type: '状態変更',
+        text: `状態を「${label}」に変更しました。`,
+        user: getCurrentUserIdentifier(),
         at: new Date().toISOString()
-      });
+      }, ...(lead.logs || [])];
 
-      try {
-        const { error } = await supabaseClient.from('leads').update({
-          status: '先方返信あり（要対応）',
-          next_followup_at: nextDate || null,
-          logs: logs
-        }).eq('id', leadId);
-
-        if (error) throw error;
-
-        // Drive上のExcel（P列）へ「返信あり」反映
-        triggerExcelStatusUpdate(lead.client_name, '返信あり');
-
-        alert('返信ログを記録し、ステータスを「返信あり」に更新しました！');
-        closeModal('leadDetailModal');
-        await loadLeads();
-      } catch (err) {
-        alert('更新エラー: ' + err.message);
+      const updateData = { status: newStatus, stop_reason: newStopReason, logs };
+      const { error } = await supabaseClient.from('leads').update(updateData).eq('id', leadId);
+      if (error) {
+        rerenderLeadModalKeepingDraft();
+        return alert('状態の更新エラー: ' + error.message);
       }
+
+      Object.assign(lead, updateData);
+
+      // Drive上のExcel（P列）へ反映（従来と同じ値で書き戻す）
+      const excelStatus = {
+        '未対応（HOT）': '未',
+        '対応中': '対応中',
+        '先方返信あり（要対応）': '返信あり',
+        '相談決定': '相談決定'
+      }[newStatus] || (newStopReason === '対象外スキップ' ? '見送り' : '対応停止');
+      triggerExcelStatusUpdate(lead.client_name, excelStatus);
+
+      renderLeadsGrid();
+      rerenderLeadModalKeepingDraft();
+    }
+
+    function openProjectFromLead() {
+      if (!selectedLead) return;
+      closeModal('leadDetailModal');
+      document.getElementById('newPrjTitle').value = `【${selectedLead.client_name} 様】制作案件`;
+      openModal('newProjectModal');
     }
 
     // http(s) のURLだけを許可し、属性に埋め込めるようエスケープして返す（javascript: 等を排除）
@@ -1823,54 +1713,6 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
-    }
-
-    async function markLeadStopped() {
-      if (!selectedLead) return;
-      const reason = document.getElementById('stopReasonSelect').value;
-
-      const logs = selectedLead.logs || [];
-      logs.unshift({
-        type: '対応停止',
-        text: '停止理由: ' + reason,
-        at: new Date().toISOString()
-      });
-
-      await supabaseClient.from('leads').update({
-        status: '対応停止',
-        stop_reason: reason,
-        logs: logs
-      }).eq('id', selectedLead.id);
-
-      triggerExcelStatusUpdate(selectedLead.client_name, '対応停止');
-
-      alert('対応停止に更新しました');
-      closeModal('leadDetailModal');
-      loadLeads();
-    }
-
-    async function markLeadConsultation() {
-      if (!selectedLead) return;
-
-      const logs = selectedLead.logs || [];
-      logs.unshift({
-        type: '相談決定',
-        text: 'MTG・案件相談へ移行',
-        at: new Date().toISOString()
-      });
-
-      await supabaseClient.from('leads').update({
-        status: '相談決定',
-        logs: logs
-      }).eq('id', selectedLead.id);
-
-      triggerExcelStatusUpdate(selectedLead.client_name, '相談決定');
-
-      closeModal('leadDetailModal');
-      loadLeads();
-
-      document.getElementById('newPrjTitle').value = `【${selectedLead.client_name} 様】制作案件`;
-      openModal('newProjectModal');
     }
 
     function openProjectChatModal(projectId) {
