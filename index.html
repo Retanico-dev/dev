@@ -1714,8 +1714,8 @@
       toggleTitleEdit(false);
       renderProjectDescription(p);
       toggleDescriptionEdit(false);
-      // ログがまだ無い課題は概要を開いた状態で表示
-      document.getElementById('chatModalDescriptionDetails').open = !(p.logs && p.logs.length);
+      // 概要は常に開いた状態で表示（必要に応じて折りたためる）
+      document.getElementById('chatModalDescriptionDetails').open = true;
 
       document.getElementById('chatInputStatus').value = p.status || '';
 
