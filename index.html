@@ -357,10 +357,10 @@
 
   <!-- ==================== 案件統合チャット＆進捗モーダル ==================== -->
   <div id="projectChatModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl md:max-w-5xl w-full p-3.5 sm:p-5 border border-slate-200 dark:border-slate-800 max-h-[95vh] h-[92vh] sm:h-[90vh] flex flex-col shadow-2xl overflow-hidden relative">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl md:max-w-5xl w-full px-3.5 sm:px-5 pt-2 sm:pt-2.5 pb-2.5 sm:pb-3.5 border border-slate-200 dark:border-slate-800 max-h-[95vh] h-[92vh] sm:h-[90vh] flex flex-col shadow-2xl overflow-hidden relative">
       
       <!-- ヘッダー -->
-      <div class="flex items-start justify-between border-b dark:border-slate-800 pb-2.5 flex-shrink-0 gap-2">
+      <div class="flex items-center justify-between border-b dark:border-slate-800 pb-1.5 flex-shrink-0 gap-2">
         <div class="min-w-0 flex-1">
           <div class="flex flex-wrap items-center gap-1.5">
             <span id="chatModalCodeBadge" class="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border dark:border-slate-700 flex items-center">
@@ -382,7 +382,7 @@
           <button id="chatModalDeleteBtn" onclick="deleteCurrentProject()" class="hidden px-2.5 py-1 text-xs rounded bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-400 font-bold border border-red-200 dark:border-red-800 hover:bg-red-100 transition touch-target-btn">
             🗑️ 削除
           </button>
-          <button onclick="closeModal('projectChatModal')" class="text-slate-400 hover:text-slate-600 text-lg p-2 touch-target-btn flex items-center justify-center">✕</button>
+          <button onclick="closeModal('projectChatModal')" class="text-slate-400 hover:text-slate-600 text-lg leading-none p-1 touch-target-btn flex items-center justify-center">✕</button>
         </div>
       </div>
 
@@ -417,7 +417,11 @@
           </div>
 
           <div>
-            <textarea id="chatInputComment" rows="2" placeholder="メッセージを入力" class="w-full p-3 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 break-words leading-relaxed"></textarea>
+            <!-- 上につまんで引っぱるとテキストボックスが広がる -->
+            <div id="chatInputResizeHandle" class="h-3 -mt-1 mb-0.5 flex items-center justify-center cursor-ns-resize touch-none select-none" title="ドラッグで入力欄を広げる">
+              <span class="w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+            </div>
+            <textarea id="chatInputComment" rows="2" placeholder="メッセージを入力" class="w-full p-3 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 break-words leading-relaxed resize-none"></textarea>
           </div>
 
           <div id="attachedFilePreview" class="hidden flex items-center justify-between p-2.5 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg text-xs">
@@ -427,13 +431,6 @@
               <span id="attachedFileSize" class="text-[10px] text-slate-400"></span>
             </div>
             <button onclick="removeAttachedFile()" type="button" class="text-red-500 hover:text-red-700 text-xs font-bold px-2 py-1 touch-target-btn">✕ 削除</button>
-          </div>
-
-          <div class="flex items-center">
-            <label class="cursor-pointer inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-200 transition touch-target-btn">
-              <span>📎 添付</span>
-              <input type="file" id="fileInputPicker" onchange="handleFileInputChange(event)" accept="audio/mp3,audio/m4a,audio/*,image/*" class="hidden">
-            </label>
           </div>
 
           <!-- 常設進行設定バー -->
@@ -464,7 +461,11 @@
             </div>
           </div>
 
-          <div class="flex items-center justify-center space-x-2">
+          <div class="relative flex items-center justify-center space-x-2">
+            <label class="absolute left-0 cursor-pointer inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-200 transition touch-target-btn">
+              <span>📎 添付</span>
+              <input type="file" id="fileInputPicker" onchange="handleFileInputChange(event)" accept="audio/mp3,audio/m4a,audio/*,image/*" class="hidden">
+            </label>
             <button onclick="closeModal('projectChatModal')" class="px-4 py-2 sm:py-1.5 border dark:border-slate-700 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition touch-target-btn">
               キャンセル
             </button>
@@ -1731,11 +1732,43 @@
 
       removeAttachedFile();
       document.getElementById('chatInputComment').value = '';
+      document.getElementById('chatInputComment').style.height = ''; // 開くたびに2行へ戻す
+      setupChatInputResizeHandle();
 
       openModal('projectChatModal');
       autoMarkProjectLogsAsRead(p);
 
       setTimeout(scrollToLatestMessage, 60);
+    }
+
+    // 入力欄上のつまみを上へドラッグすると高さが増える（下の進行設定・ボタンは固定のまま、ログ側が縮む）
+    function setupChatInputResizeHandle() {
+      const handle = document.getElementById('chatInputResizeHandle');
+      const box = document.getElementById('chatInputComment');
+      if (!handle || !box || handle.dataset.ready) return;
+      handle.dataset.ready = '1';
+
+      let startY = 0;
+      let startH = 0;
+      const onMove = (e) => {
+        const minH = 48;
+        const maxH = Math.round(window.innerHeight * 0.6);
+        const next = Math.min(maxH, Math.max(minH, startH + (startY - e.clientY)));
+        box.style.height = next + 'px';
+      };
+      const onUp = () => {
+        document.removeEventListener('pointermove', onMove);
+        document.removeEventListener('pointerup', onUp);
+        document.body.style.userSelect = '';
+      };
+      handle.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        startY = e.clientY;
+        startH = box.offsetHeight;
+        document.body.style.userSelect = 'none';
+        document.addEventListener('pointermove', onMove);
+        document.addEventListener('pointerup', onUp);
+      });
     }
 
     function toggleTitleEdit(show) {
