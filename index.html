@@ -237,7 +237,7 @@
           <div class="flex items-center space-x-2 flex-shrink-0">
             <div class="relative">
               <select id="leadAssigneeSelect" onchange="filterLeadsByAssignee(this.value)" class="text-xs font-bold pl-3 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500 appearance-none touch-target-btn cursor-pointer" title="担当者で絞り込み">
-                <option value="all" selected>👥 全担当者</option>
+                <option value="all" selected>全担当者</option>
                 <option value="none">未割当</option>
               </select>
               <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400 text-xs">▼</div>
@@ -1225,7 +1225,7 @@
       const select = document.getElementById('leadAssigneeSelect');
       if (!select) return;
       select.innerHTML =
-        '<option value="all">👥 全担当者</option>' +
+        '<option value="all">全担当者</option>' +
         '<option value="none">未割当</option>' +
         (allProfiles.length ? '<option disabled>──────</option>' : '') +
         allProfiles.map(u => `<option value="${escapeHtml(u.id)}">${escapeHtml(getDisplayName(u))}</option>`).join('');
