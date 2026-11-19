@@ -548,6 +548,10 @@
         <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">担当者</label>
         <select id="leadAssignee" class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm"></select>
       </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">記録（任意）</label>
+        <textarea id="leadInitialRecord" rows="4" class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm leading-relaxed" placeholder="送ったDM、経緯、メモなどを入力（詳細画面の履歴に記録されます）"></textarea>
+      </div>
       <div class="flex justify-end space-x-2 pt-2">
         <button onclick="closeModal('newLeadModal')" class="px-4 py-2.5 border dark:border-slate-700 rounded-lg text-xs sm:text-sm touch-target-btn">キャンセル</button>
         <button onclick="createLeadTicket()" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-xs sm:text-sm font-medium touch-target-btn">起票</button>
@@ -2735,8 +2739,15 @@
       const yt = document.getElementById('leadYoutubeUrl').value.trim();
       const email = document.getElementById('leadContactEmail').value.trim();
       const assigneeId = document.getElementById('leadAssignee').value || null;
+      const initialRecord = document.getElementById('leadInitialRecord').value.trim();
 
       if (!name) return alert('相手の名前を入力してください');
+
+      const now = Date.now();
+      const me = getCurrentUserIdentifier();
+      // logs は新しい順。起票ログの後に、入力があれば最初の記録を積む（履歴で起票→記録の順に並ぶよう1ms後にする）
+      const initialLogs = [{ type: 'created', text: 'チケット手動起票', user: me, at: new Date(now).toISOString() }];
+      if (initialRecord) initialLogs.unshift({ type: '記録', text: initialRecord, user: me, at: new Date(now + 1).toISOString() });
 
       const newLead = {
         client_name: name,
@@ -2745,11 +2756,7 @@
         contact_email: email || null,
         status: '未対応（HOT）',
         send_count: 0,
-        logs: [{
-          type: 'created',
-          text: 'チケット手動起票',
-          at: new Date().toISOString()
-        }]
+        logs: initialLogs
       };
       if (assigneeId) newLead.assignee_id = assigneeId;
 
@@ -2763,6 +2770,7 @@
       document.getElementById('leadYoutubeUrl').value = '';
       document.getElementById('leadContactEmail').value = '';
       document.getElementById('leadAssignee').value = '';
+      document.getElementById('leadInitialRecord').value = '';
       loadLeads();
     }
 
