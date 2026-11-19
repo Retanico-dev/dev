@@ -1738,7 +1738,8 @@
       openModal('projectChatModal');
       autoMarkProjectLogsAsRead(p);
 
-      setTimeout(scrollToLatestMessage, 60);
+      // 開いたときは概要から読めるよう先頭を表示（登録後は最新ログへスクロール）
+      document.getElementById('chatModalScrollArea').scrollTop = 0;
     }
 
     // 入力欄上のつまみを上へドラッグすると高さが増える（下の進行設定・ボタンは固定のまま、ログ側が縮む）
