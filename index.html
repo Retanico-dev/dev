@@ -1335,34 +1335,6 @@
       scrollLeadTimelineToBottom();
     }
 
-    async function updateLeadAssignee(leadId, assigneeId) {
-      const lead = allLeads.find(l => l.id === leadId);
-      if (!lead) return;
-
-      const newId = assigneeId || null;
-      if ((lead.assignee_id || null) === newId) return;
-
-      const newAssignee = allProfiles.find(u => u.id === newId);
-      const logs = [{
-        type: '担当変更',
-        text: newId ? `担当者を「${getDisplayName(newAssignee)}」に設定しました。` : '担当者を未割当に戻しました。',
-        user: getCurrentUserIdentifier(),
-        at: new Date().toISOString()
-      }, ...(lead.logs || [])];
-
-      const { error } = await supabaseClient.from('leads').update({ assignee_id: newId, logs }).eq('id', leadId);
-      if (error) {
-        const sel = document.getElementById('leadAssigneeSelect');
-        if (sel) sel.value = lead.assignee_id || '';
-        return alert('担当者の更新エラー: ' + error.message);
-      }
-
-      lead.assignee_id = newId;
-      lead.logs = logs;
-      renderLeadsGrid();
-      rerenderLeadModalKeepingDraft();
-    }
-
     function renderCurrentLeadDetailModal() {
       if (!selectedLead) return;
       const container = document.getElementById('leadModalDynamicContainer');
@@ -1485,23 +1457,13 @@
               <h3 class="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100">${escapeHtml(lead.client_name)}</h3>
               <button onclick="toggleEditLeadInfo()" class="text-[11px] text-slate-400 hover:text-blue-500 font-semibold p-1" title="情報を編集">✎ 編集</button>
             </div>
-            <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-1.5 text-xs">
-              <div class="flex items-center gap-1.5">
-                <label for="leadStatusChangeSelect" class="text-slate-500 dark:text-slate-400 font-medium">状態</label>
-                <select id="leadStatusChangeSelect" onchange="changeLeadStatus('${lead.id}', this.value)" class="px-2 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
-                  ${renderLeadStatusOptions(lead)}
-                </select>
-              </div>
-              <div class="flex items-center gap-1.5">
-                <label for="leadAssigneeSelect" class="text-slate-500 dark:text-slate-400 font-medium">担当者</label>
-                <select id="leadAssigneeSelect" onchange="updateLeadAssignee('${lead.id}', this.value)" class="px-2 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="">-- 未割当 --</option>
-                  ${allProfiles.map(u => `<option value="${u.id}" ${u.id === lead.assignee_id ? 'selected' : ''}>${escapeHtml(getDisplayName(u))}</option>`).join('')}
-                </select>
-              </div>
-            </div>
           </div>
-          <div class="flex flex-wrap items-center gap-1.5">${linksHtml}</div>
+          <div class="flex flex-wrap items-center gap-1.5">
+            ${linksHtml}
+            ${lead.status === '相談決定'
+              ? `<button onclick="openProjectFromLead()" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-bold transition touch-target-btn">制作案件を起票 ➔</button>`
+              : ''}
+          </div>
         </div>
 
         <details class="py-2 border-b dark:border-slate-800 group" ${lead.status === '未対応（HOT）' ? 'open' : ''}>
@@ -1513,31 +1475,43 @@
           ${renderLeadTimelineHTML(lead)}
         </div>
 
-        <div class="bg-slate-50 dark:bg-slate-800/50 p-2.5 sm:p-3 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
-          <div class="flex justify-end">
+        <div class="bg-slate-50 dark:bg-slate-800/50 p-2 sm:p-3 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <button onclick="copyModalDmText()" type="button" class="px-3 py-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-[11px] font-semibold hover:bg-slate-300 dark:hover:bg-slate-600 transition touch-target-btn">📋 コピー</button>
             <select id="modalTemplateSelector" onchange="applyTemplateToCustomBox()" class="text-[11px] px-2 py-1 border dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 max-w-[160px] truncate cursor-pointer">
               <option value="">定型文を挿入...</option>
               ${salesTemplates.map(t => `<option value="${t.id}">${escapeHtml(t.title)}</option>`).join('')}
             </select>
           </div>
           <textarea id="modalDmMessageBox" rows="4" class="w-full p-3 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 break-words leading-relaxed font-sans" placeholder="送ったDM、先方からの返信、メモなどを入力"></textarea>
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <button onclick="copyModalDmText()" type="button" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-semibold hover:bg-slate-300 dark:hover:bg-slate-600 transition touch-target-btn">📋 コピー</button>
-            <div class="flex items-center gap-2">
-              <label class="flex items-center gap-1 text-xs text-slate-500">
-                <span>次回</span>
-                <input type="date" id="modalDmNextDate" value="${escapeHtml(lead.next_followup_at || '')}" class="px-2 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs font-mono">
-              </label>
-              <button onclick="addLeadRecord('${lead.id}')" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-sm whitespace-nowrap touch-target-btn">記録</button>
+
+          <!-- 進行設定バー（「記録」で本文と一緒に保存） -->
+          <div class="bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700 shadow-xs text-xs">
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 sm:gap-2">
+              <div>
+                <label for="leadStatusChangeSelect" class="block text-[10px] text-slate-400 mb-0.5 font-bold">状態</label>
+                <select id="leadStatusChangeSelect" class="w-full px-2 py-1.5 border dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 font-bold outline-none text-[11px] truncate cursor-pointer">
+                  ${renderLeadStatusOptions(lead)}
+                </select>
+              </div>
+              <div>
+                <label for="leadAssigneeSelect" class="block text-[10px] text-slate-400 mb-0.5 font-bold">担当者</label>
+                <select id="leadAssigneeSelect" class="w-full px-2 py-1.5 border dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 font-bold outline-none text-[11px] truncate cursor-pointer">
+                  <option value="">-- 未割当 --</option>
+                  ${allProfiles.map(u => `<option value="${u.id}" ${u.id === lead.assignee_id ? 'selected' : ''}>${escapeHtml(getDisplayName(u))}</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <label for="modalDmNextDate" class="block text-[10px] text-slate-400 mb-0.5 font-bold">次回予定</label>
+                <input type="date" id="modalDmNextDate" value="${escapeHtml(lead.next_followup_at || '')}" class="w-full px-2 py-1.5 border dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-lg text-[11px] font-mono outline-none">
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="flex items-center justify-between pt-3">
-          ${lead.status === '相談決定'
-            ? `<button onclick="openProjectFromLead()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition shadow-sm touch-target-btn">制作案件を起票 ➔</button>`
-            : '<span></span>'}
-          <button onclick="closeModal('leadDetailModal')" class="px-5 py-2 border dark:border-slate-700 rounded-lg text-xs touch-target-btn">閉じる</button>
+          <div class="flex items-center justify-center space-x-2">
+            <button onclick="closeModal('leadDetailModal')" class="px-4 py-2 sm:py-1.5 border dark:border-slate-700 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition touch-target-btn">閉じる</button>
+            <button onclick="submitLeadUpdate('${lead.id}')" class="px-5 py-2 sm:py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-sm whitespace-nowrap touch-target-btn">記録 ➔</button>
+          </div>
         </div>
       `;
     }
@@ -1598,16 +1572,6 @@
       }).join('');
     }
 
-    // モーダルを再描画しても入力途中のテキストを消さない
-    function rerenderLeadModalKeepingDraft() {
-      const box = document.getElementById('modalDmMessageBox');
-      const draft = box ? box.value : '';
-      renderCurrentLeadDetailModal();
-      const newBox = document.getElementById('modalDmMessageBox');
-      if (newBox) newBox.value = draft;
-      scrollLeadTimelineToBottom();
-    }
-
     function scrollLeadTimelineToBottom() {
       // モーダル表示直後はレイアウト確定前なので次フレームでスクロール
       requestAnimationFrame(() => {
@@ -1634,68 +1598,67 @@
       alert('文面をクリップボードにコピーしました！');
     }
 
-    // テキストボックスの内容を履歴に記録（状態は変えない）
-    async function addLeadRecord(leadId) {
+    // 「記録」: テキスト・状態・担当者・次回予定をまとめて保存（制作進行の「登録」と同じ考え方）
+    async function submitLeadUpdate(leadId) {
       const lead = allLeads.find(l => l.id === leadId);
       if (!lead) return;
 
-      const box = document.getElementById('modalDmMessageBox');
-      const text = box.value.trim();
+      const text = document.getElementById('modalDmMessageBox').value.trim();
+      const statusChoice = document.getElementById('leadStatusChangeSelect').value;
+      const newAssigneeId = document.getElementById('leadAssigneeSelect').value || null;
       const nextDate = document.getElementById('modalDmNextDate').value || null;
+
+      const isStatusChanged = statusChoice !== getLeadStatusChoiceValue(lead);
+      const isAssigneeChanged = (lead.assignee_id || null) !== newAssigneeId;
       const isDateChanged = (lead.next_followup_at || null) !== nextDate;
-      if (!text && !isDateChanged) return alert('記録する内容を入力してください');
 
-      const newLogs = [];
-      if (text) newLogs.push({ type: '記録', text, user: getCurrentUserIdentifier(), at: new Date().toISOString() });
-      if (isDateChanged) newLogs.push({ type: '次回予定', text: nextDate ? `次回予定を ${nextDate} に設定` : '次回予定を解除', user: getCurrentUserIdentifier(), at: new Date().toISOString() });
-      const logs = [...newLogs, ...(lead.logs || [])];
-
-      const { error } = await supabaseClient.from('leads').update({ logs, next_followup_at: nextDate }).eq('id', leadId);
-      if (error) return alert('記録エラー: ' + error.message);
-
-      lead.logs = logs;
-      lead.next_followup_at = nextDate;
-      box.value = '';
-      renderLeadsGrid();
-      rerenderLeadModalKeepingDraft();
-    }
-
-    async function changeLeadStatus(leadId, choiceValue) {
-      const lead = allLeads.find(l => l.id === leadId);
-      if (!lead) return;
-
-      const isStop = choiceValue.startsWith('stop:');
-      const newStatus = isStop ? '対応停止' : choiceValue;
-      const newStopReason = isStop ? choiceValue.slice(5) : null;
-      const label = (LEAD_STATUS_CHOICES.find(c => c.value === choiceValue) || {}).label || newStatus;
-
-      const logs = [{
-        type: '状態変更',
-        text: `状態を「${label}」に変更しました。`,
-        user: getCurrentUserIdentifier(),
-        at: new Date().toISOString()
-      }, ...(lead.logs || [])];
-
-      const updateData = { status: newStatus, stop_reason: newStopReason, logs };
-      const { error } = await supabaseClient.from('leads').update(updateData).eq('id', leadId);
-      if (error) {
-        rerenderLeadModalKeepingDraft();
-        return alert('状態の更新エラー: ' + error.message);
+      if (!text && !isStatusChanged && !isAssigneeChanged && !isDateChanged) {
+        return alert('記録する内容を入力するか、状態・担当者・次回予定を変更してください');
       }
 
-      Object.assign(lead, updateData);
+      const me = getCurrentUserIdentifier();
+      const now = Date.now();
+      const updateData = {};
+      const newLogs = []; // 古い順に積み、最後に反転して先頭へ
+      let excelStatus = null;
 
-      // Drive上のExcel（P列）へ反映（従来と同じ値で書き戻す）
-      const excelStatus = {
-        '未対応（HOT）': '未',
-        '対応中': '対応中',
-        '先方返信あり（要対応）': '返信あり',
-        '相談決定': '相談決定'
-      }[newStatus] || (newStopReason === '対象外スキップ' ? '見送り' : '対応停止');
-      triggerExcelStatusUpdate(lead.client_name, excelStatus);
+      if (text) newLogs.push({ type: '記録', text });
+      if (isStatusChanged) {
+        const isStop = statusChoice.startsWith('stop:');
+        updateData.status = isStop ? '対応停止' : statusChoice;
+        updateData.stop_reason = isStop ? statusChoice.slice(5) : null;
+        const label = (LEAD_STATUS_CHOICES.find(c => c.value === statusChoice) || {}).label || updateData.status;
+        newLogs.push({ type: '状態変更', text: `状態を「${label}」に変更しました。` });
+        // Drive上のExcel（P列）へ反映（従来と同じ値で書き戻す）
+        excelStatus = {
+          '未対応（HOT）': '未',
+          '対応中': '対応中',
+          '先方返信あり（要対応）': '返信あり',
+          '相談決定': '相談決定'
+        }[updateData.status] || (updateData.stop_reason === '対象外スキップ' ? '見送り' : '対応停止');
+      }
+      if (isAssigneeChanged) {
+        updateData.assignee_id = newAssigneeId;
+        const newAssignee = allProfiles.find(u => u.id === newAssigneeId);
+        newLogs.push({ type: '担当変更', text: newAssigneeId ? `担当者を「${getDisplayName(newAssignee)}」に設定しました。` : '担当者を未割当に戻しました。' });
+      }
+      if (isDateChanged) {
+        updateData.next_followup_at = nextDate;
+        newLogs.push({ type: '次回予定', text: nextDate ? `次回予定を ${nextDate} に設定` : '次回予定を解除' });
+      }
+
+      const stamped = newLogs.map((lg, i) => ({ ...lg, user: me, at: new Date(now + i).toISOString() }));
+      updateData.logs = [...stamped.reverse(), ...(lead.logs || [])];
+
+      const { error } = await supabaseClient.from('leads').update(updateData).eq('id', leadId);
+      if (error) return alert('記録エラー: ' + error.message);
+
+      Object.assign(lead, updateData);
+      if (excelStatus) triggerExcelStatusUpdate(lead.client_name, excelStatus);
 
       renderLeadsGrid();
-      rerenderLeadModalKeepingDraft();
+      renderCurrentLeadDetailModal();
+      scrollLeadTimelineToBottom();
     }
 
     function openProjectFromLead() {
