@@ -238,7 +238,6 @@
             <div class="relative">
               <select id="leadAssigneeSelect" onchange="filterLeadsByAssignee(this.value)" class="text-xs font-bold pl-3 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500 appearance-none touch-target-btn cursor-pointer" title="担当者で絞り込み">
                 <option value="all" selected>👥 全担当者</option>
-                <option value="me">👤 自分の担当</option>
                 <option value="none">未割当</option>
               </select>
               <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400 text-xs">▼</div>
@@ -750,7 +749,7 @@
 
     let allLeads = [];
     let currentFilterStatus = 'active';
-    // 営業チケットの担当者フィルター: 'all' | 'me' | 'none' | <profile id>
+    // 営業チケットの担当者フィルター: 'all' | 'none' | <profile id>
     let currentLeadAssigneeFilter = (() => {
       try { return localStorage.getItem('PF_LEAD_ASSIGNEE_FILTER') || 'all'; } catch (e) { return 'all'; }
     })();
@@ -1225,16 +1224,13 @@
     function renderLeadAssigneeFilterOptions() {
       const select = document.getElementById('leadAssigneeSelect');
       if (!select) return;
-      const myId = currentUser ? currentUser.id : '';
-      const others = allProfiles.filter(u => u.id !== myId);
       select.innerHTML =
         '<option value="all">👥 全担当者</option>' +
-        '<option value="me">👤 自分の担当</option>' +
         '<option value="none">未割当</option>' +
-        (others.length ? '<option disabled>──────</option>' : '') +
-        others.map(u => `<option value="${escapeHtml(u.id)}">${escapeHtml(getDisplayName(u))}</option>`).join('');
+        (allProfiles.length ? '<option disabled>──────</option>' : '') +
+        allProfiles.map(u => `<option value="${escapeHtml(u.id)}">${escapeHtml(getDisplayName(u))}</option>`).join('');
       // 保存済みの選択がメンバーから消えていたら全担当者に戻す
-      const valid = ['all', 'me', 'none'].includes(currentLeadAssigneeFilter) || others.some(u => u.id === currentLeadAssigneeFilter);
+      const valid = ['all', 'none'].includes(currentLeadAssigneeFilter) || allProfiles.some(u => u.id === currentLeadAssigneeFilter);
       if (!valid) currentLeadAssigneeFilter = 'all';
       select.value = currentLeadAssigneeFilter;
     }
@@ -1243,7 +1239,6 @@
       const f = currentLeadAssigneeFilter;
       if (f === 'all') return true;
       if (f === 'none') return !lead.assignee_id;
-      if (f === 'me') return !!currentUser && lead.assignee_id === currentUser.id;
       return lead.assignee_id === f;
     }
 
