@@ -238,13 +238,11 @@
             <div class="relative">
               <select id="leadStatusSelect" onchange="filterLeads(this.value)" class="text-xs font-bold pl-3 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500 appearance-none touch-target-btn cursor-pointer">
                 <option value="active" selected>🔥 対応中のみ (未停止)</option>
-                <option value="未対応（HOT）">🔥 未対応 HOT (同期新着)</option>
+                <option value="未対応（HOT）">🔥 未対応</option>
                 <option value="対応中">🎯 対応中 (着手済)</option>
                 <option value="1回目送信済">1回目送信済</option>
                 <option value="2回目送信済">2回目送信済</option>
                 <option value="先方返信あり（要対応）">📬 返信あり</option>
-                <option value="再送付">再送付</option>
-                <option value="対応待ち">対応待ち</option>
                 <option value="相談決定">🎉 相談決定</option>
                 <option value="対応停止">停止のみ</option>
                 <option value="all">📁 すべて表示</option>
@@ -362,8 +360,16 @@
             <span id="chatModalCodeBadge" class="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border dark:border-slate-700 flex items-center">
               <span id="chatModalCodeText"></span>
             </span>
-            <h3 id="chatModalTitle" class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 truncate"></h3>
+            <div id="chatModalTitleView" class="flex items-center gap-1 min-w-0">
+              <h3 id="chatModalTitle" class="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 truncate"></h3>
+              <button type="button" onclick="toggleTitleEdit(true)" class="flex-shrink-0 text-[11px] text-slate-400 hover:text-blue-500 font-semibold p-1 touch-target-btn" title="件名を編集">✎</button>
+            </div>
             <span id="chatModalDriveLink"></span>
+          </div>
+          <div id="chatModalTitleEditWrap" class="hidden mt-1.5 flex items-center gap-1.5">
+            <input type="text" id="chatModalTitleInput" maxlength="200" onkeydown="handleTitleInputKey(event)" class="flex-1 min-w-0 px-2.5 py-1.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500" placeholder="件名">
+            <button type="button" onclick="toggleTitleEdit(false)" class="flex-shrink-0 px-2.5 py-1 text-[11px] rounded border dark:border-slate-700 touch-target-btn">キャンセル</button>
+            <button type="button" id="chatModalTitleSaveBtn" onclick="saveProjectTitle()" class="flex-shrink-0 px-2.5 py-1 text-[11px] rounded bg-blue-600 text-white font-bold touch-target-btn">保存</button>
           </div>
         </div>
         <div class="flex items-center space-x-1.5 flex-shrink-0">
@@ -531,6 +537,10 @@
       <div>
         <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">連絡先メールアドレス（任意）</label>
         <input type="email" id="leadContactEmail" class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm" placeholder="contact@example.com">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">担当者</label>
+        <select id="leadAssignee" class="w-full px-3 py-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-sm"></select>
       </div>
       <div class="flex justify-end space-x-2 pt-2">
         <button onclick="closeModal('newLeadModal')" class="px-4 py-2.5 border dark:border-slate-700 rounded-lg text-xs sm:text-sm touch-target-btn">キャンセル</button>
@@ -918,7 +928,15 @@
       const select = document.getElementById('newPrjAssignee');
       if (!select) return;
       select.innerHTML = '<option value="">-- 未割当 --</option>' + allProfiles.map(u => {
-        return `<option value="${u.id}">${getDisplayName(u)}</option>`;
+        return `<option value="${u.id}">${escapeHtml(getDisplayName(u))}</option>`;
+      }).join('');
+    }
+
+    function populateLeadAssigneeSelect() {
+      const select = document.getElementById('leadAssignee');
+      if (!select) return;
+      select.innerHTML = '<option value="">-- 未割当 --</option>' + allProfiles.map(u => {
+        return `<option value="${u.id}">${escapeHtml(getDisplayName(u))}</option>`;
       }).join('');
     }
 
@@ -1058,7 +1076,7 @@
       };
       if (!status) return '<span class="text-slate-400">-</span>';
       const cls = badgeClassMap[status] || badgeClassMap['未対応'];
-      return `<span class="px-3 py-1 rounded-md text-xs font-bold ${cls}">${status}</span>`;
+      return `<span class="px-3 py-1 rounded-md text-xs font-bold ${cls}">${escapeHtml(status)}</span>`;
     }
 
     function getProjectDeadlineHtml(p) {
@@ -1109,8 +1127,8 @@
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center space-x-1.5 min-w-0">
               ${unreadDot}
-              <span class="font-mono font-bold text-[11px] text-blue-600 dark:text-blue-400 flex-shrink-0">${p.ticket_code || '-'}</span>
-              <h3 class="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 truncate">${p.title}</h3>
+              <span class="font-mono font-bold text-[11px] text-blue-600 dark:text-blue-400 flex-shrink-0">${escapeHtml(p.ticket_code || '-')}</span>
+              <h3 class="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 truncate">${escapeHtml(p.title)}</h3>
             </div>
             <div class="flex-shrink-0">${getProjectStatusBadgeHtml(p.status)}</div>
           </div>
@@ -1118,7 +1136,7 @@
           <div class="grid grid-cols-3 gap-2 text-[11px] pt-2 border-t border-slate-100 dark:border-slate-800/60">
             <div class="min-w-0">
               <div class="text-slate-400 dark:text-slate-500">担当者</div>
-              <div class="text-slate-700 dark:text-slate-300 font-medium truncate">${getDisplayName(assignee)}</div>
+              <div class="text-slate-700 dark:text-slate-300 font-medium truncate">${escapeHtml(getDisplayName(assignee))}</div>
             </div>
             <div class="min-w-0">
               <div class="text-slate-400 dark:text-slate-500">期限日</div>
@@ -1157,14 +1175,14 @@
 
         return `
           <tr onclick="openProjectChatModal('${p.id}')" class="${rowBg} hover:bg-blue-50/40 dark:hover:bg-slate-800/60 cursor-pointer transition group">
-            <td class="py-3 px-3.5 whitespace-nowrap font-mono font-bold text-blue-600 dark:text-blue-400">${p.ticket_code || '-'}</td>
+            <td class="py-3 px-3.5 whitespace-nowrap font-mono font-bold text-blue-600 dark:text-blue-400">${escapeHtml(p.ticket_code || '-')}</td>
             <td class="py-3 px-3">
               <div class="min-w-0 flex items-center">
                 ${unreadDot}
-                <span class="font-bold text-sm text-slate-800 dark:text-slate-100 group-hover:text-blue-600 transition truncate">${p.title}</span>
+                <span class="font-bold text-sm text-slate-800 dark:text-slate-100 group-hover:text-blue-600 transition truncate">${escapeHtml(p.title)}</span>
               </div>
             </td>
-            <td class="py-3 px-3 truncate text-slate-600 dark:text-slate-300">${getDisplayName(assignee)}</td>
+            <td class="py-3 px-3 truncate text-slate-600 dark:text-slate-300">${escapeHtml(getDisplayName(assignee))}</td>
             <td class="py-3 px-3">${getProjectStatusBadgeHtml(p.status)}</td>
             <td class="py-3 px-3 text-center whitespace-nowrap">${getProjectDeadlineHtml(p)}</td>
             <td class="py-3 px-3 text-center whitespace-nowrap">${formatDeadlineStr(updatedAtDate)}</td>
@@ -1186,7 +1204,7 @@
 
     function getLeadStatusBadge(lead) {
       const st = lead.status;
-      if (st === '未対応（HOT）') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-900">🔥 未対応HOT</span>';
+      if (st === '未対応（HOT）') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-900">🔥 未対応</span>';
       if (st === '対応中') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-900">🎯 対応中</span>';
       if (st === '1回目送信済' || st === '送信済') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200 dark:border-sky-900">1回目送信済</span>';
       if (st === '2回目送信済') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-900">2回目送信済</span>';
@@ -1194,8 +1212,8 @@
       if (st === '対応待ち') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-900">対応待ち</span>';
       if (st === '先方返信あり（要対応）' || st === 'ラリー中') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">📬 返信あり</span>';
       if (st === '相談決定') return '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-900 font-extrabold">🎉 相談決定</span>';
-      if (st === '対応停止' || st === '失注・停止') return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">停止 (${lead.stop_reason || ''})</span>`;
-      return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">${st}</span>`;
+      if (st === '対応停止' || st === '失注・停止') return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">停止 (${escapeHtml(lead.stop_reason || '')})</span>`;
+      return `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">${escapeHtml(st)}</span>`;
     }
 
     function getLeadPhaseBadge(lead) {
@@ -1234,23 +1252,13 @@
         const isHandling = l.status === '対応中';
         const isFollowupDue = l.next_followup_at && l.next_followup_at <= todayStr && l.status !== '対応停止' && l.status !== '相談決定';
         const phaseBadge = getLeadPhaseBadge(l);
-
-        let subBadge = '';
-        if (l.subscriber_count) {
-          const subText = l.subscriber_count >= 10000 
-            ? `${(l.subscriber_count / 10000).toFixed(1)}万`
-            : l.subscriber_count >= 1000 
-            ? `${(l.subscriber_count / 1000).toFixed(1)}k`
-            : `${l.subscriber_count}`;
-          subBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border dark:border-slate-700" title="登録者数: ${l.subscriber_count.toLocaleString()}人">👤 ${subText}</span>`;
-        }
+        const leadAssignee = l.assignee_id ? allProfiles.find(u => u.id === l.assignee_id) : null;
 
         return `<div onclick="openLeadDetail('${l.id}')" class="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-xl border ${isHandling ? 'border-indigo-500/80 ring-1 ring-indigo-500/40 bg-indigo-50/20 dark:bg-indigo-950/20' : 'border-slate-200 dark:border-slate-800'} shadow-sm hover:border-blue-500 cursor-pointer transition space-y-2.5 relative touch-target-row active:scale-[0.99]">
           <div class="flex justify-between items-start gap-2">
             <div class="min-w-0 flex-1 space-y-1">
               <div class="flex items-center space-x-1.5">
-                ${subBadge}
-                <h4 class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100 truncate">${l.client_name}</h4>
+                <h4 class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100 truncate">${escapeHtml(l.client_name)}</h4>
               </div>
               ${l.vibe_notes ? `<p class="text-[11px] text-slate-400 truncate line-clamp-2 leading-relaxed">${escapeHtml(l.vibe_notes)}</p>` : ''}
             </div>
@@ -1261,8 +1269,9 @@
           </div>
 
           <div class="flex items-center justify-between text-xs pt-2 border-t border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400">
-            <div class="text-[11px]">
-              ${isHot ? '<span class="text-rose-500 font-bold">🔥 Excel同期・新規</span>' : (l.next_followup_at ? `次回: <span class="${isFollowupDue ? 'text-red-500 font-bold' : ''}">${l.next_followup_at}${isFollowupDue ? ' ⚠' : ''}</span>` : '次回: 未定')}
+            <div class="text-[11px] flex items-center gap-2 min-w-0">
+              <span class="truncate ${leadAssignee ? 'text-slate-600 dark:text-slate-300' : 'text-slate-400'}">👤 ${leadAssignee ? escapeHtml(getDisplayName(leadAssignee)) : '未割当'}</span>
+              ${isHot ? '' : `<span class="flex-shrink-0">${l.next_followup_at ? `次回: <span class="${isFollowupDue ? 'text-red-500 font-bold' : ''}">${l.next_followup_at}${isFollowupDue ? ' ⚠' : ''}</span>` : '次回: 未定'}</span>`}
             </div>
             <div class="text-[11px] text-blue-600 dark:text-blue-400 font-medium">${isHot ? '確認・着手 ➔' : '詳細・追客 ➔'}</div>
           </div>
@@ -1280,6 +1289,33 @@
       isEditingLeadInfo = false;
       renderCurrentLeadDetailModal();
       openModal('leadDetailModal');
+    }
+
+    async function updateLeadAssignee(leadId, assigneeId) {
+      const lead = allLeads.find(l => l.id === leadId);
+      if (!lead) return;
+
+      const newId = assigneeId || null;
+      if ((lead.assignee_id || null) === newId) return;
+
+      const newAssignee = allProfiles.find(u => u.id === newId);
+      const logs = [{
+        type: '担当変更',
+        text: newId ? `担当者を「${getDisplayName(newAssignee)}」に設定しました。` : '担当者を未割当に戻しました。',
+        at: new Date().toISOString()
+      }, ...(lead.logs || [])];
+
+      const { error } = await supabaseClient.from('leads').update({ assignee_id: newId, logs }).eq('id', leadId);
+      if (error) {
+        const sel = document.getElementById('leadAssigneeSelect');
+        if (sel) sel.value = lead.assignee_id || '';
+        return alert('担当者の更新エラー: ' + error.message);
+      }
+
+      lead.assignee_id = newId;
+      lead.logs = logs;
+      // 入力中のDM文面を消さないよう、モーダルは再描画せず一覧のみ更新
+      renderLeadsGrid();
     }
 
     function renderCurrentLeadDetailModal() {
@@ -1383,13 +1419,13 @@
 
       let linksHtml = '';
       if (lead.twitter_id) {
-        linksHtml += `<a href="https://x.com/${lead.twitter_id}" target="_blank" class="px-2.5 py-1 bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300 rounded text-xs font-semibold hover:underline touch-target-btn">X ↗</a>`;
+        linksHtml += `<a href="https://x.com/${escapeHtml(lead.twitter_id)}" target="_blank" class="px-2.5 py-1 bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300 rounded text-xs font-semibold hover:underline touch-target-btn">X ↗</a>`;
       }
-      if (lead.youtube_url) {
-        linksHtml += `<a href="${lead.youtube_url}" target="_blank" class="px-2.5 py-1 bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-300 rounded text-xs font-semibold hover:underline touch-target-btn">YouTube ↗</a>`;
+      if (safeUrl(lead.youtube_url)) {
+        linksHtml += `<a href="${safeUrl(lead.youtube_url)}" target="_blank" class="px-2.5 py-1 bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-300 rounded text-xs font-semibold hover:underline touch-target-btn">YouTube ↗</a>`;
       }
       if (lead.contact_email) {
-        linksHtml += `<a href="mailto:${lead.contact_email}" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded text-xs font-semibold hover:underline touch-target-btn">Mail ↗</a>`;
+        linksHtml += `<a href="mailto:${escapeHtml(lead.contact_email)}" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded text-xs font-semibold hover:underline touch-target-btn">Mail ↗</a>`;
       }
 
       let subBadge = '';
@@ -1407,6 +1443,13 @@
             <div class="flex items-center space-x-2 mt-1">
               <h3 class="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100">${escapeHtml(lead.client_name)}</h3>
               <button onclick="toggleEditLeadInfo()" class="text-[11px] text-slate-400 hover:text-blue-500 font-semibold p-1" title="情報を編集">✎ 編集</button>
+            </div>
+            <div class="flex items-center gap-1.5 mt-1.5 text-xs">
+              <label for="leadAssigneeSelect" class="text-slate-500 dark:text-slate-400 font-medium">担当者</label>
+              <select id="leadAssigneeSelect" onchange="updateLeadAssignee('${lead.id}', this.value)" class="px-2 py-1 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">-- 未割当 --</option>
+                ${allProfiles.map(u => `<option value="${u.id}" ${u.id === lead.assignee_id ? 'selected' : ''}>${escapeHtml(getDisplayName(u))}</option>`).join('')}
+              </select>
             </div>
           </div>
           <div class="flex flex-wrap items-center gap-1.5">${linksHtml}</div>
@@ -1452,7 +1495,7 @@
             <div class="bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 px-3.5 py-2 rounded-xl text-xs text-indigo-700 dark:text-indigo-300 flex items-center justify-between">
               <span>🎯 現在、初回アプローチ対応中です</span>
               <button onclick="cancelHandlingLead('${lead.id}')" class="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-white underline">
-                着手を解除（HOTに戻す）
+                着手を解除（未対応に戻す）
               </button>
             </div>
 
@@ -1532,7 +1575,7 @@
             <div class="flex items-center space-x-1.5">
               <select id="modalTemplateSelector" onchange="applyTemplateToCustomBox()" class="text-[11px] px-2 py-1 border dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 max-w-[140px] truncate cursor-pointer">
                 <option value="">定型文を挿入...</option>
-                ${salesTemplates.map(t => `<option value="${t.id}">${t.title}</option>`).join('')}
+                ${salesTemplates.map(t => `<option value="${t.id}">${escapeHtml(t.title)}</option>`).join('')}
               </select>
             </div>
           </div>
@@ -1724,6 +1767,13 @@
       }
     }
 
+    // http(s) のURLだけを許可し、属性に埋め込めるようエスケープして返す（javascript: 等を排除）
+    function safeUrl(url) {
+      if (!url) return '';
+      const u = String(url).trim();
+      return /^https?:\/\//i.test(u) ? escapeHtml(u) : '';
+    }
+
     function escapeHtml(str) {
       if (!str) return '';
       return String(str)
@@ -1800,13 +1850,14 @@
       document.getElementById('chatModalTitle').innerText = p.title;
 
       const driveEl = document.getElementById('chatModalDriveLink');
-      driveEl.innerHTML = p.drive_url
-        ? `<a href="${p.drive_url}" target="_blank" class="text-[11px] px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-600 dark:text-slate-300 hover:underline">Drive ↗</a>`
+      driveEl.innerHTML = safeUrl(p.drive_url)
+        ? `<a href="${safeUrl(p.drive_url)}" target="_blank" class="text-[11px] px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-600 dark:text-slate-300 hover:underline">Drive ↗</a>`
         : '';
 
       const delBtn = document.getElementById('chatModalDeleteBtn');
       if (delBtn) delBtn.classList.toggle('hidden', !isAdminOrMaster());
 
+      toggleTitleEdit(false);
       renderProjectDescription(p);
       toggleDescriptionEdit(false);
 
@@ -1814,7 +1865,7 @@
 
       const assigneeSelect = document.getElementById('chatInputAssignee');
       assigneeSelect.innerHTML = '<option value="">-- 未割当 --</option>' + allProfiles.map(u => {
-        return `<option value="${u.id}">${getDisplayName(u)}</option>`;
+        return `<option value="${u.id}">${escapeHtml(getDisplayName(u))}</option>`;
       }).join('');
       assigneeSelect.value = p.assignee_id || '';
 
@@ -1830,6 +1881,77 @@
       autoMarkProjectLogsAsRead(p);
 
       setTimeout(scrollToLatestMessage, 60);
+    }
+
+    function toggleTitleEdit(show) {
+      const viewEl = document.getElementById('chatModalTitleView');
+      const editWrap = document.getElementById('chatModalTitleEditWrap');
+      const input = document.getElementById('chatModalTitleInput');
+
+      if (show && selectedProjectForChat) {
+        input.value = selectedProjectForChat.title || '';
+      }
+
+      viewEl.classList.toggle('hidden', !!show);
+      editWrap.classList.toggle('hidden', !show);
+
+      if (show) {
+        input.focus();
+        input.select();
+      }
+    }
+
+    function handleTitleInputKey(e) {
+      if (e.isComposing || e.keyCode === 229) return; // IME変換中のEnterは無視
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        saveProjectTitle();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleTitleEdit(false);
+      }
+    }
+
+    async function saveProjectTitle() {
+      const p = selectedProjectForChat;
+      if (!p) return;
+
+      const newTitle = document.getElementById('chatModalTitleInput').value.trim();
+      if (!newTitle) return alert('件名を入力してください');
+
+      const oldTitle = p.title || '';
+      if (newTitle === oldTitle) return toggleTitleEdit(false);
+
+      const btn = document.getElementById('chatModalTitleSaveBtn');
+      btn.disabled = true;
+
+      const currentUserName = getCurrentUserIdentifier() || '担当者';
+      const logs = [{
+        type: '件名変更',
+        user: currentUserName,
+        url: null,
+        comment: `件名を「${oldTitle}」から「${newTitle}」に変更しました。`,
+        read_by: [currentUserName],
+        at: new Date().toISOString()
+      }, ...(p.logs || [])];
+
+      const { error } = await supabaseClient
+        .from('projects')
+        .update({ title: newTitle, logs })
+        .eq('id', p.id);
+
+      btn.disabled = false;
+      if (error) return alert('件名の保存エラー: ' + error.message);
+
+      p.title = newTitle;
+      p.logs = logs;
+      document.getElementById('chatModalTitle').innerText = newTitle;
+      toggleTitleEdit(false);
+
+      await loadCreativeProjects();
+      renderProjectChatTimeline(p);
+      renderAllUpdatesLogs();
     }
 
     function renderProjectDescription(p) {
@@ -1873,7 +1995,8 @@
       if (!text) return '';
       const urlRegex = /(https?:\/\/[^\s]+)/g;
 
-      return text.replace(urlRegex, (url) => {
+      // 先に全体をHTMLエスケープしてからURLだけをリンク化する（XSS対策）
+      return escapeHtml(text).replace(urlRegex, (url) => {
         const cleanUrl = url.trim();
         const lower = cleanUrl.toLowerCase();
         
@@ -1943,7 +2066,7 @@
               <div class="flex items-center space-x-1.5 text-[10px] text-slate-400 mb-1">
                 <span class="font-mono">${dateStr}</span>
                 <span class="font-bold text-slate-700 dark:text-slate-300">自分</span>
-                ${l.type ? `<span class="px-1.5 py-0.2 rounded font-semibold ${badgeStyle}">${l.type}</span>` : ''}
+                ${l.type ? `<span class="px-1.5 py-0.2 rounded font-semibold ${badgeStyle}">${escapeHtml(l.type)}</span>` : ''}
               </div>
               <div class="p-3 sm:p-3 rounded-2xl rounded-tr-none bg-blue-600 text-white shadow-xs text-xs space-y-1">
                 ${formattedComment ? `<div class="font-normal whitespace-pre-wrap break-words leading-relaxed selection:bg-blue-800">${formattedComment}</div>` : ''}
@@ -1952,18 +2075,18 @@
               ${readStatusHtml}
             </div>
             <div class="w-7 h-7 sm:w-6 sm:h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] sm:text-[10px] font-bold flex-shrink-0 mt-4">
-              ${userInitial}
+              ${escapeHtml(userInitial)}
             </div>
           </div>`;
         } else {
           return `<div class="flex justify-start space-x-2 pr-6 sm:pr-10">
             <div class="w-7 h-7 sm:w-6 sm:h-6 rounded-full bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center text-[11px] sm:text-[10px] font-bold flex-shrink-0 mt-4">
-              ${userInitial}
+              ${escapeHtml(userInitial)}
             </div>
             <div class="max-w-[85%] flex flex-col items-start">
               <div class="flex items-center space-x-1.5 text-[10px] text-slate-400 mb-1">
-                ${l.type ? `<span class="px-1.5 py-0.2 rounded font-semibold ${badgeStyle}">${l.type}</span>` : ''}
-                <span class="font-bold text-slate-700 dark:text-slate-300">${l.user || '担当者'}</span>
+                ${l.type ? `<span class="px-1.5 py-0.2 rounded font-semibold ${badgeStyle}">${escapeHtml(l.type)}</span>` : ''}
+                <span class="font-bold text-slate-700 dark:text-slate-300">${escapeHtml(l.user || '担当者')}</span>
                 <span class="font-mono">${dateStr}</span>
                 ${unreadTag}
               </div>
@@ -2174,10 +2297,10 @@
 
         return `<label class="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-slate-800 border dark:border-slate-700 cursor-pointer hover:border-slate-400 transition touch-target-row">
           <div class="flex items-center space-x-2 min-w-0 flex-1">
-            <input type="checkbox" checked value="${f.path}" onchange="updateCleanupCount()" class="cleanup-file-checkbox w-4 h-4 rounded text-blue-600 flex-shrink-0">
+            <input type="checkbox" checked value="${escapeHtml(f.path)}" onchange="updateCleanupCount()" class="cleanup-file-checkbox w-4 h-4 rounded text-blue-600 flex-shrink-0">
             <div class="min-w-0">
-              <div class="font-bold text-slate-800 dark:text-slate-100 truncate">${f.name}</div>
-              <div class="text-[10px] text-slate-400 truncate">案件: ${prjTitle} ｜ 作成: ${dateStr}</div>
+              <div class="font-bold text-slate-800 dark:text-slate-100 truncate">${escapeHtml(f.name)}</div>
+              <div class="text-[10px] text-slate-400 truncate">案件: ${escapeHtml(prjTitle)} ｜ 作成: ${dateStr}</div>
             </div>
           </div>
           <span class="font-mono text-[11px] text-amber-600 dark:text-amber-400 font-bold ml-2 flex-shrink-0">${sizeStr}</span>
@@ -2599,7 +2722,7 @@
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center space-x-2 flex-1 min-w-0">
                 <span class="text-slate-400 font-mono text-[10px]">#${t.sort_order || (idx + 1)}</span>
-                <input type="text" id="tpl_title_${t.id}" value="${t.title || ''}" placeholder="タイトル（例: 初回DM）" class="flex-1 font-bold px-2.5 py-1.5 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-xs outline-none focus:ring-1 focus:ring-blue-500">
+                <input type="text" id="tpl_title_${t.id}" value="${escapeHtml(t.title || '')}" placeholder="タイトル（例: 初回DM）" class="flex-1 font-bold px-2.5 py-1.5 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-xs outline-none focus:ring-1 focus:ring-blue-500">
               </div>
               <div class="flex items-center space-x-1.5 flex-shrink-0">
                 <input type="number" id="tpl_order_${t.id}" value="${t.sort_order ?? (idx + 1)}" title="表示順" class="w-12 text-center px-1.5 py-1.5 rounded-lg border dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-mono outline-none">
@@ -2608,7 +2731,7 @@
               </div>
             </div>
             <div>
-              <textarea id="tpl_body_${t.id}" rows="4" placeholder="定型文本文... {name} と記述すると相手の名前に変換されます" class="w-full p-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs font-mono outline-none focus:ring-1 focus:ring-blue-500 break-words">${t.body || ''}</textarea>
+              <textarea id="tpl_body_${t.id}" rows="4" placeholder="定型文本文... {name} と記述すると相手の名前に変換されます" class="w-full p-2.5 border dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg text-xs font-mono outline-none focus:ring-1 focus:ring-blue-500 break-words">${escapeHtml(t.body || '')}</textarea>
             </div>
           </div>
         `;
@@ -2697,7 +2820,9 @@
 
       allLeads.forEach(lead => {
         const isReplied = lead.status === '先方返信あり（要対応）' || lead.status === 'ラリー中' || lead.status === '相談決定';
-        if (!isReplied && lead.status === '対応待ち' && lead.send_count >= 3 && lead.last_sent_at) {
+        // 3通目送信後のステータスは「3回目送信済」（「対応待ち」は旧データ互換のため残す）
+        const isAfterFinalSend = lead.status === '3回目送信済' || lead.status === '対応待ち';
+        if (!isReplied && isAfterFinalSend && lead.send_count >= 3 && lead.last_sent_at) {
           const sentDate = new Date(lead.last_sent_at);
           if (sentDate <= sevenDaysAgo) {
             lead.status = '対応停止';
@@ -2722,10 +2847,11 @@
       const twitter = document.getElementById('leadTwitterId').value.trim().replace(/^@/, '');
       const yt = document.getElementById('leadYoutubeUrl').value.trim();
       const email = document.getElementById('leadContactEmail').value.trim();
+      const assigneeId = document.getElementById('leadAssignee').value || null;
 
       if (!name) return alert('相手の名前を入力してください');
 
-      const { error } = await supabaseClient.from('leads').insert({
+      const newLead = {
         client_name: name,
         twitter_id: twitter || null,
         youtube_url: yt || null,
@@ -2737,7 +2863,10 @@
           text: 'チケット手動起票',
           at: new Date().toISOString()
         }]
-      });
+      };
+      if (assigneeId) newLead.assignee_id = assigneeId;
+
+      const { error } = await supabaseClient.from('leads').insert(newLead);
 
       if (error) return alert('起票失敗: ' + error.message);
 
@@ -2746,6 +2875,7 @@
       document.getElementById('leadTwitterId').value = '';
       document.getElementById('leadYoutubeUrl').value = '';
       document.getElementById('leadContactEmail').value = '';
+      document.getElementById('leadAssignee').value = '';
       loadLeads();
     }
 
@@ -2780,14 +2910,14 @@
         return `<div class="bg-white dark:bg-slate-900 p-3 sm:p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-1 hover:border-slate-300 dark:hover:border-slate-700 transition ${isUnread ? 'ring-1 ring-red-400' : ''}">
           <div class="flex flex-wrap items-center justify-between gap-1 text-[11px]">
             <div class="flex items-center space-x-1.5 min-w-0">
-              <span class="font-bold text-slate-800 dark:text-slate-200 truncate">${l.projectTitle}</span>
+              <span class="font-bold text-slate-800 dark:text-slate-200 truncate">${escapeHtml(l.projectTitle)}</span>
               ${isUnread ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500 text-white animate-pulse">NEW</span>' : ''}
             </div>
             <span class="text-slate-400 text-[10px] font-mono flex-shrink-0">${dateStr}</span>
           </div>
           <div class="flex items-center space-x-2 text-xs">
-            <span class="font-bold px-1.5 py-0.5 rounded text-[10px] ${badgeColor}">${l.type}</span>
-            <span class="text-slate-500 font-medium">${l.user || '不明'}</span>
+            <span class="font-bold px-1.5 py-0.5 rounded text-[10px] ${badgeColor}">${escapeHtml(l.type)}</span>
+            <span class="text-slate-500 font-medium">${escapeHtml(l.user || '不明')}</span>
           </div>
           ${formattedComment ? `<div class="text-slate-700 dark:text-slate-300 font-mono text-xs whitespace-pre-wrap break-words pl-1.5 border-l-2 border-slate-200 dark:border-slate-700">${formattedComment}</div>` : ''}
           <div class="text-right pt-0.5">
@@ -2843,11 +2973,11 @@
           <td class="p-3.5">
             <div class="flex items-center space-x-2">
               ${masterUser ? onlineBadge : ''}
-              <span class="font-bold text-slate-800 dark:text-slate-100">${u.name || '未設定'}</span>
+              <span class="font-bold text-slate-800 dark:text-slate-100">${escapeHtml(u.name || '未設定')}</span>
             </div>
           </td>
-          <td class="p-3.5 font-mono text-xs text-blue-600 dark:text-blue-400 font-semibold">${u.user_id || '-'}</td>
-          <td class="p-3.5 text-slate-500 dark:text-slate-400">${u.email || '-'}</td>
+          <td class="p-3.5 font-mono text-xs text-blue-600 dark:text-blue-400 font-semibold">${escapeHtml(u.user_id || '-')}</td>
+          <td class="p-3.5 text-slate-500 dark:text-slate-400">${escapeHtml(u.email || '-')}</td>
           <td class="p-3.5"><span class="px-2.5 py-1 rounded-md text-xs font-semibold ${badgeClass}">${roleName}</span></td>
           ${masterUser ? `<td class="p-3.5 text-slate-400 text-xs font-mono">${lastActiveText}</td>` : ''}
         </tr>`;
@@ -2994,6 +3124,9 @@
       document.getElementById(id).classList.remove('hidden');
       if (id === 'newProjectModal') {
         populateNewPrjAssigneeSelect();
+      }
+      if (id === 'newLeadModal') {
+        populateLeadAssigneeSelect();
       }
     }
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
